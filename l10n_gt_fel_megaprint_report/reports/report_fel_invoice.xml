@@ -2,7 +2,7 @@
 <odoo>
   <template id="report_fel_invoice">
     <t t-foreach="docs" t-as="o">
-      <t t-call="web.external_layout">
+      <t t-call="web.external_layout_clean_footer">
         <div class="page">
           <t t-set="o" t-value="o.with_context(lang=lang)"/>
 

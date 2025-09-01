@@ -8,6 +8,7 @@
     "data": [
         "reports/action_report.xml",
         "reports/report_fel_invoice.xml",
+        'reports/external_layout_clean_footer.xml',
     ],
     "installable": True,
     "application": False,
