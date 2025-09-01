@@ -113,9 +113,9 @@
                       <t t-out="'%.2f %s' % (l.price_unit or 0.0, sym)"/>
                     </td>
                     <td class="text-right">
-                      <t t-set="sym" t-value="o.currency_id and o.currency_id.symbol or ''"/>
-                      <t t-out="'%.2f %s' % (l.price_subtotal or 0.0, sym)"/>
-                    </td>
+					  <t t-set="sym" t-value="o.currency_id and o.currency_id.symbol or ''"/>
+					  <t t-out="'%.2f %s' % (l.price_total or 0.0, sym)"/>
+					</td>
                   </tr>
                 </t>
               </tbody>
