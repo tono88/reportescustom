@@ -152,7 +152,7 @@
                   <div class="fw-bold">TOTAL EN LETRAS:</div>
                   <div class="text-upper">
                     <span t-out="o.amount_total_gt_words or ''"/>
-                    &nbsp;Q.<span t-field="o.amount_total"
+                    &#160;Q.<span t-field="o.amount_total"
                       t-options="{'widget':'monetary','display_currency': o.currency_id}"/>
                   </div>
                 </td>
