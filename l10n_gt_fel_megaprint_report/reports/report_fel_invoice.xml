@@ -1,6 +1,6 @@
 <odoo>
   <template id="report_fel_invoice">
-    <!-- Contenedor HTML para asegurar <main> en el DOM final -->
+    <!-- Asegura <main> en el DOM final -->
     <t t-call="web.html_container">
       <t t-foreach="docs" t-as="o">
         <t t-call="web.external_layout">
@@ -23,6 +23,9 @@
               .mt-4 { margin-top: 1rem; }
               .fw-bold { font-weight: 700; }
               .small { font-size: 10px; }
+
+              /* Oculta header/footer estándar de Odoo para evitar pie duplicado */
+              .header, header, .footer, footer { display: none !important; }
             </style>
 
             <!-- Encabezado: Logo (izq) + Títulos FEL (der) -->
@@ -70,7 +73,7 @@
                 </td>
                 <td>
                   <div class="fw-bold">FECHA CERTIFICACIÓN:</div>
-                  <!-- Usa tu campo si lo tienes; fallback a fecha de factura -->
+                  <!-- Si tienes un campo específico, úsalo; fallback a fecha de factura -->
                   <div><span t-out="(o.invoice_date or '')"/></div>
                 </td>
                 <td>
@@ -130,8 +133,9 @@
                       <t t-out="('%.2f' % (line.discount or 0.0))"/>%
                     </td>
                     <td class="text-right">
-                      <t t-set="tax_names" t-value="', '.join([(tax.invoice_label or tax.name) for tax in line.tax_ids])"/>
-                      <span t-out="tax_names"/>
+                      <!-- Monto de impuesto por línea: price_total - price_subtotal -->
+                      <t t-set="line_tax" t-value="(line.price_total or 0.0) - (line.price_subtotal or 0.0)"/>
+                      <span t-out="line_tax" t-options="{'widget':'monetary','display_currency': o.currency_id}"/>
                     </td>
                     <td class="text-right"><span t-field="line.price_subtotal"/></td>
                   </tr>
@@ -159,28 +163,20 @@
                 <td style="width:40%; vertical-align:top;">
                   <table class="fel-grid" style="width:100%;">
                     <tbody>
+                      <!-- Usamos SOLO el desglose estándar para evitar duplicar el 'Total' -->
                       <t t-if="o.tax_totals">
                         <t t-set="tax_totals" t-value="o.tax_totals"/>
                         <t t-set="currency" t-value="o.currency_id"/>
                         <t t-call="account.document_tax_totals"/>
                       </t>
-                      <tr class="fw-bold">
-                        <td> Total </td>
-                        <td class="text-right">
-                          <span t-field="o.amount_total"
-                                t-options="{'widget':'monetary','display_currency': o.currency_id}"/>
-                        </td>
-                      </tr>
                     </tbody>
                   </table>
                 </td>
               </tr>
             </table>
 
-            <!-- Leyendas finales -->
+            <!-- Pie: sólo la leyenda requerida, sin repetir certificador/DTE -->
             <div class="mt-4 small">
-              <div class="fw-bold">CERTIFICADOR: MEGAPRINT, S.A. NIT: 50510231</div>
-              <div class="text-upper">DOCUMENTO TRIBUTARIO ELECTRÓNICO</div>
               <div>SUJETO A RETENCIÓN DEFINITIVA ISR</div>
             </div>
           </div> <!-- /.page -->
