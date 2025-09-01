@@ -81,12 +81,9 @@
                 <td style="width:15%;" class="fw-bold">NOMBRE:</td>
                 <td style="width:55%;" t-esc="o.partner_id.name or ''"/>
                 <td style="width:10%;" class="fw-bold">NIT:</td>
-                <!-- Ocultar CF -->
                 <td style="width:20%;">
-                  <t t-if="o.partner_id.vat and o.partner_id.vat != 'CF'">
-                    <span t-esc="o.partner_id.vat"/>
-                  </t>
-                </td>
+				  <span t-esc="o.partner_id.vat or 'CF'"/>
+				</td>
               </tr>
               <tr>
                 <td class="fw-bold">DIRECCIÓN:</td>
