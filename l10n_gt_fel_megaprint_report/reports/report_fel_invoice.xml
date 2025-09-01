@@ -1,187 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <odoo>
-  <template id="report_fel_invoice">
-    <!-- Asegura <main> en el DOM final -->
-    <t t-call="web.html_container">
-      <t t-foreach="docs" t-as="o">
-        <t t-call="web.external_layout">
-          <div class="page">
-            <t t-set="o" t-value="o.with_context(lang=lang)"/>
+  <data>
 
-            <style>
-              .fel-wrap { font-size: 11px; }
-              .fel-title { text-transform: uppercase; font-weight: 700; }
-              .fel-title-big { font-size: 20px; line-height: 1.1; }
-              .fel-title-small { font-size: 12px; }
-              .fel-grid, .fel-grid th, .fel-grid td { border: 1px solid #000; border-collapse: collapse; }
-              .fel-grid th { background: #f2f2f2; font-weight: 700; }
-              .fel-grid td, .fel-grid th { padding: 4px 6px; vertical-align: middle; }
-              .text-right { text-align: right; }
-              .text-center { text-align: center; }
-              .text-upper { text-transform: uppercase; }
-              .no-border { border: none !important; }
-              .mb-2 { margin-bottom: .5rem; }
-              .mt-4 { margin-top: 1rem; }
-              .fw-bold { font-weight: 700; }
-              .small { font-size: 10px; }
+    <!-- Acción del reporte -->
+    <record id="action_report_fel_invoice" model="ir.actions.report">
+      <field name="name">FEL - Factura (Megaprint)</field>
+      <field name="model">account.move</field>
+      <field name="report_type">qweb-pdf</field>
+      <field name="report_name">l10n_gt_fel_megaprint_report.report_fel_invoice</field>
+      <field name="paperformat_id" ref="base.paperformat_euro"/>
+      <field name="print_report_name">'FEL_' + (object.name or 'Factura')</field>
+    </record>
 
-              /* Oculta header/footer estándar de Odoo para evitar pie duplicado */
-              .header, header, .footer, footer { display: none !important; }
-            </style>
+    <!-- Plantilla del reporte -->
+    <template id="report_fel_invoice">
+      <!-- Usamos el layout estándar UNA sola vez -->
+      <t t-call="web.external_layout">
+        <!-- Mantén el contexto de idioma; 'o' viene del motor de reportes -->
+        <t t-set="o" t-value="o.with_context(lang=lang)"/>
 
-            <!-- Encabezado: Logo (izq) + Títulos FEL (der) -->
-            <div class="row fel-wrap mb-2">
-              <div class="col-6">
-                <t t-if="o.company_id.logo">
-                  <img t-att-src="image_data_uri(o.company_id.logo)" style="max-height:80px; max-width:220px;"/>
-                </t>
-              </div>
-              <div class="col-6 text-right">
-                <div class="fel-title fel-title-small">DOCUMENTO TRIBUTARIO ELECTRÓNICO</div>
-                <div class="fel-title fel-title-big">FACTURA</div>
-              </div>
-            </div>
+        <!-- Estilos del formato FEL -->
+        <style type="text/css">
+          .fel * { font-family: "DejaVu Sans","sans-serif"; color:#111; font-size:10pt; }
+          .fel .title-small { text-transform:uppercase; font-weight:700; font-size:9pt; letter-spacing:.3px; color:#555; }
+          .fel .title-big { text-transform:uppercase; font-weight:800; font-size:14pt; letter-spacing:.8px; }
+          .fel .table { width:100%; border-collapse:collapse; }
+          .fel .table.outer { border:1px solid #222; }
+          .fel .table th { background:#f2f2f2; text-transform:uppercase; font-weight:700; padding:6px 8px; border:1px solid #222; }
+          .fel .table td { padding:6px 8px; border:1px solid #222; vertical-align:top; }
+          .fel .no-border td, .fel .no-border th { border:none!important; }
+          .fel .text-right { text-align:right; }
+          .fel .text-center { text-align:center; }
+          .fel .fw-bold { font-weight:700; }
+          .fel .mt-6 { margin-top:6px; }
+          .fel .mt-10 { margin-top:10px; }
+          .fel .note { font-size:8pt; color:#444; }
+          /* Evita doble borde donde no corresponde */
+          .fel .outer td + td, .fel .outer th + th { border-left:1px solid #222; }
+        </style>
 
-            <!-- Emisor / FEL -->
-            <table class="fel-grid" style="width:100%;">
+        <main class="fel">
+          <!-- Título al estilo del ejemplo (no usamos layout_document_title para no duplicar) -->
+          <div class="text-right" style="margin-top:2mm; margin-bottom:3mm;">
+            <div class="title-small">Documento Tributario Electrónico</div>
+            <div class="title-big">Factura</div>
+          </div>
+
+          <!-- Bloque superior: datos de emisor + FEL -->
+          <table class="table outer">
+            <tr>
+              <td colspan="2" style="width:55%;">
+                <div class="fw-bold" style="font-size:11pt; text-transform:uppercase;">
+                  <span t-out="o.company_id.name"/>
+                </div>
+                <div>NIT: <span t-out="o.company_id.vat or ''"/></div>
+                <div t-esc="o.company_id.contact_address"/>
+              </td>
+
+              <td style="width:22.5%;">
+                <div class="fw-bold">FECHA DE EMISIÓN:</div>
+                <div t-field="o.invoice_date"/>
+              </td>
+              <td style="width:22.5%;">
+                <div class="fw-bold">NÚMERO DTE:</div>
+                <div t-out="o.numero_fel or ''"/>
+              </td>
+            </tr>
+            <tr>
+              <td style="width:27.5%;">
+                <div class="fw-bold">SERIE</div>
+                <div t-out="o.serie_fel or ''"/>
+              </td>
+              <td style="width:27.5%;">
+                <div class="fw-bold">No. AUTORIZACIÓN</div>
+                <div t-out="o.firma_fel or ''"/>
+              </td>
+              <td>
+                <div class="fw-bold">CERTIFICADOR:</div>
+                <div>MEGAPRINT, S.A. NIT: 50510231</div>
+              </td>
+              <td>
+                <div class="fw-bold">FECHA CERTIFICACIÓN:</div>
+                <!-- usa create_date si existe (documento certificado), si no invoice_date -->
+                <div t-if="o.create_date" t-out="o.create_date.strftime('%Y-%m-%d')"/>
+                <div t-if="not o.create_date and o.invoice_date" t-out="o.invoice_date.strftime('%Y-%m-%d')"/>
+              </td>
+            </tr>
+          </table>
+
+          <!-- Receptor -->
+          <table class="table outer mt-6">
+            <tr>
+              <td style="width:15%;" class="fw-bold">NOMBRE:</td>
+              <td style="width:55%;" t-out="o.partner_id.name or ''"/>
+              <td style="width:10%;" class="fw-bold">NIT:</td>
+              <td style="width:20%;" t-out="o.partner_id.vat or 'CF'"/>
+            </tr>
+            <tr>
+              <td class="fw-bold">DIRECCIÓN:</td>
+              <td colspan="3" t-esc="o.partner_id.contact_address or ''"/>
+            </tr>
+          </table>
+
+          <!-- Detalle -->
+          <table class="table outer mt-10">
+            <thead>
               <tr>
-                <td colspan="3">
-                  <div class="fw-bold text-upper" t-out="o.company_id.name or ''"/>
-                  <div t-if="o.company_id.vat">NIT: <span t-out="o.company_id.vat or ''"/></div>
-                  <div t-if="o.company_id.partner_id.contact_address" t-out="o.company_id.partner_id.contact_address"/>
-                </td>
-                <td style="width:22%;">
-                  <div class="fw-bold">FECHA DE EMISIÓN:</div>
-                  <div><span t-field="o.invoice_date"/></div>
-                </td>
-                <td style="width:22%;">
-                  <div class="fw-bold">NÚMERO DTE:</div>
-                  <div><span t-out="o.numero_fel or ''"/></div>
-                </td>
+                <th style="width:7%;">Tipo</th>
+                <th style="width:12%;" class="text-right">Cantidad</th>
+                <th>Descripción</th>
+                <th style="width:13%;" class="text-right">Precio Unitario</th>
+                <th style="width:13%;" class="text-right">Descuento</th>
+                <th style="width:13%;" class="text-right">Impuesto</th>
+                <th style="width:13%;" class="text-right">Total</th>
               </tr>
-              <tr>
-                <td style="width:18%;">
-                  <div class="fw-bold">SERIE</div>
-                  <div><span t-out="o.serie_fel or ''"/></div>
-                </td>
-                <td style="width:22%;">
-                  <div class="fw-bold">No. AUTORIZACIÓN</div>
-                  <div><span t-out="o.firma_fel or ''"/></div>
-                </td>
-                <td>
-                  <div class="fw-bold">CERTIFICADOR:</div>
-                  <div>MEGAPRINT, S.A. NIT: 50510231</div>
-                </td>
-                <td>
-                  <div class="fw-bold">FECHA CERTIFICACIÓN:</div>
-                  <!-- Si tienes un campo específico, úsalo; fallback a fecha de factura -->
-                  <div><span t-out="(o.invoice_date or '')"/></div>
-                </td>
-                <td>
-                  <div class="fw-bold">DOCUMENTO</div>
-                  <div t-if="o.state != 'posted'">DOCUMENTO DE PRUEBA</div>
-                  <div t-else="">TRIBUTARIO ELECTRÓNICO</div>
-                </td>
-              </tr>
-            </table>
-
-            <!-- Receptor -->
-            <table class="fel-grid" style="width:100%; margin-top:6px;">
-              <tr>
-                <td style="width:20%;"><div class="fw-bold">NOMBRE:</div></td>
-                <td colspan="2"><span t-field="o.partner_id.name"/></td>
-                <td style="width:12%;"><div class="fw-bold">NIT:</div></td>
-                <td style="width:20%;"><span t-out="o.partner_id.vat or 'CF'"/></td>
-              </tr>
-              <tr>
-                <td><div class="fw-bold">DIRECCIÓN:</div></td>
-                <td colspan="4">
-                  <t t-if="o.partner_id.contact_address">
-                    <span t-out="o.partner_id.contact_address"/>
-                  </t>
-                </td>
-              </tr>
-            </table>
-
-            <!-- Tabla de líneas (sin lambda) -->
-            <t t-set="product_lines" t-value="[l for l in o.invoice_line_ids if l.display_type == 'product']"/>
-            <table class="fel-grid" style="width:100%; margin-top:6px;">
-              <thead>
+            </thead>
+            <tbody>
+              <t t-foreach="o.invoice_line_ids.filtered(lambda l: l.display_type == 'product')" t-as="l">
                 <tr>
-                  <th style="width:8%;">TIPO</th>
-                  <th style="width:10%;" class="text-right">CANTIDAD</th>
-                  <th>DESCRIPCIÓN</th>
-                  <th style="width:14%;" class="text-right">PRECIO UNITARIO</th>
-                  <th style="width:12%;" class="text-right">DESCUENTO</th>
-                  <th style="width:12%;" class="text-right">IMPUESTO</th>
-                  <th style="width:14%;" class="text-right">TOTAL</th>
+                  <td class="text-center" t-out="(l.product_id.default_code or 'B')"/>
+                  <td class="text-right">
+                    <span t-field="l.quantity"/>
+                    <span t-if="l.product_uom_id" t-field="l.product_uom_id" groups="uom.group_uom"/>
+                  </td>
+                  <td t-esc="l.name"/>
+                  <td class="text-right">
+                    <span t-field="l.price_unit" t-options="{'widget':'monetary','display_currency':o.currency_id}"/>
+                  </td>
+                  <td class="text-right">
+                    <span t-out="('%.2f' % (l.discount or 0.0))"/>%
+                  </td>
+                  <td class="text-right">
+                    <t t-set="taxes" t-value="', '.join([(t.invoice_label or t.name) for t in l.tax_ids])"/>
+                    <span t-out="taxes or '-'"/>
+                  </td>
+                  <td class="text-right">
+                    <span t-field="l.price_total" t-options="{'widget':'monetary','display_currency':o.currency_id}"/>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                <t t-foreach="product_lines" t-as="line">
-                  <tr>
-                    <td class="text-center">
-                      <t t-set="ptype" t-value="(line.product_id.type or 'product')"/>
-                      <t t-out="'B' if ptype in ('product','consu') else 'S'"/>
-                    </td>
-                    <td class="text-right">
-                      <span t-field="line.quantity"/>
-                      <span t-if="line.product_uom_id" t-field="line.product_uom_id"/>
-                    </td>
-                    <td><span t-field="line.name" t-options="{'widget':'text'}"/></td>
-                    <td class="text-right"><span t-field="line.price_unit"/></td>
-                    <td class="text-right">
-                      <t t-out="('%.2f' % (line.discount or 0.0))"/>%
-                    </td>
-                    <td class="text-right">
-                      <!-- Monto de impuesto por línea: price_total - price_subtotal -->
-                      <t t-set="line_tax" t-value="(line.price_total or 0.0) - (line.price_subtotal or 0.0)"/>
-                      <span t-out="line_tax" t-options="{'widget':'monetary','display_currency': o.currency_id}"/>
-                    </td>
-                    <td class="text-right"><span t-field="line.price_subtotal"/></td>
-                  </tr>
-                </t>
-              </tbody>
-            </table>
+              </t>
+            </tbody>
+          </table>
 
-            <!-- Totales + Total en letras -->
-            <table style="width:100%; margin-top:6px;">
-              <tr>
-                <td style="width:60%; vertical-align:top;">
-                  <table class="fel-grid" style="width:100%;">
-                    <tr>
-                      <td class="no-border">
-                        <div class="fw-bold">TOTAL EN LETRAS:</div>
-                        <div class="text-upper">
-                          <span t-out="o.amount_total_gt_words or ''"/>
-                          &#160;Q.<span t-field="o.amount_total"
-                            t-options="{'widget':'monetary','display_currency': o.currency_id}"/>
-                        </div>
-                      </td>
-                    </tr>
-                  </table>
-                </td>
-                <td style="width:40%; vertical-align:top;">
-                  <table class="fel-grid" style="width:100%;">
-                    <tbody>
-                      <!-- Usamos SOLO el desglose estándar para evitar duplicar el 'Total' -->
-                      <t t-if="o.tax_totals">
-                        <t t-set="tax_totals" t-value="o.tax_totals"/>
-                        <t t-set="currency" t-value="o.currency_id"/>
-                        <t t-call="account.document_tax_totals"/>
-                      </t>
-                    </tbody>
-                  </table>
-                </td>
-              </tr>
-            </table>
-
-            <!-- Pie: sólo la leyenda requerida, sin repetir certificador/DTE -->
-            <div class="mt-4 small">
-              <div>SUJETO A RETENCIÓN DEFINITIVA ISR</div>
+          <!-- Totales / Total en letras -->
+          <div style="display:flex; gap:10px; margin-top:8px;">
+            <!-- Total en letras (SIN repetir el número) -->
+            <div style="flex:1;">
+              <table class="table outer">
+                <tr>
+                  <td style="width:38%;" class="fw-bold">TOTAL EN LETRAS:</td>
+                  <td>
+                    <!-- Cálculo de letras con centavos en formato XX/100 -->
+                    <t t-set="entero" t-value="int(o.amount_total)"/>
+                    <t t-set="centavos" t-value="int(round((o.amount_total - entero) * 100))"/>
+                    <t t-set="centavos_fmt" t-value="'%02d' % centavos"/>
+                    <t t-set="letras"
+                       t-value="o.currency_id.with_context(lang='es_GT').amount_to_text(entero).upper()"/>
+                    <span t-out="letras"/> CON <span t-out="centavos_fmt"/>/100
+                  </td>
+                </tr>
+              </table>
+              <div class="note" style="margin-top:6px;">SUJETO A RETENCIÓN DEFINITIVA ISR</div>
             </div>
-          </div> <!-- /.page -->
-        </t>
+
+            <!-- Caja de totales a la derecha -->
+            <div style="flex:0 0 40%;">
+              <table class="table outer">
+                <tbody>
+                  <tr>
+                    <td>Subtotal</td>
+                    <td class="text-right">
+                      <span t-field="o.amount_untaxed"
+                            t-options="{'widget':'monetary','display_currency':o.currency_id}"/>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>IVA 12%</td>
+                    <td class="text-right">
+                      <span t-field="o.amount_tax"
+                            t-options="{'widget':'monetary','display_currency':o.currency_id}"/>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="fw-bold">Total</td>
+                    <td class="text-right fw-bold">
+                      <span t-field="o.amount_total"
+                            t-options="{'widget':'monetary','display_currency':o.currency_id}"/>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </main>
       </t>
-    </t>
-  </template>
+    </template>
+
+  </data>
 </odoo>
