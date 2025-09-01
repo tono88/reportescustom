@@ -2,7 +2,8 @@
 <odoo>
   <template id="report_fel_invoice">
     <t t-foreach="docs" t-as="o">
-      <t t-call="web.external_layout_clean_footer">
+      <!-- USAR EL LAYOUT LIMPIO DEL MÓDULO (SIN FOOTER CON CORREO) -->
+      <t t-call="l10n_gt_fel_megaprint_report.external_layout_clean_footer">
         <div class="page">
           <t t-set="o" t-value="o.with_context(lang=lang)"/>
 
@@ -24,7 +25,7 @@
           </style>
 
           <main class="fel">
-            <!-- Títulos (layout ya imprime logo, aquí solo rótulos) -->
+            <!-- Títulos -->
             <div class="text-right" style="margin-top:2mm; margin-bottom:3mm;">
               <div class="title-small">DOCUMENTO TRIBUTARIO ELECTRÓNICO</div>
               <div class="title-big">FACTURA</div>
@@ -76,7 +77,12 @@
                 <td style="width:15%;" class="fw-bold">NOMBRE:</td>
                 <td style="width:55%;" t-esc="o.partner_id.name or ''"/>
                 <td style="width:10%;" class="fw-bold">NIT:</td>
-                <td style="width:20%;" t-esc="o.partner_id.vat or 'CF'"/>
+                <!-- OCULTAR CF -->
+                <td style="width:20%;">
+                  <t t-if="o.partner_id.vat and o.partner_id.vat != 'CF'">
+                    <span t-esc="o.partner_id.vat"/>
+                  </t>
+                </td>
               </tr>
               <tr>
                 <td class="fw-bold">DIRECCIÓN:</td>
@@ -108,14 +114,16 @@
                       <span t-if="l.product_uom_id" t-esc="l.product_uom_id.name"/>
                     </td>
                     <td t-esc="l.name"/>
+                    <!-- PRECIO UNITARIO CON IVA = price_total / quantity -->
                     <td class="text-right">
                       <t t-set="sym" t-value="o.currency_id and o.currency_id.symbol or ''"/>
-                      <t t-out="'%.2f %s' % (l.price_unit or 0.0, sym)"/>
+                      <t t-out="'%.2f %s' % (((l.price_total or 0.0) / (l.quantity or 1.0)), sym)"/>
                     </td>
+                    <!-- TOTAL CON IVA -->
                     <td class="text-right">
-					  <t t-set="sym" t-value="o.currency_id and o.currency_id.symbol or ''"/>
-					  <t t-out="'%.2f %s' % (l.price_total or 0.0, sym)"/>
-					</td>
+                      <t t-set="sym" t-value="o.currency_id and o.currency_id.symbol or ''"/>
+                      <t t-out="'%.2f %s' % (l.price_total or 0.0, sym)"/>
+                    </td>
                   </tr>
                 </t>
               </tbody>
@@ -149,7 +157,7 @@
                 </tr>
               </table>
               <div class="note" style="margin-top:6px;">Sujeto a pagos trimestrales ISR</div>
-			  <div class="note" style="margin-top:6px;">Agente de Retención del IVA</div>
+              <div class="note" style="margin-top:6px;">Agente de Retención del IVA</div>
             </div>
 
           </main>
