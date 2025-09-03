@@ -14,14 +14,14 @@
                 <group string="Payments">
                     <group>
                         <field name="payment_state" readonly="1"/>
-                        <field name="payment_journal_id"/>
+                        <field name="payment_journal_id" required="True"/>
                         <field name="payment_date"/>
                         <field name="payment_mode"/>
                     </group>
                     <group>
-                        <button name="action_create_payments" type="object" string="Create Payments" class="btn-primary"/>
-                        <button name="action_create_check_payments" type="object" string="Create Check Payments"/>
-                        <button name="action_mark_paid" type="object" string="Mark Paid" attrs="{'invisible': [('payment_state','=','paid')]}"/>
+                        <button name="action_create_payments" type="object" string="Create Payments" class="btn-primary" invisible="payment_state == 'paid'"/>
+                        <button name="action_create_check_payments" type="object" string="Create Check Payments" invisible="payment_state == 'paid'"/>
+                        <button name="action_mark_paid" type="object" string="Mark Paid" invisible="payment_state == 'paid'"/>
                         <button name="action_view_payments" type="object" string="View Payments"/>
                         <field name="payment_ids" widget="many2many_tags" readonly="1"/>
                     </group>
