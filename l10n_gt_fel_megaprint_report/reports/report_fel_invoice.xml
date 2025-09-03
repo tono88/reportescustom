@@ -39,7 +39,13 @@
 				<t t-elif="o.move_type == 'in_refund'">NOTA DE CRÉDITO PROVEEDOR</t>
 			  </div>
 			</div>
-
+			<!-- SOLO SI ES NOTA DE CRÉDITO -->
+			<t t-if="o.move_type == 'out_refund' and o.factura_original_id">
+			  <div class="fw-bold" style="margin-top:3mm;">
+				No. DOCUMENTO ORIGEN:
+				<span t-esc="o.factura_original_id"/>
+			  </div>
+			</t>
             <!-- Emisor / FEL -->
             <table class="table outer">
               <tr>
