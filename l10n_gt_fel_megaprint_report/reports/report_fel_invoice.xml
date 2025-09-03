@@ -39,13 +39,51 @@
 				<t t-elif="o.move_type == 'in_refund'">NOTA DE CRÉDITO PROVEEDOR</t>
 			  </div>
 			</div>
-			<!-- SOLO SI ES NOTA DE CRÉDITO -->
-			<t t-if="o.move_type == 'out_refund' and o.factura_original_id">
-			  <div class="fw-bold" style="margin-top:3mm;">
-				No. DOCUMENTO ORIGEN:
-				<span t-esc="o.factura_original_id.firma_fel"/>
-			  </div>
+			<!-- Datos del documento origen: SOLO para Nota de Crédito -->
+			<t t-if="o.move_type == 'out_refund'">
+			  <table class="table outer mt-6">
+				<tr>
+				  <td class="fw-bold" style="width:35%;">No. AUTORIZACIÓN DOCUMENTO:</td>
+				  <td>
+					<span t-esc="(o.factura_original_id and o.factura_original_id.firma_fel) or ''"/>
+				  </td>
+				</tr>
+				<tr>
+				  <td class="fw-bold">FECHA EMISIÓN DOC. ORIGEN:</td>
+				  <td>
+					<t t-if="o.factura_original_id and o.factura_original_id.invoice_date">
+					  <t t-out="o.factura_original_id.invoice_date.strftime('%d-%m-%Y %H:%M:%S')"/>
+					</t>
+				  </td>
+				</tr>
+				<tr>
+				  <td class="fw-bold">MOTIVO:</td>
+				  <td>
+					<!-- Toma el primer campo disponible entre varias posibilidades -->
+					<t t-set="motivo"
+					   t-value="getattr(o, 'motivo', False)
+								or getattr(o, 'motivo_nc', False)
+								or getattr(o, 'motivo_fel', False)
+								or getattr(o, 'reason', False)
+								or getattr(o, 'ref', False)"/>
+					<span t-esc="motivo or ''"/>
+				  </td>
+				</tr>
+				<tr>
+				  <td class="fw-bold">SERIE DOCUMENTO ORIGEN:</td>
+				  <td>
+					<span t-esc="(o.factura_original_id and o.factura_original_id.serie_fel) or ''"/>
+				  </td>
+				</tr>
+				<tr>
+				  <td class="fw-bold">NUMERO DOCUMENTO ORIGEN:</td>
+				  <td>
+					<span t-esc="(o.factura_original_id and o.factura_original_id.numero_fel) or ''"/>
+				  </td>
+				</tr>
+			  </table>
 			</t>
+
             <!-- Emisor / FEL -->
             <table class="table outer">
               <tr>
