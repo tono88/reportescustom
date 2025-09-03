@@ -2,7 +2,7 @@
 {
     'name': 'Payroll Payments from Batch (Community)',
     'summary': 'Create and track payments (including checks) from payroll batches and payslips, with explicit payment method selection',
-    'version': '18.0.1.6.0',
+    'version': '18.0.1.7.0',
     'category': 'Human Resources/Payroll',
     'depends': ['payroll', 'account'],
     'author': 'Blockera Bustamante / ChatGPT',

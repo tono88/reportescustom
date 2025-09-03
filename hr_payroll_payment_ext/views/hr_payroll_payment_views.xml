@@ -5,13 +5,12 @@
         <field name="inherit_id" ref="payroll.hr_payslip_run_view_form"/>
         <field name="arch" type="xml">
             <xpath expr="//sheet" position="inside">
-                <separator string="Payments"/>
                 <div class="oe_button_box" name="button_box">
                     <button type="object" name="action_view_payments" class="oe_stat_button" icon="fa-money">
                         <field name="payment_count" widget="statinfo" string="Payments"/>
                     </button>
                 </div>
-                <group string="Payments">
+                <group string="Payments" class="mt16">
                     <group>
                         <field name="payment_state" readonly="1"/>
                         <field name="payment_journal_id" required="True"/>
