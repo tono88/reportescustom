@@ -12,10 +12,8 @@ def _resolve_employee_partner(employee):
     return False
 
 def _maybe_set_payment_reference(payment_model, vals, text):
-    # Odoo 17/18: account.payment doesn't have 'ref'; some databases have 'payment_reference'
     if 'payment_reference' in payment_model._fields:
         vals['payment_reference'] = text
-    # else: skip silently
 
 class HrPayslipRun(models.Model):
     _inherit = "hr.payslip.run"
@@ -30,6 +28,12 @@ class HrPayslipRun(models.Model):
         string="Payment Journal",
         domain="[('type', 'in', ('bank','cash'))]"
     )
+    payment_method_line_id = fields.Many2one(
+        'account.payment.method.line',
+        string="Payment Method",
+        domain="[('journal_id','=',payment_journal_id), ('payment_type','=','outbound')]",
+        help="Choose the outbound payment method to use (e.g., Check, Manual)."
+    )
     payment_date = fields.Date(string="Payment Date", default=fields.Date.context_today)
     payment_mode = fields.Selection([
         ('per_employee', 'Per employee (one payment each)'),
@@ -37,6 +41,12 @@ class HrPayslipRun(models.Model):
     ], default='per_employee', string="Payment Mode", required=True)
     payment_ids = fields.Many2many('account.payment', string="Related Payments", readonly=True)
     payment_count = fields.Integer(compute="_compute_payment_count")
+
+    @api.onchange('payment_journal_id')
+    def _onchange_payment_journal_id(self):
+        for run in self:
+            if run.payment_method_line_id and run.payment_method_line_id.journal_id != run.payment_journal_id:
+                run.payment_method_line_id = False
 
     @api.depends('payment_ids')
     def _compute_payment_count(self):
@@ -64,6 +74,15 @@ class HrPayslipRun(models.Model):
         return total
 
     def _pick_payment_method_line(self, journal, prefer_check=False):
+        # If user picked a method on the batch, honor it
+        self.ensure_one()
+        if self.payment_method_line_id:
+            ml = self.payment_method_line_id
+            if ml.payment_type != 'outbound':
+                raise UserError(_("Selected payment method must be 'outbound'."))
+            if ml.journal_id != journal:
+                raise UserError(_("Selected payment method belongs to another journal."))
+            return ml
         method_lines = journal.outbound_payment_method_line_ids
         if not method_lines:
             raise UserError(_("Journal %s has no outbound payment methods configured.") % journal.display_name)
@@ -93,12 +112,12 @@ class HrPayslipRun(models.Model):
         Payment = self.env['account.payment']
         for run in self:
             journal = run.payment_journal_id
-            method_line = self._pick_payment_method_line(journal, prefer_check=prefer_check)
+            method_line = run._pick_payment_method_line(journal, prefer_check=prefer_check)
             if run.payment_mode == 'per_employee':
-                payments = self._create_payments_per_employee(run, journal, method_line, auto_post=auto_post, Payment=Payment)
+                payments = run._create_payments_per_employee(run, journal, method_line, auto_post=auto_post, Payment=Payment)
                 run.payment_ids = [(4, p.id) for p in payments]
             else:
-                payment = self._create_one_payment_for_batch(run, journal, method_line, auto_post=auto_post, Payment=Payment)
+                payment = run._create_one_payment_for_batch(run, journal, method_line, auto_post=auto_post, Payment=Payment)
                 run.payment_ids = [(4, payment.id)]
             run.payment_state = 'to_pay' if not auto_post else 'paid'
         return True
@@ -107,11 +126,11 @@ class HrPayslipRun(models.Model):
         Payment = Payment or self.env['account.payment']
         payments = Payment
         for slip in run.slip_ids:
-            amount = self._get_slip_net_amount(slip)
+            amount = run._get_slip_net_amount(slip)
             if not amount:
                 continue
             employee = slip.employee_id
-            partner = self._get_employee_partner(employee)
+            partner = run._get_employee_partner(employee)
             vals = {
                 'date': run.payment_date or fields.Date.context_today(self),
                 'journal_id': journal.id,
@@ -134,7 +153,7 @@ class HrPayslipRun(models.Model):
         Payment = Payment or self.env['account.payment']
         total = 0.0
         for slip in run.slip_ids:
-            total += (self._get_slip_net_amount(slip) or 0.0)
+            total += (run._get_slip_net_amount(slip) or 0.0)
         if not total:
             raise UserError(_("No amount found on payslips."))
         clearing_partner = self.env['res.partner'].sudo().search([('name','=','Payroll Clearing'), ('company_id','in',[False, run.company_id.id])], limit=1)

@@ -15,6 +15,7 @@
                     <group>
                         <field name="payment_state" readonly="1"/>
                         <field name="payment_journal_id" required="True"/>
+                        <field name="payment_method_line_id"/>
                         <field name="payment_date"/>
                         <field name="payment_mode"/>
                     </group>
