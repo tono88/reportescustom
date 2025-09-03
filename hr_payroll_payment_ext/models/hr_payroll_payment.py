@@ -11,6 +11,12 @@ def _resolve_employee_partner(employee):
                 return partner
     return False
 
+def _maybe_set_payment_reference(payment_model, vals, text):
+    # Odoo 17/18: account.payment doesn't have 'ref'; some databases have 'payment_reference'
+    if 'payment_reference' in payment_model._fields:
+        vals['payment_reference'] = text
+    # else: skip silently
+
 class HrPayslipRun(models.Model):
     _inherit = "hr.payslip.run"
 
@@ -81,24 +87,25 @@ class HrPayslipRun(models.Model):
                 raise UserError(_("Select a Payment Journal."))
 
     def action_create_payments(self, prefer_check=False, auto_post=True):
-        # prefer_check can come via context when triggered from the view
         ctx_prefer_check = bool(self.env.context.get('prefer_check'))
         prefer_check = prefer_check or ctx_prefer_check
         self._ensure_ready_to_pay()
+        Payment = self.env['account.payment']
         for run in self:
             journal = run.payment_journal_id
             method_line = self._pick_payment_method_line(journal, prefer_check=prefer_check)
             if run.payment_mode == 'per_employee':
-                payments = self._create_payments_per_employee(run, journal, method_line, auto_post=auto_post)
+                payments = self._create_payments_per_employee(run, journal, method_line, auto_post=auto_post, Payment=Payment)
                 run.payment_ids = [(4, p.id) for p in payments]
             else:
-                payment = self._create_one_payment_for_batch(run, journal, method_line, auto_post=auto_post)
+                payment = self._create_one_payment_for_batch(run, journal, method_line, auto_post=auto_post, Payment=Payment)
                 run.payment_ids = [(4, payment.id)]
             run.payment_state = 'to_pay' if not auto_post else 'paid'
         return True
 
-    def _create_payments_per_employee(self, run, journal, method_line, auto_post=True):
-        payments = self.env['account.payment']
+    def _create_payments_per_employee(self, run, journal, method_line, auto_post=True, Payment=None):
+        Payment = Payment or self.env['account.payment']
+        payments = Payment
         for slip in run.slip_ids:
             amount = self._get_slip_net_amount(slip)
             if not amount:
@@ -114,16 +121,17 @@ class HrPayslipRun(models.Model):
                 'amount': abs(amount),
                 'currency_id': run.company_id.currency_id.id,
                 'payment_method_line_id': method_line.id,
-                'ref': _("Payroll %s - %s") % (run.name, employee.name),
             }
-            payment = self.env['account.payment'].create(vals)
+            _maybe_set_payment_reference(Payment, vals, _("Payroll %s - %s") % (run.name, employee.name))
+            payment = Payment.create(vals)
             if auto_post:
                 payment.action_post()
             payments += payment
             slip.payment_id = payment.id
         return payments
 
-    def _create_one_payment_for_batch(self, run, journal, method_line, auto_post=True):
+    def _create_one_payment_for_batch(self, run, journal, method_line, auto_post=True, Payment=None):
+        Payment = Payment or self.env['account.payment']
         total = 0.0
         for slip in run.slip_ids:
             total += (self._get_slip_net_amount(slip) or 0.0)
@@ -141,9 +149,9 @@ class HrPayslipRun(models.Model):
             'amount': abs(total),
             'currency_id': run.company_id.currency_id.id,
             'payment_method_line_id': method_line.id,
-            'ref': _("Payroll %s - Batch Payment") % (run.name),
         }
-        payment = self.env['account.payment'].create(vals)
+        _maybe_set_payment_reference(Payment, vals, _("Payroll %s - Batch Payment") % (run.name))
+        payment = Payment.create(vals)
         if auto_post:
             payment.action_post()
         return payment
@@ -192,6 +200,7 @@ class HrPayslip(models.Model):
         if not amount:
             raise UserError(_("No amount found on this payslip."))
         partner = self._get_employee_partner()
+        Payment = self.env['account.payment']
         vals = {
             'date': run.payment_date or fields.Date.context_today(self),
             'journal_id': journal.id,
@@ -201,9 +210,9 @@ class HrPayslip(models.Model):
             'amount': abs(amount),
             'currency_id': self.company_id.currency_id.id,
             'payment_method_line_id': method_line.id,
-            'ref': _("Payroll %s - %s") % (run.name or self.name, self.employee_id.name),
         }
-        payment = self.env['account.payment'].create(vals)
+        _maybe_set_payment_reference(Payment, vals, _("Payroll %s - %s") % (run.name or self.name, self.employee_id.name))
+        payment = Payment.create(vals)
         if auto_post:
             payment.action_post()
         self.payment_id = payment.id
