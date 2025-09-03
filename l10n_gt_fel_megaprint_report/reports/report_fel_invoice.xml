@@ -43,7 +43,7 @@
 			<t t-if="o.move_type == 'out_refund' and o.factura_original_id">
 			  <div class="fw-bold" style="margin-top:3mm;">
 				No. DOCUMENTO ORIGEN:
-				<span t-esc="o.factura_original_id"/>
+				<span t-esc="o.factura_original_id.firma_fel"/>
 			  </div>
 			</t>
             <!-- Emisor / FEL -->
