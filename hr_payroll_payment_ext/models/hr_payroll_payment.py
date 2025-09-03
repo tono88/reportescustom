@@ -2,6 +2,17 @@
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 
+def _resolve_employee_partner(employee):
+    """Return the best partner to pay the employee, compatible with Odoo 17/18 field names."""
+    # Try common fields in order of preference
+    field_candidates = ['address_home_id', 'private_address_id', 'work_contact_id', 'user_partner_id', 'address_id']
+    for fname in field_candidates:
+        if fname in employee._fields:
+            partner = employee[fname]
+            if partner:
+                return partner
+    return False
+
 class HrPayslipRun(models.Model):
     _inherit = "hr.payslip.run"
 
@@ -36,9 +47,9 @@ class HrPayslipRun(models.Model):
         return action
 
     def _get_employee_partner(self, employee):
-        partner = employee.address_home_id
+        partner = _resolve_employee_partner(employee)
         if not partner:
-            raise UserError(_("Employee %s has no Private Address (home) partner set.") % employee.name)
+            raise UserError(_("Employee %s has no payable Partner (private/work contact) set.") % employee.name)
         return partner
 
     def _get_slip_net_amount(self, slip):
@@ -74,7 +85,7 @@ class HrPayslipRun(models.Model):
     def action_create_payments(self, prefer_check=False, auto_post=True):
         self._ensure_ready_to_pay()
         for run in self:
-            journal = run.payment_journal_id
+            journal = self.payment_journal_id
             method_line = self._pick_payment_method_line(journal, prefer_check=prefer_check)
             if run.payment_mode == 'per_employee':
                 payments = self._create_payments_per_employee(run, journal, method_line, auto_post=auto_post)
@@ -84,10 +95,6 @@ class HrPayslipRun(models.Model):
                 run.payment_ids = [(4, payment.id)]
             run.payment_state = 'to_pay' if not auto_post else 'paid'
         return True
-
-    def action_create_check_payments(self):
-        """Convenience action to force CHECK method when available."""
-        return self.action_create_payments(prefer_check=True, auto_post=True)
 
     def _create_payments_per_employee(self, run, journal, method_line, auto_post=True):
         payments = self.env['account.payment']
@@ -112,7 +119,6 @@ class HrPayslipRun(models.Model):
             if auto_post:
                 payment.action_post()
             payments += payment
-            # Link back to the payslip
             slip.payment_id = payment.id
         return payments
 
@@ -159,22 +165,6 @@ class HrPayslip(models.Model):
         total = sum(self.line_ids.filtered(lambda l: l.category_id and l.category_id.code in ('BASIC','ALW','ALWANCE','GROSS')).mapped('total'))                 - sum(self.line_ids.filtered(lambda l: l.category_id and l.category_id.code in ('DED','DEDUCTION')).mapped('total'))
         return total
 
-    def _payslip_pick_payment_method_line(self, journal, prefer_check=False):
-        method_lines = journal.outbound_payment_method_line_ids
-        if not method_lines:
-            raise UserError(_("Journal %s has no outbound payment methods configured.") % journal.display_name)
-        if prefer_check:
-            def is_check(ml):
-                name = (ml.name or '').lower()
-                pm = ml.payment_method_id
-                return ('check' in name) or (pm and ((pm.code in ('check_printing', 'check')) or ('check' in (pm.name or '').lower())))
-            check_ml = method_lines.filtered(is_check)
-            if not check_ml:
-                raise UserError(_("The selected journal has no 'Check' outbound payment method.\n"
-                                  "Add it in Accounting → Configuration → Journals → Payment Methods."))
-            return check_ml[0]
-        return method_lines[0]
-
     def _ensure_ready_to_pay_single(self):
         self.ensure_one()
         if self.state != 'done' and (self.payslip_run_id and self.payslip_run_id.state != 'close'):
@@ -184,17 +174,21 @@ class HrPayslip(models.Model):
             raise UserError(_("Select a Payment Journal on the batch (Procesamientos de nóminas)."))
         return run
 
+    def _get_employee_partner(self):
+        partner = _resolve_employee_partner(self.employee_id)
+        if not partner:
+            raise UserError(_("Employee %s has no payable Partner (private/work contact) set.") % self.employee_id.name)
+        return partner
+
     def action_create_payment(self, prefer_check=False, auto_post=True):
         self.ensure_one()
         run = self._ensure_ready_to_pay_single()
         journal = run.payment_journal_id
-        method_line = self._payslip_pick_payment_method_line(journal, prefer_check=prefer_check)
+        method_line = run._pick_payment_method_line(journal, prefer_check=prefer_check)
         amount = self._get_net_amount()
         if not amount:
             raise UserError(_("No amount found on this payslip."))
-        partner = self.employee_id.address_home_id
-        if not partner:
-            raise UserError(_("Employee %s has no Private Address (home) partner set.") % self.employee_id.name)
+        partner = self._get_employee_partner()
         vals = {
             'date': run.payment_date or fields.Date.context_today(self),
             'journal_id': journal.id,
