@@ -112,6 +112,8 @@ class HrPayslipRun(models.Model):
             if auto_post:
                 payment.action_post()
             payments += payment
+            # Link back to the payslip
+            slip.payment_id = payment.id
         return payments
 
     def _create_one_payment_for_batch(self, run, journal, method_line, auto_post=True):
@@ -142,3 +144,83 @@ class HrPayslipRun(models.Model):
     def action_mark_paid(self):
         self.write({'payment_state': 'paid'})
         return True
+
+
+class HrPayslip(models.Model):
+    _inherit = "hr.payslip"
+
+    payment_id = fields.Many2one('account.payment', string="Payment", readonly=True)
+
+    def _get_net_amount(self):
+        self.ensure_one()
+        net_line = self.line_ids.filtered(lambda l: l.code and l.code.upper() in ('NET', 'NETO'))
+        if net_line:
+            return net_line[0].total
+        total = sum(self.line_ids.filtered(lambda l: l.category_id and l.category_id.code in ('BASIC','ALW','ALWANCE','GROSS')).mapped('total'))                 - sum(self.line_ids.filtered(lambda l: l.category_id and l.category_id.code in ('DED','DEDUCTION')).mapped('total'))
+        return total
+
+    def _payslip_pick_payment_method_line(self, journal, prefer_check=False):
+        method_lines = journal.outbound_payment_method_line_ids
+        if not method_lines:
+            raise UserError(_("Journal %s has no outbound payment methods configured.") % journal.display_name)
+        if prefer_check:
+            def is_check(ml):
+                name = (ml.name or '').lower()
+                pm = ml.payment_method_id
+                return ('check' in name) or (pm and ((pm.code in ('check_printing', 'check')) or ('check' in (pm.name or '').lower())))
+            check_ml = method_lines.filtered(is_check)
+            if not check_ml:
+                raise UserError(_("The selected journal has no 'Check' outbound payment method.\n"
+                                  "Add it in Accounting → Configuration → Journals → Payment Methods."))
+            return check_ml[0]
+        return method_lines[0]
+
+    def _ensure_ready_to_pay_single(self):
+        self.ensure_one()
+        if self.state != 'done' and (self.payslip_run_id and self.payslip_run_id.state != 'close'):
+            raise UserError(_("Confirm the payslip (Done) or close its batch before creating payments."))
+        run = self.payslip_run_id
+        if not run or not run.payment_journal_id:
+            raise UserError(_("Select a Payment Journal on the batch (Procesamientos de nóminas)."))
+        return run
+
+    def action_create_payment(self, prefer_check=False, auto_post=True):
+        self.ensure_one()
+        run = self._ensure_ready_to_pay_single()
+        journal = run.payment_journal_id
+        method_line = self._payslip_pick_payment_method_line(journal, prefer_check=prefer_check)
+        amount = self._get_net_amount()
+        if not amount:
+            raise UserError(_("No amount found on this payslip."))
+        partner = self.employee_id.address_home_id
+        if not partner:
+            raise UserError(_("Employee %s has no Private Address (home) partner set.") % self.employee_id.name)
+        vals = {
+            'date': run.payment_date or fields.Date.context_today(self),
+            'journal_id': journal.id,
+            'payment_type': 'outbound',
+            'partner_type': 'supplier',
+            'partner_id': partner.id,
+            'amount': abs(amount),
+            'currency_id': self.company_id.currency_id.id,
+            'payment_method_line_id': method_line.id,
+            'ref': _("Payroll %s - %s") % (run.name or self.name, self.employee_id.name),
+        }
+        payment = self.env['account.payment'].create(vals)
+        if auto_post:
+            payment.action_post()
+        self.payment_id = payment.id
+        if run:
+            run.payment_ids = [(4, payment.id)]
+        return True
+
+    def action_create_check_payment(self):
+        """Create a CHECK payment for this payslip."""
+        return self.action_create_payment(prefer_check=True, auto_post=True)
+
+    def action_view_payment(self):
+        self.ensure_one()
+        action = self.env.ref('account.action_account_payments').read()[0]
+        action['domain'] = [('id', 'in', [self.payment_id.id])]
+        action['context'] = {'default_journal_id': self.payslip_run_id.payment_journal_id.id if self.payslip_run_id else False}
+        return action

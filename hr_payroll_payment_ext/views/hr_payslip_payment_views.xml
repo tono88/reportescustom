@@ -1,0 +1,19 @@
+<odoo>
+    <record id="view_hr_payslip_form_payment_ext" model="ir.ui.view">
+        <field name="name">hr.payslip.form.payment.ext</field>
+        <field name="model">hr.payslip</field>
+        <field name="inherit_id" ref="payroll.hr_payslip_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form/header" position="inside">
+                <button name="action_create_payment" type="object" string="Create Payment" class="btn-primary" invisible="payment_id or state != 'done'"/>
+                <button name="action_create_check_payment" type="object" string="Create Check Payment" invisible="payment_id or state != 'done'"/>
+                <button name="action_view_payment" type="object" string="View Payment" invisible="not payment_id"/>
+            </xpath>
+            <xpath expr="//form/sheet//group[@name='top']" position="after">
+                <group string="Payment">
+                    <field name="payment_id" readonly="1"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>
