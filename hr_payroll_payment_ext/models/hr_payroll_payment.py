@@ -54,15 +54,21 @@ class HrPayslipRun(models.Model):
         if not method_lines:
             raise UserError(_("Journal %s has no outbound payment methods configured.") % journal.display_name)
         if prefer_check:
-            check_ml = method_lines.filtered(lambda m: 'check' in (m.name or '').lower())
-            if check_ml:
-                return check_ml[0]
+            def is_check(ml):
+                name = (ml.name or '').lower()
+                pm = ml.payment_method_id
+                return ('check' in name) or (pm and ((pm.code in ('check_printing', 'check')) or ('check' in (pm.name or '').lower())))
+            check_ml = method_lines.filtered(is_check)
+            if not check_ml:
+                raise UserError(_("The selected journal has no 'Check' outbound payment method.\n"
+                                  "Add it in Accounting → Configuration → Journals → Payment Methods."))
+            return check_ml[0]
         return method_lines[0]
 
     def _ensure_ready_to_pay(self):
         for run in self:
-            if run.state not in ('close', 'verify'):
-                raise UserError(_("Confirm/Post the payroll batch before creating payments."))
+            if run.state != 'close':
+                raise UserError(_("Close (post) the payroll batch before creating payments."))
             if not run.payment_journal_id:
                 raise UserError(_("Select a Payment Journal."))
 
@@ -79,6 +85,10 @@ class HrPayslipRun(models.Model):
                 run.payment_ids = [(4, payment.id)]
             run.payment_state = 'to_pay' if not auto_post else 'paid'
         return True
+
+    def action_create_check_payments(self):
+        \"\"\"Convenience action to force CHECK method when available.\"\"\"
+        return self.action_create_payments(prefer_check=True, auto_post=True)
 
     def _create_payments_per_employee(self, run, journal, method_line, auto_post=True):
         payments = self.env['account.payment']
