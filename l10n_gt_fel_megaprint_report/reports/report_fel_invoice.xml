@@ -43,7 +43,7 @@
 				<t t-if="o.move_type == 'out_refund'">
 				  <table class="table outer mt-6">
 					<tr>
-					  <td class="fw-bold" style="width:35%;">No. AUTORIZACIÓN DOCUMENTO:</td>
+					  <td class="fw-bold" style="width:35%;">No. AUTORIZACIÓN DOCUMENTO ORIGEN:</td>
 					  <td><span t-esc="(o.factura_original_id and o.factura_original_id.firma_fel) or ''"/></td>
 					</tr>
 					<tr>
@@ -56,6 +56,23 @@
 					</tr>
 					<!-- AQUI va el bloque de MOTIVO corregido -->
 					<!-- ... -->
+					<tr>
+  <td class="fw-bold">MOTIVO:</td>
+  <td>
+    <!-- Elegimos el primer campo existente sin usar getattr -->
+    <t t-set="motivo_val"
+       t-value="(hasattr(o, 'motivo') and o.motivo)
+                or (hasattr(o, 'motivo_nc') and o.motivo_nc)
+                or (hasattr(o, 'motivo_fel') and o.motivo_fel)
+                or (hasattr(o, 'reason') and o.reason)
+                or (hasattr(o, 'ref') and o.ref)
+                or ''"/>
+    <span t-esc="o.motivo_nc or 'Error en documento'"/>
+
+  </td>
+</tr>
+
+
 					<tr>
 					  <td class="fw-bold">SERIE DOCUMENTO ORIGEN:</td>
 					  <td><span t-esc="(o.factura_original_id and o.factura_original_id.serie_fel) or ''"/></td>
