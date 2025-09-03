@@ -61,6 +61,7 @@ class HrPayslipRun(models.Model):
 
     def _ensure_ready_to_pay(self):
         for run in self:
+            # Accepted terminal states in 18.0 typically 'close' (posted) or 'verify' (awaiting)
             if run.state not in ('close', 'verify'):
                 raise UserError(_("Confirm/Post the payroll batch before creating payments."))
             if not run.payment_journal_id:
