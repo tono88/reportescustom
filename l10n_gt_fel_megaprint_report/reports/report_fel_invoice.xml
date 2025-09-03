@@ -141,6 +141,7 @@
                   <th style="width:12%;" class="text-right">Cantidad</th>
                   <th>Descripción</th>
                   <th style="width:16%;" class="text-right">Precio Unitario</th>
+				  <th style="width:12%;" class="text-right">Impuesto</th>
                   <th style="width:16%;" class="text-right">Total</th>
                 </tr>
               </thead>
@@ -161,6 +162,11 @@
                       <t t-set="sym" t-value="o.currency_id and o.currency_id.symbol or ''"/>
                       <t t-out="'%.2f %s' % (((l.price_total or 0.0) / (l.quantity or 1.0)), sym)"/>
                     </td>
+					<!-- IMPUESTO (diferencia entre total con IVA y subtotal sin IVA) -->
+<td class="text-right">
+  <t t-set="sym" t-value="o.currency_id and o.currency_id.symbol or ''"/>
+  <t t-out="'%.2f %s' % (((l.price_total or 0.0) - (l.price_subtotal or 0.0)), sym)"/>
+</td>
                     <!-- Total CON IVA -->
                     <td class="text-right">
                       <t t-set="sym" t-value="o.currency_id and o.currency_id.symbol or ''"/>
