@@ -1,0 +1,182 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: hr_payroll_payment_ext 18.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-09-02 00:00+0000\n"
+"PO-Revision-Date: 2025-09-02 00:00+0000\n"
+"Last-Translator: ChatGPT\n"
+"Language: es\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. module: hr_payroll_payment_ext
+#: model:ir.ui.view,arch_db:hr_payroll_payment_ext.view_hr_payslip_run_form_payment_ext
+msgid "Payments"
+msgstr "Pagos"
+
+#. module: hr_payroll_payment_ext
+#: model:ir.model.fields,field_description:hr_payroll_payment_ext.field_hr_payslip_run__payment_state
+msgid "Payment State"
+msgstr "Estado del pago"
+
+#. module: hr_payroll_payment_ext
+#: selection:hr.payslip.run,payment_state:0
+msgid "No Payment"
+msgstr "Sin pago"
+
+#. module: hr_payroll_payment_ext
+#: selection:hr.payslip.run,payment_state:0
+msgid "To Pay"
+msgstr "Por pagar"
+
+#. module: hr_payroll_payment_ext
+#: selection:hr.payslip.run,payment_state:0
+msgid "Paid"
+msgstr "Pagado"
+
+#. module: hr_payroll_payment_ext
+#: model:ir.model.fields,field_description:hr_payroll_payment_ext.field_hr_payslip_run__payment_journal_id
+msgid "Payment Journal"
+msgstr "Diario de pago"
+
+#. module: hr_payroll_payment_ext
+#: model:ir.model.fields,field_description:hr_payroll_payment_ext.field_hr_payslip_run__payment_method_line_id
+msgid "Payment Method"
+msgstr "Método de pago"
+
+#. module: hr_payroll_payment_ext
+#: model:ir.model.fields,help:hr_payroll_payment_ext.field_hr_payslip_run__payment_method_line_id
+msgid "Choose the outbound payment method to use (e.g., Check, Manual)."
+msgstr "Elija el método de pago de salida a utilizar (p. ej., Cheque, Manual)."
+
+#. module: hr_payroll_payment_ext
+#: model:ir.model.fields,field_description:hr_payroll_payment_ext.field_hr_payslip_run__payment_date
+msgid "Payment Date"
+msgstr "Fecha de pago"
+
+#. module: hr_payroll_payment_ext
+#: model:ir.model.fields,field_description:hr_payroll_payment_ext.field_hr_payslip_run__payment_mode
+msgid "Payment Mode"
+msgstr "Modo de pago"
+
+#. module: hr_payroll_payment_ext
+#: selection:hr.payslip.run,payment_mode:0
+msgid "Per employee (one payment each)"
+msgstr "Por empleado (un pago por cada uno)"
+
+#. module: hr_payroll_payment_ext
+#: selection:hr.payslip.run,payment_mode:0
+msgid "One payment for whole batch"
+msgstr "Un pago para todo el lote"
+
+#. module: hr_payroll_payment_ext
+#: model:ir.model.fields,field_description:hr_payroll_payment_ext.field_hr_payslip_run__payment_ids
+msgid "Related Payments"
+msgstr "Pagos relacionados"
+
+#. module: hr_payroll_payment_ext
+#: model:ir.ui.view,arch_db:hr_payroll_payment_ext.view_hr_payslip_run_form_payment_ext
+msgid "Create Payments"
+msgstr "Crear pagos"
+
+#. module: hr_payroll_payment_ext
+#: model:ir.ui.view,arch_db:hr_payroll_payment_ext.view_hr_payslip_run_form_payment_ext
+msgid "Create Check Payments"
+msgstr "Crear pagos con cheque"
+
+#. module: hr_payroll_payment_ext
+#: model:ir.ui.view,arch_db:hr_payroll_payment_ext.view_hr_payslip_run_form_payment_ext
+msgid "Mark Paid"
+msgstr "Marcar como pagado"
+
+#. module: hr_payroll_payment_ext
+#: model:ir.ui.view,arch_db:hr_payroll_payment_ext.view_hr_payslip_run_form_payment_ext
+msgid "View Payments"
+msgstr "Ver pagos"
+
+#. module: hr_payroll_payment_ext
+#: model:ir.ui.view,arch_db:hr_payroll_payment_ext.view_hr_payslip_form_payment_ext
+msgid "Create Payment"
+msgstr "Crear pago"
+
+#. module: hr_payroll_payment_ext
+#: model:ir.ui.view,arch_db:hr_payroll_payment_ext.view_hr_payslip_form_payment_ext
+msgid "Create Check Payment"
+msgstr "Crear pago con cheque"
+
+#. module: hr_payroll_payment_ext
+#: model:ir.ui.view,arch_db:hr_payroll_payment_ext.view_hr_payslip_form_payment_ext
+msgid "View Payment"
+msgstr "Ver pago"
+
+#. module: hr_payroll_payment_ext
+#: model:ir.model.fields,field_description:hr_payroll_payment_ext.field_hr_payslip__payment_id
+msgid "Payment"
+msgstr "Pago"
+
+#. module: hr_payroll_payment_ext
+#: code:addons/hr_payroll_payment_ext/models/hr_payroll_payment.py:0
+#, python-format
+msgid "Employee %s has no payable Partner (private/work contact) set."
+msgstr "El empleado %s no tiene configurado un contacto pagable (dirección privada/contacto de trabajo)."
+
+#. module: hr_payroll_payment_ext
+#: code:addons/hr_payroll_payment_ext/models/hr_payroll_payment.py:0
+#, python-format
+msgid "Close (post) the payroll batch before creating payments."
+msgstr "Cierre (publique) el lote de nómina antes de crear pagos."
+
+#. module: hr_payroll_payment_ext
+#: code:addons/hr_payroll_payment_ext/models/hr_payroll_payment.py:0
+msgid "Select a Payment Journal."
+msgstr "Seleccione un Diario de pago."
+
+#. module: hr_payroll_payment_ext
+#: code:addons/hr_payroll_payment_ext/models/hr_payroll_payment.py:0
+#, python-format
+msgid "Journal %s has no outbound payment methods configured."
+msgstr "El diario %s no tiene métodos de pago de salida configurados."
+
+#. module: hr_payroll_payment_ext
+#: code:addons/hr_payroll_payment_ext/models/hr_payroll_payment.py:0
+msgid "The selected journal has no 'Check' outbound payment method.\nAdd it in Accounting → Configuration → Journals → Payment Methods."
+msgstr "El diario seleccionado no tiene método de pago de salida 'Cheque'.\nAgregue uno en Contabilidad → Configuración → Diarios → Métodos de pago."
+
+#. module: hr_payroll_payment_ext
+#: code:addons/hr_payroll_payment_ext/models/hr_payroll_payment.py:0
+msgid "Confirm the payslip (Done) or close its batch before creating payments."
+msgstr "Confirme el recibo (Hecho) o cierre su lote antes de crear pagos."
+
+#. module: hr_payroll_payment_ext
+#: code:addons/hr_payroll_payment_ext/models/hr_payroll_payment.py:0
+msgid "Select a Payment Journal on the batch (Procesamientos de nóminas)."
+msgstr "Seleccione un Diario de pago en el lote (Procesamientos de nóminas)."
+
+#. module: hr_payroll_payment_ext
+#: code:addons/hr_payroll_payment_ext/models/hr_payroll_payment.py:0
+msgid "No amount found on payslips."
+msgstr "No se encontró importe en los recibos."
+
+#. module: hr_payroll_payment_ext
+#: code:addons/hr_payroll_payment_ext/models/hr_payroll_payment.py:0
+msgid "No amount found on this payslip."
+msgstr "No se encontró importe en este recibo."
+
+#. module: hr_payroll_payment_ext
+#: code:addons/hr_payroll_payment_ext/models/hr_payroll_payment.py:0
+#, python-format
+msgid "Payroll %s - %s"
+msgstr "Nómina %s - %s"
+
+#. module: hr_payroll_payment_ext
+#: code:addons/hr_payroll_payment_ext/models/hr_payroll_payment.py:0
+#, python-format
+msgid "Payroll %s - Batch Payment"
+msgstr "Nómina %s - Pago por lote"
+
+#. module: hr_payroll_payment_ext
+#: model:ir.model.fields,field_description:hr_payroll_payment_ext.field_hr_payslip_run__payment_count
+msgid "Payments"
+msgstr "Pagos"
