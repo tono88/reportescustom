@@ -59,15 +59,7 @@
 					<tr>
   <td class="fw-bold">MOTIVO:</td>
   <td>
-    <!-- Elegimos el primer campo existente sin usar getattr -->
-    <t t-set="motivo_val"
-       t-value="(hasattr(o, 'motivo') and o.motivo)
-                or (hasattr(o, 'motivo_nc') and o.motivo_nc)
-                or (hasattr(o, 'motivo_fel') and o.motivo_fel)
-                or (hasattr(o, 'reason') and o.reason)
-                or (hasattr(o, 'ref') and o.ref)
-                or ''"/>
-    <span t-esc="'Error en documento'"/>
+    Error en documento
 
   </td>
 </tr>
