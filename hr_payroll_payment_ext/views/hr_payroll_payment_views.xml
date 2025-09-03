@@ -1,12 +1,9 @@
-
-<?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <record id="view_hr_payslip_run_form_payment_ext" model="ir.ui.view">
         <field name="name">hr.payslip.run.form.payment.ext</field>
         <field name="model">hr.payslip.run</field>
         <field name="inherit_id" ref="payroll.hr_payslip_run_view_form"/>
         <field name="arch" type="xml">
-            <!-- Smart button -->
             <xpath expr="//sheet" position="inside">
                 <div class="oe_button_box" name="button_box">
                     <button type="object" name="action_view_payments" class="oe_stat_button" icon="fa-money">
@@ -15,7 +12,6 @@
                 </div>
             </xpath>
 
-            <!-- Payments block -->
             <xpath expr="//sheet/group[@name='other']" position="after">
                 <group string="Payments">
                     <group>
