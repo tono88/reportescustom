@@ -67,7 +67,7 @@
                 or (hasattr(o, 'reason') and o.reason)
                 or (hasattr(o, 'ref') and o.ref)
                 or ''"/>
-    <span t-esc="o.motivo_nc or 'Error en documento'"/>
+    <span t-esc="'Error en documento'"/>
 
   </td>
 </tr>
