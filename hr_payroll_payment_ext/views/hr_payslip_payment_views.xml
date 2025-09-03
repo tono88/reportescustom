@@ -6,7 +6,7 @@
         <field name="arch" type="xml">
             <xpath expr="//form/header" position="inside">
                 <button name="action_create_payment" type="object" string="Create Payment" class="btn-primary" invisible="payment_id or state != 'done'"/>
-                <button name="action_create_check_payment" type="object" string="Create Check Payment" invisible="payment_id or state != 'done'"/>
+                <button name="action_create_payment" type="object" string="Create Check Payment" context="{'prefer_check': True}" invisible="payment_id or state != 'done'"/>
                 <button name="action_view_payment" type="object" string="View Payment" invisible="not payment_id"/>
             </xpath>
             <xpath expr="//form/sheet//group[@name='top']" position="after">

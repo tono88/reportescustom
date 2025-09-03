@@ -20,7 +20,7 @@
                     </group>
                     <group>
                         <button name="action_create_payments" type="object" string="Create Payments" class="btn-primary" invisible="payment_state == 'paid'"/>
-                        <button name="action_create_check_payments" type="object" string="Create Check Payments" invisible="payment_state == 'paid'"/>
+                        <button name="action_create_payments" type="object" string="Create Check Payments" context="{'prefer_check': True}" invisible="payment_state == 'paid'"/>
                         <button name="action_mark_paid" type="object" string="Mark Paid" invisible="payment_state == 'paid'"/>
                         <button name="action_view_payments" type="object" string="View Payments"/>
                         <field name="payment_ids" widget="many2many_tags" readonly="1"/>

@@ -3,8 +3,6 @@ from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 
 def _resolve_employee_partner(employee):
-    """Return the best partner to pay the employee, compatible with Odoo 17/18 field names."""
-    # Try common fields in order of preference
     field_candidates = ['address_home_id', 'private_address_id', 'work_contact_id', 'user_partner_id', 'address_id']
     for fname in field_candidates:
         if fname in employee._fields:
@@ -83,9 +81,12 @@ class HrPayslipRun(models.Model):
                 raise UserError(_("Select a Payment Journal."))
 
     def action_create_payments(self, prefer_check=False, auto_post=True):
+        # prefer_check can come via context when triggered from the view
+        ctx_prefer_check = bool(self.env.context.get('prefer_check'))
+        prefer_check = prefer_check or ctx_prefer_check
         self._ensure_ready_to_pay()
         for run in self:
-            journal = self.payment_journal_id
+            journal = run.payment_journal_id
             method_line = self._pick_payment_method_line(journal, prefer_check=prefer_check)
             if run.payment_mode == 'per_employee':
                 payments = self._create_payments_per_employee(run, journal, method_line, auto_post=auto_post)
@@ -184,6 +185,8 @@ class HrPayslip(models.Model):
         self.ensure_one()
         run = self._ensure_ready_to_pay_single()
         journal = run.payment_journal_id
+        ctx_prefer_check = bool(self.env.context.get('prefer_check'))
+        prefer_check = prefer_check or ctx_prefer_check
         method_line = run._pick_payment_method_line(journal, prefer_check=prefer_check)
         amount = self._get_net_amount()
         if not amount:
@@ -207,10 +210,6 @@ class HrPayslip(models.Model):
         if run:
             run.payment_ids = [(4, payment.id)]
         return True
-
-    def action_create_check_payment(self):
-        """Create a CHECK payment for this payslip."""
-        return self.action_create_payment(prefer_check=True, auto_post=True)
 
     def action_view_payment(self):
         self.ensure_one()
