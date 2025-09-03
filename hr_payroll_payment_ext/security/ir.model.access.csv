@@ -1,2 +1,0 @@
-id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_hr_payslip_run_payments,access_hr_payslip_run_payments,model_hr_payslip_run,base.group_user,1,1,1,0
