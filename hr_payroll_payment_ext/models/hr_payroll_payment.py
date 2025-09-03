@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError
@@ -46,8 +45,7 @@ class HrPayslipRun(models.Model):
         net_line = slip.line_ids.filtered(lambda l: l.code and l.code.upper() in ('NET', 'NETO'))
         if net_line:
             return net_line[0].total
-        total = sum(slip.line_ids.filtered(lambda l: l.category_id and l.category_id.code in ('BASIC','ALW','ALWANCE','GROSS')).mapped('total')) \
-                - sum(slip.line_ids.filtered(lambda l: l.category_id and l.category_id.code in ('DED','DEDUCTION')).mapped('total'))
+        total = sum(slip.line_ids.filtered(lambda l: l.category_id and l.category_id.code in ('BASIC','ALW','ALWANCE','GROSS')).mapped('total'))                 - sum(slip.line_ids.filtered(lambda l: l.category_id and l.category_id.code in ('DED','DEDUCTION')).mapped('total'))
         return total
 
     def _pick_payment_method_line(self, journal, prefer_check=False):
@@ -88,7 +86,7 @@ class HrPayslipRun(models.Model):
         return True
 
     def action_create_check_payments(self):
-        \"\"\"Convenience action to force CHECK method when available.\"\"\"
+        """Convenience action to force CHECK method when available."""
         return self.action_create_payments(prefer_check=True, auto_post=True)
 
     def _create_payments_per_employee(self, run, journal, method_line, auto_post=True):

@@ -3,7 +3,7 @@
 {
     'name': 'Payroll Payments from Batch (Community)',
     'summary': 'Create and track payments (including checks) directly from OCA payroll batches',
-    'version': '18.0.1.0.5',
+    'version': '18.0.1.0.6',
     'category': 'Human Resources/Payroll',
     'depends': ['payroll', 'account'],
     'author': 'Blockera Bustamante / ChatGPT',
