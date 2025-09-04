@@ -1,13 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-
-    <record id="res_config_settings_view_form" model="ir.ui.view">
-        <field name="name">res.config.settings.view.form.inherit.account.budget</field>
-        <field name="model">res.config.settings</field>
-        <field name="inherit_id" ref="account.res_config_settings_view_form"/>
-        <field name="arch" type="xml">
-            <xpath expr="//setting[@id='account_budget']" position="replace"/>
-        </field>
-    </record>
-
+  <record id="res_config_settings_view_form_inherit_budget" model="ir.ui.view">
+    <field name="name">res.config.settings.view.form.inherit.account.budget</field>
+    <field name="model">res.config.settings</field>
+    <field name="inherit_id" ref="account.res_config_settings_view_form"/>
+    <field name="arch" type="xml">
+      <!-- En Odoo 18 ya no hay <setting>; insertamos una caja en el bloque de contabilidad -->
+      <xpath expr="//div[@id='account_settings']" position="inside">
+        <div class="o_setting_box" id="account_budget">
+          <div class="o_setting_left_pane">
+            <label string="Presupuestos (Budget)"/>
+          </div>
+          <div class="o_setting_right_pane">
+            <div class="content-group">
+              <div class="row">
+                <div class="col-12">
+                  <span class="text-muted">
+                    Habilita la gestión de presupuestos, posiciones presupuestarias y análisis de ejecución.
+                    (La funcionalidad ya está activa vía menús sin necesidad de un toggle en Ajustes).
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </xpath>
+    </field>
+  </record>
 </odoo>
