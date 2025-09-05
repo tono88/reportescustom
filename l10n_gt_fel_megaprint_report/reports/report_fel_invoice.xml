@@ -142,7 +142,7 @@
                   <th style="width:12%;" class="text-right">Cantidad</th>
                   <th>Descripción</th>
                   <th style="width:16%;" class="text-right">Precio Unitario</th>
-				  <th style="width:12%;" class="text-right">Impuesto</th>
+				  <th style="width:12%;" class="text-right">Impuesto IVA</th>
                   <th style="width:16%;" class="text-right">Total</th>
                 </tr>
               </thead>
