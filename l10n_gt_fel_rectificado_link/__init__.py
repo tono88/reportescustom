@@ -1,9 +1,16 @@
 from . import models
 
-def post_init_set_original_links(cr, registry):
-    """Backfill del campo en documentos existentes."""
+def post_init_set_original_links(env_or_cr, registry=None):
+    """
+    Hook post-instalación con firma flexible para Odoo 18.
+    Odoo 18 llama con `env`; versiones previas con `(cr, registry)`.
+    """
     from odoo.api import Environment, SUPERUSER_ID
-    env = Environment(cr, SUPERUSER_ID, {})
+    # Detectar si recibimos env o cr
+    if registry is None:
+        env = env_or_cr
+    else:
+        env = Environment(env_or_cr, SUPERUSER_ID, {})
     moves = env["account.move"].search([
         ("factura_original_id", "=", False),
         ("state", "!=", "cancel"),
