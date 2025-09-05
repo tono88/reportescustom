@@ -1,19 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Add toggle to the Account Journal form -->
     <record id="view_account_journal_form_instant_reconcile" model="ir.ui.view">
         <field name="name">account.journal.form.instant.reconcile</field>
         <field name="model">account.journal</field>
         <field name="inherit_id" ref="account.view_account_journal_form"/>
         <field name="arch" type="xml">
-            <!-- Place it under the Advanced Settings / Ajustes avanzados group if present; otherwise in main sheet -->
-            <xpath expr="//sheet//group[@name='advanced']" position="inside">
-                <group>
+            <!-- Safer target: inject a new group inside the main sheet -->
+            <xpath expr="//sheet" position="inside">
+                <group string="Reconciliación">
                     <field name="instant_reconcile_on_post"/>
                 </group>
-            </xpath>
-            <xpath expr="//sheet" position="inside">
-                <group attrs="{'invisible': [('instant_reconcile_on_post','!=', False)]}"/>
             </xpath>
         </field>
     </record>
