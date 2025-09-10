@@ -85,7 +85,9 @@
                   </div>
                   <div>NIT: <span t-esc="o.company_id.vat or ''"/></div>
 				  <div style="text-transform:uppercase;">BLOCKERA BUSTAMANTE</div>
-                  <div t-esc="(o.company_id.partner_id.contact_address) or (o.company_id.contact_address) or ''"/>
+                  <div t-if="o.company_id.partner_id"
+					t-raw="o.company_id.partner_id._display_address(without_company=True).replace('\n','<br/>')"/>
+
                 </td>
                 <td style="width:22.5%;">
                   <div class="fw-bold">FECHA DE EMISIÓN:</div>
