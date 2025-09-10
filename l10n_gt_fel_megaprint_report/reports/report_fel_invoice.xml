@@ -86,7 +86,7 @@
                   <div>NIT: <span t-esc="o.company_id.vat or ''"/></div>
 				  <div style="text-transform:uppercase;">BLOCKERA BUSTAMANTE</div>
                   <!-- SOLO DIRECCIÓN, sin repetir la empresa -->
-					<div style="white-space: pre-line;"
+					<div 
 						 t-esc="(o.company_id.partner_id and o.company_id.partner_id._display_address(without_company=True)) or ''"/>
 
                 </td>
