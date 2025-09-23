@@ -89,13 +89,28 @@
 				<!--	<div 
 						 t-esc="(o.company_id.partner_id and o.company_id.partner_id._display_address(without_company=True)) or ''"/>
 -->
-				<!-- Tomar la dirección del diario si está configurada; si no, caer a la de la compañía -->
-				<t t-set="addr_partner"
-				   t-value="(o.journal_id and hasattr(o.journal_id, 'direccion') and o.journal_id.direccion) or o.company_id.partner_id"/>
 
-				<!-- Imprimir SOLO la dirección (sin repetir el nombre de empresa), respetando saltos de línea -->
-				<div style="white-space: pre-line;"
-					 t-esc="addr_partner and addr_partner._display_address(without_company=True) or ''"/>
+
+<!-- 1) Elegir el partner de dirección:
+      - Diario.direccion (res.partner) si existe
+      - Si no, el partner de la compañía -->
+<t t-set="addr_partner"
+   t-value="(o.journal_id and hasattr(o.journal_id, 'direccion') and o.journal_id.direccion) or o.company_id.partner_id"/>
+
+<!-- 2) Construir la dirección en una variable, con fallback a contact_address -->
+<t t-if="addr_partner">
+  <t t-set="addr_str"
+     t-value="(hasattr(addr_partner, '_display_address') and addr_partner._display_address(without_company=True)) or (addr_partner.contact_address or '')"/>
+  <!-- 3) Imprimir respetando saltos de línea sin meter <br/> en atributos -->
+  <div style="white-space: pre-line;" t-esc="addr_str or ''"/>
+</t>
+<t t-if="not addr_partner">
+  <div/>
+</t>
+
+
+
+
 
                 </td>
                 <td style="width:22.5%;">
