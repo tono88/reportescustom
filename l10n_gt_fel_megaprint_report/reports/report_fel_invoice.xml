@@ -91,23 +91,15 @@
 -->
 
 
-<!-- 1) Elegir el partner de dirección:
-      - Diario.direccion (res.partner) si existe
-      - Si no, el partner de la compañía -->
-<t t-set="addr_partner"
-   t-value="(o.journal_id and hasattr(o.journal_id, 'direccion') and o.journal_id.direccion) or o.company_id.partner_id"/>
+<!-- Dirección del emisor: prioriza la del Diario (campo many2one 'direccion'),
+     si no existe usa la del partner de la compañía -->
+<t t-set="ap" t-value="(o.journal_id and getattr(o.journal_id, 'direccion', False)) or o.company_id.partner_id"/>
 
-<!-- 2) Construir la dirección en una variable, con fallback a contact_address -->
-<t t-if="addr_partner">
-  <t t-set="addr_str"
-     t-value="(hasattr(addr_partner, '_display_address') and addr_partner._display_address(without_company=True)) or (addr_partner.contact_address or '')"/>
-  <!-- 3) Imprimir respetando saltos de línea sin meter <br/> en atributos -->
-  <div style="white-space: pre-line;" t-esc="addr_str or ''"/>
-</t>
-<t t-if="not addr_partner">
-  <div/>
-</t>
+<!-- Construir la dirección en una variable (solo dirección, sin nombre de empresa) -->
+<t t-set="addr_str" t-value="ap and ap._display_address(without_company=True) or ''"/>
 
+<!-- Imprimir respetando saltos de línea (evita meter <br/> en atributos) -->
+<div style="white-space: pre-line;"><t t-esc="addr_str"/></div>
 
 
 
