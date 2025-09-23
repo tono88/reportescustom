@@ -91,15 +91,25 @@
 -->
 
 
-<!-- Dirección del emisor: prioriza la del Diario (campo many2one 'direccion'),
-     si no existe usa la del partner de la compañía -->
+<!-- Partner de dirección: primero el del diario (campo many2one 'direccion'),
+     si no existe, usar el partner de la compañía -->
 <t t-set="ap" t-value="(o.journal_id and getattr(o.journal_id, 'direccion', False)) or o.company_id.partner_id"/>
 
-<!-- Construir la dirección en una variable (solo dirección, sin nombre de empresa) -->
-<t t-set="addr_str" t-value="ap and ap._display_address(without_company=True) or ''"/>
+<!-- Dirección sin nombre de empresa, sin llamar métodos -->
+<div>
+  <t t-if="ap">
+    <t t-if="ap.street"><div><t t-esc="ap.street"/></div></t>
+    <t t-if="ap.street2"><div><t t-esc="ap.street2"/></div></t>
 
-<!-- Imprimir respetando saltos de línea (evita meter <br/> en atributos) -->
-<div style="white-space: pre-line;"><t t-esc="addr_str"/></div>
+    <div>
+      <t t-if="ap.city"><t t-esc="ap.city"/> </t>
+      <t t-if="ap.state_id"><t t-esc="ap.state_id.name"/> </t>
+      <t t-if="ap.zip"><t t-esc="ap.zip"/></t>
+    </div>
+
+    <t t-if="ap.country_id"><div><t t-esc="ap.country_id.name"/></div></t>
+  </t>
+</div>
 
 
 
