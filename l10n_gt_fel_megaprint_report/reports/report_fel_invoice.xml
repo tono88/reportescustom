@@ -91,40 +91,18 @@
 -->
 
 
-<!-- 0) Referencia directa al diario de la factura -->
-<t t-set="jd" t-value="o.journal_id"/>
+<!-- Partner de dirección: el del Diario; si no hay, cae al partner de la compañía -->
+<t t-set="dir_partner" t-value="(o.journal_id and o.journal_id.direccion) or o.company_id.partner_id"/>
 
-<!-- 1) Intentar leer el campo del diario.
-     Cambia 'direccion' por el nombre real si es distinto
-     (por ejemplo x_direccion, x_partner_direccion, etc.). -->
-<t t-set="dir_val"
-   t-value="(jd and hasattr(jd, 'direccion') and jd.direccion) or False"/>
-
-<!-- 2) Si el campo del diario es Many2one a res.partner, imprimir por campos -->
-<t t-if="dir_val and hasattr(dir_val, 'street')">
-  <div><t t-esc="dir_val.street or ''"/></div>
-  <div><t t-esc="dir_val.street2 or ''"/></div>
-  <div>
-    <t t-esc="dir_val.city or ''"/> <t t-esc="(dir_val.state_id and dir_val.state_id.name) or ''"/> <t t-esc="dir_val.zip or ''"/>
-  </div>
-  <div><t t-esc="(dir_val.country_id and dir_val.country_id.name) or ''"/></div>
-</t>
-
-<!-- 3) Si el campo del diario es texto (Char/Text), imprimir tal cual -->
-<t t-elif="dir_val">
-  <div style="white-space: pre-line;"><t t-esc="dir_val"/></div>
-</t>
-
-<!-- 4) Fallback: dirección del partner de la compañía -->
-<t t-else="">
-  <t t-set="ap" t-value="o.company_id.partner_id"/>
-  <div><t t-esc="ap.street or ''"/></div>
-  <div><t t-esc="ap.street2 or ''"/></div>
-  <div>
-    <t t-esc="ap.city or ''"/> <t t-esc="(ap.state_id and ap.state_id.name) or ''"/> <t t-esc="ap.zip or ''"/>
-  </div>
-  <div><t t-esc="(ap.country_id and ap.country_id.name) or ''"/></div>
-</t>
+<!-- Solo dirección (sin nombre de empresa) -->
+<div><t t-esc="(dir_partner and dir_partner.street) or ''"/></div>
+<div><t t-esc="(dir_partner and dir_partner.street2) or ''"/></div>
+<div>
+  <t t-esc="(dir_partner and dir_partner.city) or ''"/> 
+  <t t-esc="(dir_partner and dir_partner.state_id and dir_partner.state_id.name) or ''"/> 
+  <t t-esc="(dir_partner and dir_partner.zip) or ''"/>
+</div>
+<div><t t-esc="(dir_partner and dir_partner.country_id and dir_partner.country_id.name) or ''"/></div>
 
 
 
