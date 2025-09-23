@@ -91,25 +91,18 @@
 -->
 
 
-<!-- Partner de dirección: primero el del diario (campo many2one 'direccion'),
-     si no existe, usar el partner de la compañía -->
-<t t-set="ap" t-value="(o.journal_id and getattr(o.journal_id, 'direccion', False)) or o.company_id.partner_id"/>
+<!-- Dirección del emisor: primero la del Diario (many2one 'direccion'), si no, la del partner de la compañía -->
+<t t-set="ap" t-value="(o.journal_id and o.journal_id.direccion) or o.company_id.partner_id"/>
 
-<!-- Dirección sin nombre de empresa, sin llamar métodos -->
+<!-- Solo dirección (sin nombre de empresa) -->
+<div><t t-esc="(ap and ap.street) or ''"/></div>
+<div><t t-esc="(ap and ap.street2) or ''"/></div>
 <div>
-  <t t-if="ap">
-    <t t-if="ap.street"><div><t t-esc="ap.street"/></div></t>
-    <t t-if="ap.street2"><div><t t-esc="ap.street2"/></div></t>
-
-    <div>
-      <t t-if="ap.city"><t t-esc="ap.city"/> </t>
-      <t t-if="ap.state_id"><t t-esc="ap.state_id.name"/> </t>
-      <t t-if="ap.zip"><t t-esc="ap.zip"/></t>
-    </div>
-
-    <t t-if="ap.country_id"><div><t t-esc="ap.country_id.name"/></div></t>
-  </t>
+  <t t-esc="(ap and ap.city) or ''"/>
+  <t t-esc="(ap and ap.state_id and ap.state_id.name) or ''"/>
+  <t t-esc="(ap and ap.zip) or ''"/>
 </div>
+<div><t t-esc="(ap and ap.country_id and ap.country_id.name) or ''"/></div>
 
 
 
