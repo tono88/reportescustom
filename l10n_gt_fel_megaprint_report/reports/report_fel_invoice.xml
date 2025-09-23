@@ -86,8 +86,16 @@
                   <div>NIT: <span t-esc="o.company_id.vat or ''"/></div>
 				  <div style="text-transform:uppercase;">BLOCKERA BUSTAMANTE</div>
                   <!-- SOLO DIRECCIÓN, sin repetir la empresa -->
-					<div 
+				<!--	<div 
 						 t-esc="(o.company_id.partner_id and o.company_id.partner_id._display_address(without_company=True)) or ''"/>
+-->
+				<!-- Tomar la dirección del diario si está configurada; si no, caer a la de la compañía -->
+				<t t-set="addr_partner"
+				   t-value="(o.journal_id and hasattr(o.journal_id, 'direccion') and o.journal_id.direccion) or o.company_id.partner_id"/>
+
+				<!-- Imprimir SOLO la dirección (sin repetir el nombre de empresa), respetando saltos de línea -->
+				<div style="white-space: pre-line;"
+					 t-esc="addr_partner and addr_partner._display_address(without_company=True) or ''"/>
 
                 </td>
                 <td style="width:22.5%;">
