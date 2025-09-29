@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+    <t t-name="bi_pos_multi_warehouse.PosStockWarehouse">
+        <Dialog size="'md'">
+            <t t-set-slot="header">
+               Warehouses
+            </t>
+            <div class="main_div_pos_session">
+                <table class="table">
+                    <thead>
+                        <th name="Name_warehouse" >Warehouse</th>
+                        <th name="qty_available">Available</th>
+                        <th name="qty" >Qty</th>
+                    </thead>
+                    <tbody>
+                        <br></br>
+                        <tr t-foreach="props.rec || []" t-as="qty"  t-key="qty_index">
+                        <td name="Name_warehouse">
+                            <t t-esc="qty['location']"/>
+                        </td>
+                        <td name="qty_available">
+                            <t t-esc="qty['quantity']"/>
+                        </td>
+                        <td class="entered_item_qty">
+                        <input id ="entered_item_qty" t-att-loc="qty['location']" t-att-loc-id="qty['location']" t-att-locdbid="qty['id']" t-att-qty-id="qty['quantity']"  type="text" class="stock_id"  name="stock_qty"/>
+                        </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <br/> 
+                 <t t-set-slot="footer">
+                    <button class="btn btn-primary btn-lg lh-lg o-default-button" t-on-click="apply">Apply</button>
+                    <button class="btn btn-secondary btn-lg lh-lg o-default-button" t-on-click="props.close">Cancel</button>
+                </t>
+           </div>
+        </Dialog>
+    </t>
+</templates>
