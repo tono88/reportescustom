@@ -178,6 +178,7 @@
                   <th style="width:8%;">Tipo</th>
                   <th style="width:12%;" class="text-right">Cantidad</th>
                   <th>Descripción</th>
+                  <th style="width:14%;">Almacén</th>
                   <th style="width:16%;" class="text-right">Precio Unitario</th>
 				  <th style="width:12%;" class="text-right">Impuesto IVA</th>
                   <th style="width:16%;" class="text-right">Total</th>
@@ -195,6 +196,7 @@
                       <span t-if="l.product_uom_id" t-esc="l.product_uom_id.name"/>
                     </td>
                     <td t-esc="l.name"/>
+                    <td><span t-esc="o.get_wh_for_line(l)"/></td>
                     <!-- Precio unitario CON IVA = price_total / quantity -->
                     <td class="text-right">
                       <t t-set="sym" t-value="o.currency_id and o.currency_id.symbol or ''"/>
