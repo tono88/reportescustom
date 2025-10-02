@@ -53,17 +53,13 @@ patch(ProductScreen.prototype, "skit_recall_pay_later", {
             const toLoad = stored[payload.id];
             if (!toLoad) return;
 
-            // Create new order and load content
             const newOrder = this.pos.add_new_order();
             newOrder.init_from_JSON(toLoad);
 
-            // Remove from storage
             const remaining = stored.filter((_, i) => i !== payload.id);
             saveStoredOrders(remaining);
 
-            this.notification.add(this.env._t("Orden cargada. Proceda al cobro."), {
-                type: "success",
-            });
+            this.notification.add(this.env._t("Orden cargada. Proceda al cobro."), { type: "success" });
             this.showScreen("PaymentScreen");
         }
     },

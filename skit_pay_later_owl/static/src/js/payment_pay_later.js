@@ -49,7 +49,6 @@ patch(PaymentScreen.prototype, "skit_pay_later_payment", {
             return;
         }
 
-        // Export order JSON to be recalled later
         const exported = order.export_as_JSON();
         exported.skit_pay_later = true;
         exported.skit_pay_later_saved_at = new Date().toISOString();
@@ -58,13 +57,11 @@ patch(PaymentScreen.prototype, "skit_pay_later_payment", {
         stored.push(exported);
         saveStoredOrders(stored);
 
-        // Reset current order to continue selling
         this.pos.add_new_order();
 
         this.notification.add(this.env._t("Orden guardada como 'Pagar después'"), {
             type: "success",
         });
-        // Navigate back to ProductScreen
         this.showScreen("ProductScreen");
     },
 });

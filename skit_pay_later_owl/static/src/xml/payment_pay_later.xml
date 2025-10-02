@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
-    <!-- Inject 'Pagar después' button into PaymentScreen -->
     <t t-name="skit_pay_later.PaymentScreenPatch" owl="1">
         <xpath expr="//div[contains(@class,'payment-buttons')]" position="inside">
             <button class="pay-later-btn" t-on-click="onClickPayLater">
