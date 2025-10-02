@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+    <t t-inherit="point_of_sale.PaymentScreenBack" t-inherit-mode="extension">
+        <xpath expr="//button[hasclass('validation')]" position="replace">
+            <button class="button back back-button validation btn btn-light btn-lg w-50 py-3 lh-lg "
+                t-on-click="() => pos.onClickBackButton()">
+                <span class="back_text">Back</span>
+            </button>
+        </xpath>
+    </t>
+    <t t-inherit="point_of_sale.PaymentScreenDue" t-inherit-mode="extension">
+        <xpath expr="//section[hasclass('paymentlines-container')]" position="replace">
+            <section class="paymentlines-container rounded-3 bg-view"
+                t-att-class="{'paymentlines-empty': paymentLines.length === 0 }">
+                <div class="total text-center py-2 py-lg-4 text-success">
+                    <t t-if="this.pos.get_order().get_is_pending()" >
+                        <t t-esc="this.env.utils.formatCurrency(this.pos.get_order().get_p_invoice_amt())"/>
+                    </t>
+                    <t t-else="" >
+                        <t t-esc="this.env.utils.formatCurrency(currentOrder.getTotalDue())" />
+                    </t>
+                </div>
+            </section>
+        </xpath>
+    </t>
+
+    <t t-inherit="point_of_sale.PaymentScreenValidate" t-inherit-mode="extension">
+        <xpath expr="//button[hasclass('button')]" position="replace">
+            <t t-if="currentOrder.get_is_pending()" >
+                <button class="button next validation btn btn-primary btn-lg w-50 py-3 lh-lg"
+                    t-attf-class="{{currentOrder.get_is_pending() and currentOrder._isValidEmptyOrder() ? 'highlight' : 'disabled'}}"
+                    t-on-click="() => this.validateOrder()">
+                    <span class="next_text">Validate</span>
+                </button>
+            </t>
+            <t t-else="">
+                <button class="button next validation btn btn-primary btn-lg w-50 py-3 lh-lg"
+                    t-attf-class="{{currentOrder.is_paid() and currentOrder._isValidEmptyOrder() ? 'highlight' : 'disabled'}}"
+                    t-on-click="() => this.validateOrder()">
+                    <span class="next_text">Validate</span>
+                </button>
+            </t>
+        </xpath>
+    </t>
+</templates>

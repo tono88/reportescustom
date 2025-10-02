@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+    <!-- Designing the Pay Later Screen in POS -->
+    <t t-name="PayLaterScreen" owl="1">
+        <div class="partnerlist-screen screen h-100 d-flex flex-column bg-100">
+            <div class="controls d-flex align-items-center justify-content-between mt-1 mt-md-0 p-2 bg-400">
+                <!-- Back Button -->
+                <div class="buttons d-flex gap-2">
+                    <button class="discard btn btn-lg btn-light"
+                            t-on-click="() => this.pos.showScreen('ProductScreen')">
+                        <span class="search-icon">
+                            <i class="fa fa-angle-double-left"></i>
+                        </span>
+                        Back
+                    </button>
+                </div>
+                <!-- Display Client Name -->
+                <div class="client-name-top d-flex align-items-center justify-content-center flex-grow-1">
+                    <t t-if="pos.get_order().get_partner()">
+                        <div class="partner-name"
+                             style=" font-size: 24px; font-weight: bold;">
+                            <t t-esc="pos.get_order().get_partner().name"/>
+                        </div>
+                    </t>
+                </div>
+            </div>
+            <!-- Pending Invoice -->
+            <div class="orders overflow-y-auto flex-grow-1">
+                <h3 style="margin-left: 48%;">Pending Invoice</h3>
+                <table id="pending_invoice_otable" class="partner-list table table-striped w-100">
+                     <thead style="background-color: #714B67; color: white;">
+                        <tr class="de_back">
+                            <th></th>
+                            <th>S.no</th>
+                            <th>Order Type</th>
+                            <th>Order Ref</th>
+                            <th>Invoice Ref</th>
+                            <th>Invoice Date</th>
+                            <th>Invoice Amount</th>
+                            <th>UnPaid Amount</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <t t-foreach="state.order['pendinginvoice']" t-as="line" t-key="line.id">
+                            <tr class="tbody_search" t-att-id="line.id" style="background-color: #f0f0f0;" >
+                                <td>
+                                    <a t-att-id="line.id"  class="expand_func" style="cursor:pointer;" t-on-click="() => this.toggleExpand(line)">
+                                        <i class=" fa fa-angle-double-down fa-angle-double-up " aria-hidden="true">
+                                        <span t-attf-id="symbolcollapse_{{line.id}}"></span></i></a>
+                                </td>
+                                <td class='pending_invoice_id'><t t-esc='line.id'/></td>
+                                <td><t t-esc='line.sno'/></td>
+                                <td class="pending_order_type"><t t-esc='line.type'/></td>
+                                <td><t t-esc='line.name'/></td>
+                                <td><t t-esc='line.invoice_ref'/></td>
+                                <td><t t-esc='line.date_invoice'/></td>
+                                <td><t t-esc='line.amount_total'/></td>
+                                <td class="unpaid_amount"><t t-esc='line.unpaid_amount'/></td>
+                                <td>
+                                    <!-- Pay later order balance amount is zero not show in paynow button -->
+                                    <t t-if="line.unpaid_amount > 0">
+                                        <!-- The pay later order session and current session id is same not shown paynow button -->
+                                        <t t-if="line.session_name != line.pos_session_name ">
+                                            <button class='button Paynow pay_button' t-on-click="() => this.payNow(line.id,line.unpaid_amount,line.porder_id,line.type)">
+                                                Pay now
+                                            </button>
+                                        </t>
+                                        <t t-else=""> </t>
+                                    </t>
+                                    <t t-else=""> </t>
+
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="9" style="padding:0; width:100%">
+                                    <div t-attf-id="expandline_{{line.id}}" class="expandlines">
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <tr class="invoicescreen" t-att-id="line.id" style="display: none;">
+                                <td colspan="9">
+                                    <table class="product-details-table w-100" >
+                                        <thead style="background-color: #714B67; color: white;">
+                                            <tr>
+                                                <th>S.no</th>
+                                                <th>Product</th>
+                                                <th class='text-right' >Qty</th>
+                                                <th class='text-right' >UnitPrice</th>
+                                                <th class='text-right' >Amount</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <t t-foreach="state.order['inv_lines'][line.id]" t-as="product" t-key="product.id">
+                                                <tr>
+                                                    <td><t t-esc='product.sno or ""' /></td>
+                                                    <td><t t-esc='product.product or ""' /></td>
+                                                    <td class='text-right' ><t t-esc='product.qty or ""' /></td>
+                                                    <td class='text-right' ><t t-esc='product.price_unit or ""' /></td>
+                                                    <td class='text-right' ><t t-esc='product.amount or ""' /></td>
+                                                  </tr>
+                                            </t>
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                        </t>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </t>
+
+    <!-- order details in paylater screen -->
+ 	<t t-name="PInvoiceLineScreenWidget" >
+        <table class='dl-olist' style="width:100%" id="pendinginvoice_oltable">
+			 <thead>
+	            <tr>
+	                <th>S.no</th>
+	                <th>Product</th>
+	                <th class='text-right' >Qty</th>
+	                <th class='text-right' >UnitPrice</th>
+	                <th class='text-right' >Amount</th>
+	            </tr>
+	          </thead>
+	          <tbody>
+		          <t t-foreach="lines" t-as="line">
+			          <tr>
+			          	<td><t t-esc='line.sno or ""' /></td>
+			            <td><t t-esc='line.product or ""' /></td>
+			            <td class='text-right' ><t t-esc='line.qty or ""' /></td>
+			            <td class='text-right' ><t t-esc='line.price_unit or ""' /></td>
+			            <td class='text-right' ><t t-esc='line.amount or ""' /></td>
+			          </tr>
+		          </t>
+	          </tbody>
+		 </table>
+    </t>
+</templates>
