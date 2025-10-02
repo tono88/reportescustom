@@ -24,16 +24,18 @@ function saveStoredOrders(orders) {
     }
 }
 
-patch(PaymentScreen.prototype, "skit_pay_later_payment", {
+// Odoo 18: patch(target, props)
+patch(PaymentScreen.prototype, {
     setup() {
+        // keep parent setup
         super.setup();
         this.notification = useService("notification");
     },
 
     async onClickPayLater() {
         const order = this.pos.get_order();
-
         if (!order) return;
+
         if (!order.get_orderlines().length) {
             this.showPopup("ErrorPopup", {
                 title: this.env._t("Orden vacía"),
@@ -58,10 +60,7 @@ patch(PaymentScreen.prototype, "skit_pay_later_payment", {
         saveStoredOrders(stored);
 
         this.pos.add_new_order();
-
-        this.notification.add(this.env._t("Orden guardada como 'Pagar después'"), {
-            type: "success",
-        });
+        this.notification.add(this.env._t("Orden guardada como 'Pagar después'"), { type: "success" });
         this.showScreen("ProductScreen");
     },
 });

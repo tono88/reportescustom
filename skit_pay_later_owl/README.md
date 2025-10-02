@@ -1,2 +1,2 @@
 # SKIT Pay Later (OWL) — Odoo 18 Community
-Flujo ligero para diferir pago en POS (sin deuda contable). Usa OWL/ESM y `localStorage`.
+Build 18.0.1.2 — Arregla firma de `patch` para Odoo 18 (patch(target, props)).

@@ -24,7 +24,8 @@ function saveStoredOrders(orders) {
     }
 }
 
-patch(ProductScreen.prototype, "skit_recall_pay_later", {
+// Odoo 18: patch(target, props)
+patch(ProductScreen.prototype, {
     setup() {
         super.setup();
         this.notification = useService("notification");
@@ -33,9 +34,7 @@ patch(ProductScreen.prototype, "skit_recall_pay_later", {
     async onClickRecallPayLater() {
         const stored = loadStoredOrders();
         if (!stored.length) {
-            this.notification.add(this.env._t("No hay órdenes 'Pagar después'."), {
-                type: "info",
-            });
+            this.notification.add(this.env._t("No hay órdenes 'Pagar después'."), { type: "info" });
             return;
         }
 

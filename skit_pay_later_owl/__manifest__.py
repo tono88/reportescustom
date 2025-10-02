@@ -1,7 +1,7 @@
 {
     "name": "SKIT Pay Later (OWL, POS 18)",
     "summary": "Botón 'Pagar después' para POS 18 (OWL) sin jQuery/Bootstrap.",
-    "version": "18.0.1.1",
+    "version": "18.0.1.2",
     "category": "Point of Sale",
     "author": "ChatGPT (port for Estuardo)",
     "website": "https://example.com",
