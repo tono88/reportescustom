@@ -1,0 +1,9 @@
+.pay-later-btn, .recall-pay-later-btn {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  cursor: pointer;
+  font-weight: 600;
+}
+.pay-later-btn { background: #fff7e6; }
+.recall-pay-later-btn { background: #e6f4ff; }
