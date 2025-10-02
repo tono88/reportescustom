@@ -48,14 +48,11 @@
 					</tr>
 					<tr>
 					  <td class="fw-bold">FECHA EMISIÓN DOC. ORIGEN:</td>
-                      <td>
-                        <t t-if="o.factura_original_id and o.factura_original_id.create_date">
-                          <span t-esc="format_datetime(o.factura_original_id.create_date)"/>
-                        </t>
-                        <t t-elif="o.factura_original_id and o.factura_original_id.invoice_date">
-                          <span t-esc="format_date(o.factura_original_id.invoice_date)"/>
-                        </t>
-                      </td>
+					  <td>
+						<t t-if="o.factura_original_id and o.factura_original_id.invoice_date">
+						  <t t-out="o.factura_original_id.invoice_date.strftime('%d-%m-%Y %H:%M:%S')"/>
+						</t>
+					  </td>
 					</tr>
 					<!-- AQUI va el bloque de MOTIVO corregido -->
 					<!-- ... -->
@@ -113,14 +110,7 @@
                 </td>
                 <td style="width:22.5%;">
                   <div class="fw-bold">FECHA DE EMISIÓN:</div>
-                  <div>
-                    <t t-if="o.create_date">
-                      <span t-esc="format_datetime(o.create_date)"/>
-                    </t>
-                    <t t-elif="o.invoice_date">
-                      <span t-esc="format_date(o.invoice_date)"/>
-                    </t>
-                  </div>
+                  <div t-field="o.invoice_date"/>
                 </td>
                 <td style="width:22.5%;">
                   <div class="fw-bold">NÚMERO DTE:</div>
@@ -142,14 +132,8 @@
                 </td>
                 <td>
                   <div class="fw-bold">FECHA CERTIFICACIÓN:</div>
-                  <div>
-                    <t t-if="o.create_date">
-                      <span t-esc="format_datetime(o.create_date)"/>
-                    </t>
-                    <t t-elif="o.invoice_date">
-                      <span t-esc="format_date(o.invoice_date)"/>
-                    </t>
-                  </div>
+                  <div t-if="o.create_date" t-out="o.create_date.strftime('%Y-%m-%d')"/>
+                  <div t-if="not o.create_date and o.invoice_date" t-out="o.invoice_date.strftime('%Y-%m-%d')"/>
                 </td>
               </tr>
             </table>
