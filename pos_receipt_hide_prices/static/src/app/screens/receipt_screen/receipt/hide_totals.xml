@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+    <t t-name="OrderReceipt" t-inherit="point_of_sale.OrderReceipt" t-inherit-mode="extension" owl="1">
+        <!-- Remove tax summary -->
+        <xpath expr="//*[hasclass('pos-receipt-taxes')]" position="replace">
+            <div class="pos-receipt-taxes" style="display:none !important;"></div>
+        </xpath>
+
+        <!-- Remove totals / rounding / to-pay rows -->
+        <xpath expr="//*[hasclass('receipt-total') or hasclass('receipt-rounding') or hasclass('receipt-to-pay')]" position="replace">
+            <div style="display:none !important;"></div>
+        </xpath>
+
+        <!-- Remove payment lines (amounts per method) -->
+        <xpath expr="//*[hasclass('paymentlines')]" position="replace">
+            <div class="paymentlines" style="display:none !important;"></div>
+        </xpath>
+
+        <!-- Remove other amount rows like 'change' and generic 'pos-receipt-amount' lines -->
+        <xpath expr="//*[hasclass('pos-receipt-amount')]" position="replace">
+            <div class="pos-receipt-amount" style="display:none !important;"></div>
+        </xpath>
+    </t>
+</templates>

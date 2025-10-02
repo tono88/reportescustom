@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+    <!-- Patch Orderline to hide prices while preserving product name and quantity (and unit).
+         Compatible with modules that add extra info lines (e.g., warehouse/location) since we only touch specific nodes. -->
+    <t t-name="Orderline" t-inherit="point_of_sale.Orderline" t-inherit-mode="extension" owl="1">
+        <!-- Remove the right-aligned per-line price -->
+        <xpath expr="//div[hasclass('product-price')]" position="replace">
+            <div class="product-price" style="display:none !important;"></div>
+        </xpath>
+
+        <!-- Replace price-per-unit content with only the Qty and Unit (no unit price shown) -->
+        <xpath expr="//li[hasclass('price-per-unit')]" position="replace">
+            <li class="price-per-unit">
+                <span class="qty px-1 border rounded text-bg-view fw-bolder me-1" t-esc="line.qty"/>
+                <t t-if="line.unit" t-esc="line.unit"/>
+            </li>
+        </xpath>
+
+        <!-- Remove the discount info line which exposes undiscounted price and % -->
+        <xpath expr="//li[@t-if and contains(@t-if, 'discount')]" position="replace">
+            <li class="discount-removed" style="display:none !important;"></li>
+        </xpath>
+    </t>
+</templates>
