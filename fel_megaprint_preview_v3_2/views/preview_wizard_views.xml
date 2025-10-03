@@ -1,0 +1,20 @@
+<odoo>
+  <record id="view_fel_megaprint_preview_wizard_form_v32" model="ir.ui.view">
+    <field name="name">fel.megaprint.preview.wizard.form.v32</field>
+    <field name="model">fel.megaprint.preview.wizard</field>
+    <field name="arch" type="xml">
+      <form string="Previsualización XML FEL">
+        <group>
+          <field name="move_id" invisible="1"/>
+          <field name="endpoint" readonly="1"/>
+        </group>
+        <group>
+          <field name="xml_text" nolabel="1" readonly="1" widget="text" style="height: 520px; white-space: pre; font-family: monospace;"/>
+        </group>
+        <footer>
+          <button string="Cerrar" special="cancel" class="btn-primary"/>
+        </footer>
+      </form>
+    </field>
+  </record>
+</odoo>
