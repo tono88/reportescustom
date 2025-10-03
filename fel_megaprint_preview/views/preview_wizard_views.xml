@@ -1,6 +1,6 @@
 <odoo>
     <record id="view_fel_megaprint_preview_wizard_form" model="ir.ui.view">
-        <field name="name">fel.megaprint.preview.wizard.form.safe</field>
+        <field name="name">fel.megaprint.preview.wizard.form.minimal</field>
         <field name="model">fel.megaprint.preview.wizard</field>
         <field name="arch" type="xml">
             <form string="Previsualización XML FEL">
@@ -9,11 +9,10 @@
                     <field name="endpoint" readonly="1"/>
                 </group>
                 <group>
-                    <field name="xml_text" nolabel="1" readonly="1" widget="text" style="height: 420px; white-space: pre; font-family: monospace;"/>
+                    <field name="xml_text" nolabel="1" readonly="1" widget="text" style="height: 480px; white-space: pre; font-family: monospace;"/>
                 </group>
                 <footer>
-                    <button string="Cancelar" class="btn-secondary" special="cancel"/>
-                    <button string="Confirmar y Enviar" type="object" name="action_confirm_send" class="btn-primary"/>
+                    <button string="Cerrar" special="cancel" class="btn-primary"/>
                 </footer>
             </form>
         </field>
