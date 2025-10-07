@@ -1,15 +1,18 @@
 {
-    "name": "Guatemala FEL Megaprint - Reporte de Factura",
-    "version": "18.0.1.0.0",
-    "summary": "Formato de impresión FEL (Megaprint) para facturas",
-    "author": "Tu Equipo",
+    "name": "FEL Megaprint Report GT (Logo + QR en Pie)",
+    "summary": "Agrega logo FEL y código QR al pie del reporte de factura.",
+    "version": "18.0.1.0",
+    "author": "Estuardo & ChatGPT",
+    "website": "https://example.com",
     "license": "LGPL-3",
     "depends": ["account", "web"],
     "data": [
-        "reports/action_report.xml",
-        "reports/report_fel_invoice.xml",
-        'reports/external_layout_clean_footer.xml',
+        "reports/report_templates.xml"
     ],
+    "assets": {
+        "web.report_assets_common": [
+        ]
+    },
     "installable": True,
-    "application": False,
+    "application": False
 }

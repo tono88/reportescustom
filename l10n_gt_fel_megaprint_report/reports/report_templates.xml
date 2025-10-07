@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+  <!-- Extensión del reporte de factura para agregar pie con logo FEL y QR -->
+  <template id="report_invoice_document_fel_qr_footer" inherit_id="account.report_invoice_document">
+    <xpath expr="//div[contains(@class,'article')]" position="after">
+      <div class="footer-fel" style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;border-top:1px solid #ddd;padding-top:8px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <img t-att-src="'/l10n_gt_fel_megaprint_report/static/src/img/fel_logo.png'"
+               style="height:38px;"/>
+          <div style="font-size:11px;color:#333;line-height:1.2;">
+            Documento Tributario Electrónico (FEL)
+          </div>
+        </div>
+        <div style="text-align:right;">
+          <img t-att-src="'/report/barcode/QR/%s?width=120&height=120&humanreadable=0' % ((o.fel_qr_encoded or '') if 'o' in locals() else (doc.fel_qr_encoded or ''))"
+               alt="FEL QR"/>
+          <div style="font-size:9px;color:#555;margin-top:4px;max-width:260px;word-break:break-all;">
+            <span>Firma: </span><span t-esc="(o.firma_fel if 'o' in locals() else doc.firma_fel) or ''"/>
+          </div>
+        </div>
+      </div>
+    </xpath>
+  </template>
+</odoo>
