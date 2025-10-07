@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+  <template id="patch_invoice_call" inherit_id="l10n_gt_fel_megaprint_report.report_fel_invoice">
+    <xpath expr="//t[@t-call='l10n_gt_fel_megaprint_report.external_layout_clean_footer']" position="attributes">
+      <attribute name="t-call">l10n_gt_header_phoneonly_layout_v3.external_layout_phone</attribute>
+    </xpath>
+  </template>
+</odoo>
