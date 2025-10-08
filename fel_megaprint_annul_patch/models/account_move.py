@@ -60,12 +60,12 @@ class AccountMove(models.Model):
             api_host   = "dev2.api.ifacere-fel.com" if is_test else "apiv2.ifacere-fel.com"
             firma_host = "dev.ifacere-firma.com"    if is_test else "ifacere-firma.com"
 
-            # 1) Token
+            # 1) Token (corrección: SolicitaTokenRequest + /api/solicitaToken)
             headers_xml = {"Content-Type": "application/xml"}
-            payload = '<?xml version="1.0" encoding="UTF-8"?><SolicitarTokenRequest id="{0}"><usuario>{1}</usuario><clave>{2}</clave></SolicitarTokenRequest>'.format(
+            payload = '<?xml version="1.0" encoding="UTF-8"?><SolicitaTokenRequest id="{0}"><usuario>{1}</usuario><clave>{2}</clave></SolicitaTokenRequest>'.format(
                 uuid.uuid4().hex, usuario, clave
             )
-            r = requests.post('https://{}/api/solicitarToken'.format(api_host), data=payload, headers=headers_xml, timeout=60)
+            r = requests.post('https://{}/api/solicitaToken'.format(api_host), data=payload, headers=headers_xml, timeout=60)
             try:
                 token_xml = etree.XML(r.text.encode('utf-8'))
             except Exception:
