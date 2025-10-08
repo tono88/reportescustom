@@ -42,57 +42,33 @@ def _env_is_test(move, journal_flag):
 
 def _request_token(api_host, usuario, clave):
     """
-    Intenta obtener token probando varias rutas conocidas de Megaprint.
-    Retorna (token, raw_response, url_usada). Lanza UserError si falla.
+    Igual que v17:
+      - URL: https://{api_host}/api/solicitarToken   (con 'r' en la URL)
+      - XML: <SolicitaTokenRequest>                  (sin 'r' en el tag)
     """
-    headers_xml = {
-        "Content-Type": "application/xml",
-        "Accept": "application/xml",
-    }
+    headers_xml = {"Content-Type": "application/xml", "Accept": "application/xml"}
     payload = (
         '<?xml version="1.0" encoding="UTF-8"?>'
         '<SolicitaTokenRequest id="{rid}"><usuario>{usr}</usuario><clave>{pwd}</clave></SolicitaTokenRequest>'
     ).format(rid=uuid.uuid4().hex, usr=usuario, pwd=clave)
 
-    candidate_paths = [
-        "/api/solicitaToken",
-        "/solicitaToken",
-        "/fel-dte/solicitaToken",
-        "/services/solicitaToken",
-    ]
+    url = f'https://{api_host}/api/solicitarToken'
+    r = requests.post(url, data=payload.encode("utf-8"), headers=headers_xml, timeout=60)
+    if not (r.text or "").strip():
+        raise UserError(_("No se pudo solicitar token a Megaprint.\nURL: %s\nHTTP: %s\nHeaders: %s\nRespuesta vacía") %
+                        (url, r.status_code, dict(r.headers)))
+    try:
+        xml = etree.XML(r.text.encode("utf-8"))
+    except Exception:
+        _logger.exception("TokenResponse inválida (%s): %s", url, r.text)
+        raise UserError(_("No se pudo solicitar token a Megaprint.\nURL: %s\nHTTP: %s\nRespuesta:\n%s") %
+                        (url, r.status_code, r.text))
 
-    last_text = ""
-    last_url = ""
-    for path in candidate_paths:
-        url = 'https://{}{}'.format(api_host, path)
-        try:
-            r = requests.post(url, data=payload, headers=headers_xml, timeout=60)
-        except Exception as e:
-            last_text = "ERROR_CONEXION: {}".format(e)
-            last_url = url
-            continue
-
-        last_text = r.text or ""
-        last_url = url
-
-        # Algunos gateways devuelven JSON 401/403
-        ct = r.headers.get('Content-Type', '')
-        if 'application/json' in ct.lower() and 'unauthorized' in (r.text or '').lower():
-            _logger.warning("Ruta %s devolvió JSON unauthorized: %s", url, r.text)
-            continue
-
-        # Intentar parsear como XML y extraer <token>
-        try:
-            xml = etree.XML((r.text or "").encode('utf-8'))
-            token_nodes = xml.xpath("//token")
-            if token_nodes and token_nodes[0].text:
-                return token_nodes[0].text, r.text, url
-        except Exception:
-            # Si no es XML válido, probamos con la siguiente ruta
-            _logger.info("Ruta %s no devolvió XML de token válido. Respuesta: %s", url, (r.text or "")[:300])
-            continue
-
-    raise UserError(_("No se pudo solicitar token a Megaprint.\nÚltima URL: %s\nÚltima respuesta:\n%s") % (last_url, last_text))
+    nodes = xml.xpath("//token")
+    if not nodes or not nodes[0].text:
+        raise UserError(_("Megaprint no devolvió token.\nURL: %s\nHTTP: %s\nRespuesta:\n%s") %
+                        (url, r.status_code, r.text))
+    return nodes[0].text, url, r.text
 
 class AccountMove(models.Model):
     _inherit = "account.move"
@@ -122,10 +98,10 @@ class AccountMove(models.Model):
             # === Endpoints Megaprint (prod/dev) ===
             is_test = _env_is_test(move, modo)
             api_host   = "dev2.api.ifacere-fel.com" if is_test else "apiv2.ifacere-fel.com"
-            firma_host = "dev.ifacere-firma.com"    if is_test else "ifacere-firma.com"
+            firma_host = ("dev." if is_test else "") + "api.soluciones-mega.com"
 
             # 1) Token (con estrategia multi-path + Accept: xml)
-            token, raw_token_resp, token_url = _request_token(api_host, usuario, clave)
+            token, token_url, raw_token_resp = _request_token(api_host, usuario, clave)
             _logger.info("Token FEL obtenido desde %s", token_url)
 
             # 2) Firma
