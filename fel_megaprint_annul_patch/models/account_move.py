@@ -30,27 +30,27 @@ def _env_is_test(move, journal_flag):
     if isinstance(journal_flag, bool):
         is_test = journal_flag
     elif isinstance(journal_flag, str):
-        is_test = journal_flag.lower() in ('test', 'pruebas', 'sandbox', 'dev', 'development')
+        is_test = journal_flag.lower() in ('test','pruebas','sandbox','dev','development')
 
     if not is_test and move.company_id:
         comp_flag = _pick(move, move.company_id, ['pruebas_fel', 'fel_pruebas'])
         if isinstance(comp_flag, bool):
             is_test = comp_flag
         elif isinstance(comp_flag, str):
-            is_test = comp_flag.lower() in ('test', 'pruebas', 'sandbox', 'dev', 'development')
+            is_test = comp_flag.lower() in ('test','pruebas','sandbox','dev','development')
     return is_test
 
 def _request_token(api_host, usuario, clave):
     """
     Igual que v17:
       - URL: https://{api_host}/api/solicitarToken   (con 'r' en la URL)
-      - XML: <SolicitaTokenRequest>                  (sin 'r' en el tag)
+      - XML: <SolicitaTokenRequest>                  (sin 'r' en el tag, y SIN atributo id)
     """
     headers_xml = {"Content-Type": "application/xml", "Accept": "application/xml"}
     payload = (
         '<?xml version="1.0" encoding="UTF-8"?>'
-        '<SolicitaTokenRequest id="{rid}"><usuario>{usr}</usuario><clave>{pwd}</clave></SolicitaTokenRequest>'
-    ).format(rid=uuid.uuid4().hex, usr=usuario, pwd=clave)
+        '<SolicitaTokenRequest><usuario>{usr}</usuario><clave>{pwd}</clave></SolicitaTokenRequest>'
+    ).format(usr=usuario, pwd=clave)
 
     url = f'https://{api_host}/api/solicitarToken'
     r = requests.post(url, data=payload.encode("utf-8"), headers=headers_xml, timeout=60)
@@ -100,7 +100,7 @@ class AccountMove(models.Model):
             api_host   = "dev2.api.ifacere-fel.com" if is_test else "apiv2.ifacere-fel.com"
             firma_host = ("dev." if is_test else "") + "api.soluciones-mega.com"
 
-            # 1) Token (con estrategia multi-path + Accept: xml)
+            # 1) Token (v17 exacto + Accept: xml)
             token, token_url, raw_token_resp = _request_token(api_host, usuario, clave)
             _logger.info("Token FEL obtenido desde %s", token_url)
 
