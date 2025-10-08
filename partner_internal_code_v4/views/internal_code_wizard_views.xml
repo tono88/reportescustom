@@ -1,0 +1,27 @@
+<odoo>
+  <record id="view_internal_code_wizard_form" model="ir.ui.view">
+    <field name="name">res.partner.internal.code.wizard.form</field>
+    <field name="model">res.partner.internal.code.wizard</field>
+    <field name="arch" type="xml">
+      <form string="Asignar códigos internos">
+        <group>
+          <field name="scope"/>
+          <field name="processed" readonly="1"/>
+          <field name="assigned" readonly="1"/>
+        </group>
+        <footer>
+          <button name="action_assign" string="Asignar" type="object" class="btn-primary"/>
+          <button string="Cerrar" special="cancel" class="btn-secondary"/>
+        </footer>
+      </form>
+    </field>
+  </record>
+
+  <record id="action_res_partner_internal_code_wizard" model="ir.actions.act_window">
+    <field name="name">Asignar códigos internos</field>
+    <field name="res_model">res.partner.internal.code.wizard</field>
+    <field name="view_mode">form</field>
+    <field name="target">new</field>
+  </record>
+
+</odoo>

@@ -1,0 +1,38 @@
+<odoo>
+<!--  FORM: el campo dentro del layout (ya lo tienes así, lo dejo igual)  -->
+<record id="view_partner_form_internal_code" model="ir.ui.view">
+<field name="name">res.partner.form.internal.code</field>
+<field name="model">res.partner</field>
+<field name="inherit_id" ref="base.view_partner_form"/>
+<field name="arch" type="xml">
+<xpath expr="//field[@name='vat']" position="after">
+<field name="internal_code" string="Código interno" placeholder="Ej. CL-000123"/>
+</xpath>
+</field>
+</record>
+<!--  SEARCH: agrega el campo al buscador para poder filtrar por él  -->
+<record id="view_partner_filter_internal_code" model="ir.ui.view">
+<field name="name">res.partner.search.internal.code</field>
+<field name="model">res.partner</field>
+<field name="inherit_id" ref="base.view_res_partner_filter"/>
+<field name="arch" type="xml">
+<xpath expr="//search" position="inside">
+<!--  Esto habilita “Añadir filtro → Código interno contiene …”  -->
+<field name="internal_code" string="Código interno" filter_domain="[('internal_code','ilike', self)]"/>
+<filter name="has_internal_code" string="Con código interno" domain="[('internal_code','!=',False)]"/>
+</xpath>
+</field>
+</record>
+<!--  TREE: columna en la lista de contactos  -->
+<record id="view_partner_tree_internal_code" model="ir.ui.view">
+<field name="name">res.partner.tree.internal.code</field>
+<field name="model">res.partner</field>
+<field name="inherit_id" ref="base.view_partner_tree"/>
+<field name="arch" type="xml">
+<!--  Insertamos antes de “Ciudad” (según tu captura existe esa columna)  -->
+<xpath expr="//field[@name='city']" position="before">
+<field name="internal_code" string="Código interno" optional="show"/>
+</xpath>
+</field>
+</record>
+</odoo>
