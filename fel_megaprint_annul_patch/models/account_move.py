@@ -47,7 +47,7 @@ def _get_creds(move):
     return usuario, apikey, modo
 
 def _request_token(api_host, usuario, apikey):
-    headers_xml = {"Content-Type":"application/xml","Accept":"application/xml"}
+    headers_xml = {"Content-Type":"application/xml", "Accept":"application/xml"}
     payload = (
         '<?xml version="1.0" encoding="UTF-8"?>'
         '<SolicitaTokenRequest><usuario>{u}</usuario><apikey>{k}</apikey></SolicitaTokenRequest>'
@@ -67,7 +67,7 @@ def _request_token(api_host, usuario, apikey):
     return nodes[0].text, url, r.text
 
 def _retornar_xml(api_host, token, uuid_val):
-    """Intenta obtener el XML (útil para alimentar retornarPDF cuando el manual lo pide)."""
+    """Plan B para recuperar el xml_dte de la certificación."""
     headers = {"Content-Type":"application/xml","Accept":"application/xml","authorization":"Bearer "+token}
     payload = (
         '<?xml version="1.0" encoding="UTF-8"?>'
@@ -77,7 +77,6 @@ def _retornar_xml(api_host, token, uuid_val):
     r = requests.post(url, data=payload.encode('utf-8'), headers=headers, timeout=60)
     try:
         xml = etree.XML((r.text or "").encode('utf-8'))
-        # proveedores suelen devolver <xml_dte> ... </xml_dte>
         node = xml.xpath('//xml_dte')
         if node and node[0].text:
             return html.unescape(node[0].text)
@@ -87,29 +86,46 @@ def _retornar_xml(api_host, token, uuid_val):
 
 def _retornar_pdf_v2(api_host, token, uuid_val, xml_dte_text=None):
     """
-    Manual 6.6: retornarPDF espera XML con <xml_dte> + <uuid>, y devuelve XML con <pdf> (base64).
-    Si xml_dte_text no viene, intentamos pedirlo a retornarXML.
+    Retorna el PDF desde Megaprint. Intenta primero con el payload mínimo:
+        <RetornaPDFRequest><uuid>...</uuid></RetornaPDFRequest>
+    Si no hay PDF, reintenta con <uuid> y <xml_dte> (en ese orden).
     """
-    if not xml_dte_text:
-        xml_dte_text = _retornar_xml(api_host, token, uuid_val) or ''
-    headers = {"Content-Type":"application/xml","Accept":"application/xml","authorization":"Bearer "+token}
-    payload = (
-        '<?xml version="1.0" encoding="UTF-8"?>'
-        '<RetornarPDFRequest><xml_dte><![CDATA[{xml}]]></xml_dte><uuid>{u}</uuid></RetornarPDFRequest>'
-    ).format(xml=xml_dte_text, u=uuid_val)
+    headers = {"Content-Type":"application/xml", "Accept":"application/xml", "authorization":"Bearer "+token}
     url = f'https://{api_host}/api/retornarPDF'
-    r = requests.post(url, data=payload.encode('utf-8'), headers=headers, timeout=60)
-    try:
-        xml = etree.XML((r.text or "").encode('utf-8'))
-        # éxito: <pdf>BASE64</pdf>
-        pdf_node = xml.xpath('//pdf | //PDF')
-        if pdf_node and pdf_node[0].text:
-            return base64.b64decode(pdf_node[0].text)
-        if xml.xpath('//listado_errores'):
-            _logger.warning("retornarPDF devolvió errores: %s", r.text)
-    except Exception:
-        _logger.exception("retornarPDF no interpretable: %s", r.text)
-    return None
+
+    def _send_and_parse(payload):
+        r = requests.post(url, data=payload.encode('utf-8'), headers=headers, timeout=60)
+        try:
+            xml = etree.XML((r.text or "").encode('utf-8'))
+            pdf_node = xml.xpath('//pdf | //PDF')
+            if pdf_node and (pdf_node[0].text or '').strip():
+                return base64.b64decode(pdf_node[0].text)
+            if xml.xpath('//listado_errores'):
+                _logger.warning("retornarPDF devolvió errores: %s", r.text)
+        except Exception:
+            _logger.exception("retornarPDF no interpretable: %s", r.text)
+        return None
+
+    # 1) MÍNIMO: solo UUID
+    payload_min = (
+        '<?xml version="1.0" encoding="UTF-8"?>'
+        '<RetornaPDFRequest><uuid>{u}</uuid></RetornaPDFRequest>'
+    ).format(u=uuid_val)
+    pdf = _send_and_parse(payload_min)
+    if pdf:
+        return pdf
+
+    # 2) Reintento con xml_dte si lo tenemos (o lo pedimos)
+    if not xml_dte_text:
+        xml_dte_text = _retornar_xml(api_host, token, uuid_val)
+    if xml_dte_text:
+        payload_full = (
+            '<?xml version="1.0" encoding="UTF-8"?>'
+            '<RetornaPDFRequest><uuid>{u}</uuid><xml_dte><![CDATA[{xml}]]></xml_dte></RetornaPDFRequest>'
+        ).format(u=uuid_val, xml=xml_dte_text)
+        pdf = _send_and_parse(payload_full)
+
+    return pdf or None
 
 def _extract_annul_uuid_from_chatter(move):
     """Busca en chatter un 'UUID de anulación: XXXXX-...' para usarlo como plan B."""
@@ -163,9 +179,7 @@ class AccountMove(models.Model):
             firma_host = ("dev." if is_test else "") + "api.soluciones-mega.com"
 
             # 1) token
-            token, token_url, raw_token_resp = _request_token(api_host, usuario, apikey)  # <- corrección
-            # opcional: limpiar variables no usadas
-            # del token_url, raw_token_resp
+            token, _, _ = _request_token(api_host, usuario, apikey)
 
             # 2) dte de anulación (sin firma)
             if not hasattr(move, "dte_anulacion"):
@@ -205,27 +219,20 @@ class AccountMove(models.Model):
             if annul_xml.xpath("//listado_errores"):
                 raise UserError(_("Megaprint devolvió errores:\n%s") % (r.text or ""))
 
-            # UUID original (factura) y UUID de anulación
+            # UUIDs
             original_uuid = getattr(move, 'firma_fel', False)
             annul_uuid_nodes = annul_xml.xpath("//uuid")
             annul_uuid = (annul_uuid_nodes and annul_uuid_nodes[0].text) or False
 
-            # 5) PDF: intentar primero con el UUID ORIGINAL (suele venir ya con sello “ANULADO”)
+            # 5) PDF: primero con UUID ORIGINAL (debería venir con sello ANULADO)
             pdf_bytes = None
-            if original_uuid:
-                try:
-                    # intentar con xml de la factura si existe
-                    xml_fact = _pick(self, move, ['documento_xml_fel','xml_fel','fel_xml','xml_dte','documento_xml'])
-                    pdf_bytes = _retornar_pdf_v2(api_host, token, original_uuid, xml_fact)
-                except Exception:
-                    _logger.exception("retornarPDF con UUID original falló")
-
-            # si no hay PDF, probar con UUID de anulación (comprobante de anulación)
-            if not pdf_bytes and annul_uuid:
-                try:
-                    pdf_bytes = _retornar_pdf_v2(api_host, token, annul_uuid, xml_firmado)
-                except Exception:
-                    _logger.exception("retornarPDF con UUID de anulación falló")
+            try:
+                if original_uuid:
+                    pdf_bytes = _retornar_pdf_v2(api_host, token, original_uuid)
+                if not pdf_bytes and annul_uuid:
+                    pdf_bytes = _retornar_pdf_v2(api_host, token, annul_uuid, xml_firmado)  # comprobante de anulación
+            except Exception:
+                _logger.exception("retornarPDF tras anulación falló")
 
             _save_pdf_on_move(move, pdf_bytes, f"fel_anulacion_{(original_uuid or annul_uuid or 'doc')}.pdf")
 
@@ -249,7 +256,7 @@ class AccountMove(models.Model):
                     raise UserError(_("FEL anulado (UUID: %s), pero no pude cancelar la factura en Odoo.\nDetalle: %s") %
                                     ((annul_uuid or original_uuid or '-'), e2))
 
-            # Mensaje limpio
+            # Mensaje sobrio (sin XMLs crudos)
             body = _("FEL anulado correctamente en Megaprint.")
             if annul_uuid:
                 body += _(" UUID de anulación: %s.") % annul_uuid
@@ -265,17 +272,15 @@ class AccountMove(models.Model):
             is_test = _env_is_test(move, modo)
             api_host = "dev2.api.ifacere-fel.com" if is_test else "apiv2.ifacere-fel.com"
 
-            token, token_url, raw_token_resp = _request_token(api_host, usuario, apikey)  # <- corrección
-            # opcional: del token_url, raw_token_resp
+            token, _, _ = _request_token(api_host, usuario, apikey)
             original_uuid = getattr(move, 'firma_fel', False)
             pdf_bytes = None
 
-            # 1) intentar con UUID original
+            # 1) intentar con UUID original (payload mínimo)
             if original_uuid:
-                xml_fact = _pick(self, move, ['documento_xml_fel','xml_fel','fel_xml','xml_dte','documento_xml'])
-                pdf_bytes = _retornar_pdf_v2(api_host, token, original_uuid, xml_fact)
+                pdf_bytes = _retornar_pdf_v2(api_host, token, original_uuid)
 
-            # 2) plan B: intentar con UUID de anulación (si lo encuentro en el chatter)
+            # 2) plan B: UUID de anulación tomado del chatter
             if not pdf_bytes:
                 annul_uuid = _extract_annul_uuid_from_chatter(move)
                 if annul_uuid:
