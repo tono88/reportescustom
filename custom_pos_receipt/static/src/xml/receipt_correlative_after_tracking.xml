@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates id="custom_pos_receipt_correlative_after_tracking" xml:space="preserve">
+  <t t-inherit="point_of_sale.ReceiptHeader" t-inherit-mode="extension" owl="1">
+    <xpath expr="//t[@t-esc='props.data.headerData.trackingNumber']" position="after">
+      <t t-if="props.data.headerData and props.data.headerData.correlative">
+        <div class="pos-receipt-small-line">
+          <span>Numero correlativo: </span>
+          <t t-esc="props.data.headerData.correlative"/>
+        </div>
+      </t>
+      <t t-elif="props.data and props.data.internal_correlative">
+        <div class="pos-receipt-small-line">
+          <span>Numero correlativo: </span>
+          <t t-esc="props.data.internal_correlative"/>
+        </div>
+      </t>
+    </xpath>
+  </t>
+</templates>

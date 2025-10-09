@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<!-- FORM: colocar el correlativo justo DESPUÉS del nombre, sin nuevo grupo -->
+    <record id="view_pos_order_form_internal_correlative" model="ir.ui.view">
+        <field name="name">pos.order.form.internal.correlative</field>
+        <field name="model">pos.order</field>
+        <field name="inherit_id" ref="point_of_sale.view_pos_pos_form"/>
+        <field name="arch" type="xml">
+            <!-- Insertar el campo al lado del campo name -->
+            <xpath expr="//sheet//group[.//field[@name='name']]//field[@name='name']" position="after">
+                <field name="internal_correlative" string="Correlativo interno" readonly="1"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- LIST: mostrar el correlativo en la lista de órdenes de POS -->
+    <record id="view_pos_order_list_internal_correlative" model="ir.ui.view">
+        <field name="name">pos.order.list.internal.correlative</field>
+        <field name="model">pos.order</field>
+        <!-- xmlid estándar de la lista de órdenes de POS -->
+        <field name="inherit_id" ref="point_of_sale.view_pos_order_tree"/>
+        <field name="arch" type="xml">
+            <!-- Funciona si la base es <tree> o <list> -->
+            <xpath expr="//tree|//list" position="inside">
+                <field name="internal_correlative"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- SEARCH: permitir buscar por correlativo -->
+    <record id="view_pos_order_search_internal_correlative" model="ir.ui.view">
+        <field name="name">pos.order.search.internal.correlative</field>
+        <field name="model">pos.order</field>
+        <field name="inherit_id" ref="point_of_sale.view_pos_order_filter"/>
+        <field name="arch" type="xml">
+            <xpath expr="//search" position="inside">
+                <field name="internal_correlative" string="Correlativo interno"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

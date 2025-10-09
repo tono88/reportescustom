@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates id="pos_internal_correlative_receipt_header" xml:space="preserve">
+  <t t-inherit="point_of_sale.ReceiptHeader" t-inherit-mode="extension">
+    <!-- Show the internal correlative near the top of the header -->
+    <xpath expr="//div[@class='pos-receipt-contact']" position="inside">
+      <div t-if="props.data.internal_correlative" class="mt-1">
+        Correlativo interno&nbsp;<t t-esc="props.data.internal_correlative"/>
+      </div>
+    </xpath>
+  </t>
+</templates>
