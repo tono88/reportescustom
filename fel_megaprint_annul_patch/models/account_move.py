@@ -40,6 +40,20 @@ def _env_is_test(move, journal_flag):
             is_test = comp_flag.lower() in ('test','pruebas','sandbox','dev','development')
     return is_test
 
+def _get_creds(move):
+    """Obtiene credenciales: primero del diario; si faltan, cae a la compañía."""
+    j = move.journal_id
+    usuario = _pick(move, j, ['usuario_fel', 'fel_usuario', 'fel_user', 'user_fel']) if j else False
+    clave   = _pick(move, j, ['clave_fel', 'fel_clave', 'fel_password', 'password_fel']) if j else False
+    modo    = _pick(move, j, ['pruebas_fel', 'fel_pruebas', 'fel_environment']) if j else None
+    if (not usuario or not clave) and move.company_id:
+        c = move.company_id
+        usuario = usuario or _pick(move, c, ['usuario_fel'])
+        clave   = clave   or _pick(move, c, ['clave_fel'])
+    if not usuario or not clave:
+        raise UserError(_("Configure Usuario y API Key FEL en el Diario o en la Compañía."))
+    return usuario, clave, modo
+
 def _request_token(api_host, usuario, clave):
     """
     Igual que v17:
@@ -49,7 +63,7 @@ def _request_token(api_host, usuario, clave):
     headers_xml = {"Content-Type": "application/xml", "Accept": "application/xml"}
     payload = (
         '<?xml version="1.0" encoding="UTF-8"?>'
-        '<SolicitaTokenRequest><usuario>{usr}</usuario><clave>{pwd}</clave></SolicitaTokenRequest>'
+        '<SolicitaTokenRequest><usuario>{usr}</usuario><apikey>{pwd}</apikey></SolicitaTokenRequest>'
     ).format(usr=usuario, pwd=clave)
 
     url = f'https://{api_host}/api/solicitarToken'
@@ -88,12 +102,15 @@ class AccountMove(models.Model):
             if not j:
                 raise UserError(_("La factura no tiene diario asignado."))
 
-            usuario = _pick(self, j, ['usuario_fel', 'fel_usuario', 'fel_user', 'user_fel'])
-            clave   = _pick(self, j, ['clave_fel', 'fel_clave', 'fel_password', 'password_fel'])
-            modo    = _pick(self, j, ['pruebas_fel', 'fel_pruebas', 'fel_environment'])
+            usuario, clave, modo = _get_creds(move)
+
+            # (dejamos j por compatibilidad pero ya no se usa directamente)
+            # usuario = _pick(self, j, ['usuario_fel', 'fel_usuario', 'fel_user', 'user_fel'])
+            # clave   = _pick(self, j, ['clave_fel', 'fel_clave', 'fel_password', 'password_fel'])
+            # modo    = _pick(self, j, ['pruebas_fel', 'fel_pruebas', 'fel_environment'])
 
             if not usuario or not clave:
-                raise UserError(_("Configure Usuario/Clave FEL en el Diario de la factura."))
+                raise UserError(_("Configure Usuario y API Key FEL en el Diario o en la Compañía."))
 
             # === Endpoints Megaprint (prod/dev) ===
             is_test = _env_is_test(move, modo)
