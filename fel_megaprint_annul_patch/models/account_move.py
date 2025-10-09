@@ -179,7 +179,7 @@ class AccountMove(models.Model):
             firma_host = ("dev." if is_test else "") + "api.soluciones-mega.com"
 
             # 1) token
-            token, _, _ = _request_token(api_host, usuario, apikey)
+            token, token_url, raw_token_resp = _request_token(api_host, usuario, apikey)
 
             # 2) dte de anulación (sin firma)
             if not hasattr(move, "dte_anulacion"):
@@ -272,7 +272,7 @@ class AccountMove(models.Model):
             is_test = _env_is_test(move, modo)
             api_host = "dev2.api.ifacere-fel.com" if is_test else "apiv2.ifacere-fel.com"
 
-            token, _, _ = _request_token(api_host, usuario, apikey)
+            token, token_url, raw_token_resp = _request_token(api_host, usuario, apikey)
             original_uuid = getattr(move, 'firma_fel', False)
             pdf_bytes = None
 
