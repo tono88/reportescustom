@@ -1,6 +1,6 @@
 # -*- encoding: utf-8 -*-
 import logging, html, uuid, base64, re
-from odoo import models, _
+from odoo import models, fields, _
 from odoo.exceptions import UserError
 from lxml import etree
 import requests
@@ -162,6 +162,15 @@ def _save_pdf_on_move(move, pdf_bytes, filename):
 # ----------------- modelo -----------------
 class AccountMove(models.Model):
     _inherit = "account.move"
+
+    # NUEVO: checkbox manual para marcar que el DTE está anulado
+    fel_annulled = fields.Boolean(
+        string="Anulada FEL (manual)",
+        help="Marca manualmente si el DTE fue anulado en certificador. Es informativo.",
+        default=False,
+        copy=False,
+        tracking=True,
+    )
 
     # --------- Botón principal: anular + actualizar PDF + cancelar ---------
     def action_annul_fel_megaprint(self):
