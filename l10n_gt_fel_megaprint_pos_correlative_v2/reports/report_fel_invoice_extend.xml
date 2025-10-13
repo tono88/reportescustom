@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+  <template id="report_fel_invoice_extend" inherit_id="l10n_gt_fel_megaprint_report.report_fel_invoice">
+    <!-- Ubicar la tabla de DTE (NÚMERO DTE, SERIE, No. AUTORIZACIÓN, CERTIFICADOR, FECHA CERTIFICACIÓN)
+         y agregar una fila al final con el correlativo interno POS -->
+    <xpath expr="//div[@class='fw-bold' and normalize-space()='NÚMERO DTE:']/ancestor::table[1]//tr[last()]" position="after">
+      <tr>
+        <td style="width:27.5%;"><div class="fw-bold">CORRELATIVO INTERNO POS:</div></td>
+        <td colspan="3"><span t-esc="o.internal_correlative or ''"/></td>
+      </tr>
+    </xpath>
+  </template>
+</odoo>

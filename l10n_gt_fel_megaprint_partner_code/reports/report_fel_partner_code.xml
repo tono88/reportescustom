@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+  <!-- Extiende el reporte principal para añadir el código interno del cliente en el bloque Receptor -->
+  <template id="report_fel_partner_code" inherit_id="l10n_gt_fel_megaprint_report.report_fel_invoice">
+    <!-- Localiza la tabla de Receptor por la celda 'NOMBRE:' y, dentro de esa misma tabla,
+         ubica la fila que contiene 'NIT:' para insertar una fila nueva justo después. -->
+    <xpath expr="//table[contains(@class,'table') and contains(@class,'outer')][.//td[@class='fw-bold' and normalize-space()='NOMBRE:']][1]//td[@class='fw-bold' and normalize-space()='NIT:']/parent::tr" position="after">
+      <tr>
+        <td class="fw-bold">CÓDIGO INTERNO:</td>
+        <td colspan="3">
+          <span t-esc="o.partner_id.internal_code or ''"/>
+        </td>
+      </tr>
+    </xpath>
+  </template>
+</odoo>
