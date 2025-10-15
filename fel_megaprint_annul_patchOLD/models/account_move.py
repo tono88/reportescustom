@@ -142,7 +142,7 @@ def _extract_annul_uuid_from_chatter(move):
 
 def _save_pdf_on_move(move, pdf_bytes, filename):
     if not pdf_bytes:
-        return False
+        return
     if 'pdf_fel' in move._fields:
         vals = {'pdf_fel': base64.b64encode(pdf_bytes)}
         if 'pdf_fel_filename' in move._fields:
@@ -158,57 +158,21 @@ def _save_pdf_on_move(move, pdf_bytes, filename):
         })
         if 'pdf_fel_attachment_id' in move._fields:
             move.write({'pdf_fel_attachment_id': att.id})
-    return True
-
-def _to_draft_then_cancel(move):
-    """En Odoo 18 a veces hay que volver a borrador y luego cancelar.
-       Probamos varios nombres de método para máxima compatibilidad."""
-    # 1) Volver a borrador / despostear
-    for m in ('button_draft', 'action_draft', 'button_unpost'):
-        if hasattr(move, m):
-            try:
-                getattr(move, m)()
-                break
-            except Exception as e:
-                _logger.info("Intento %s falló: %s", m, e)
-
-    # 2) Cancelar
-    for m in ('button_cancel', 'action_cancel', '_action_cancel'):
-        if hasattr(move, m):
-            getattr(move, m)()
-            return True
-
-    # 3) Último recurso: escribir estado (si existe la opción)
-    if 'state' in move._fields and any(opt[0] == 'cancel' for opt in move._fields['state'].selection):
-        try:
-            move.write({'state': 'cancel'})
-            return True
-        except Exception as e:
-            _logger.info("No se pudo forzar state=cancel: %s", e)
-    return False
 
 # ----------------- modelo -----------------
 class AccountMove(models.Model):
     _inherit = "account.move"
 
-    # Checkbox manual; quedará bloqueado al anular por botón.
+    # NUEVO: checkbox manual para marcar que el DTE está anulado
     fel_annulled = fields.Boolean(
         string="Anulada FEL (manual)",
-        help="Marca manualmente si el DTE fue anulado en certificador. Se bloquea automáticamente al anular por botón.",
+        help="Marca manualmente si el DTE fue anulado en certificador. Es informativo.",
         default=False,
         copy=False,
         tracking=True,
     )
 
-    # Evitar que se desmarque una vez activado (bloqueo lógico a nivel de servidor)
-    def write(self, vals):
-        if 'fel_annulled' in vals and vals['fel_annulled'] is False:
-            for rec in self:
-                if rec.fel_annulled:
-                    raise UserError(_("No es posible desmarcar 'Anulada FEL' una vez activado."))
-        return super().write(vals)
-
-    # --------- Botón principal: ANULAR + actualizar PDF + cancelar + bloquear checkbox ---------
+    # --------- Botón principal: anular + actualizar PDF + cancelar ---------
     def action_annul_fel_megaprint(self):
         for move in self:
             if not getattr(move, "requiere_certificacion", None):
@@ -224,7 +188,7 @@ class AccountMove(models.Model):
             firma_host = ("dev." if is_test else "") + "api.soluciones-mega.com"
 
             # 1) token
-            token, _, _ = _request_token(api_host, usuario, apikey)
+            token, token_url, raw_token_resp = _request_token(api_host, usuario, apikey)
 
             # 2) dte de anulación (sin firma)
             if not hasattr(move, "dte_anulacion"):
@@ -269,38 +233,46 @@ class AccountMove(models.Model):
             annul_uuid_nodes = annul_xml.xpath("//uuid")
             annul_uuid = (annul_uuid_nodes and annul_uuid_nodes[0].text) or False
 
-            # 5) PDF automático (primero UUID original, luego UUID de anulación)
+            # 5) PDF: primero con UUID ORIGINAL (debería venir con sello ANULADO)
             pdf_bytes = None
             try:
                 if original_uuid:
                     pdf_bytes = _retornar_pdf_v2(api_host, token, original_uuid)
                 if not pdf_bytes and annul_uuid:
-                    pdf_bytes = _retornar_pdf_v2(api_host, token, annul_uuid, xml_firmado)
+                    pdf_bytes = _retornar_pdf_v2(api_host, token, annul_uuid, xml_firmado)  # comprobante de anulación
             except Exception:
                 _logger.exception("retornarPDF tras anulación falló")
-            saved = _save_pdf_on_move(move, pdf_bytes, f"fel_anulacion_{(original_uuid or annul_uuid or 'doc')}.pdf")
 
-            # 6) Cancelar en Odoo (borrador -> cancelado)
-            if not _to_draft_then_cancel(move):
-                _logger.exception("No se pudo cancelar la factura tras anulación FEL (id=%s).", move.id)
-                raise UserError(_("FEL anulado (UUID: %s), pero no pude cancelar la factura en Odoo.")
-                                % (annul_uuid or original_uuid or '-'))
+            _save_pdf_on_move(move, pdf_bytes, f"fel_anulacion_{(original_uuid or annul_uuid or 'doc')}.pdf")
 
-            # 7) Marcar y bloquear el checkbox
-            move.write({'fel_annulled': True})
+            # 6) Cancelar en Odoo
+            cancel_ok = False
+            try:
+                if hasattr(move, 'button_cancel'):
+                    move.button_cancel()
+                    cancel_ok = True
+            except Exception as e1:
+                _logger.info("button_cancel directo falló: %s. Intento por draft…", e1)
+            if not cancel_ok:
+                try:
+                    if hasattr(move, 'button_draft'):
+                        move.button_draft()
+                    if hasattr(move, 'button_cancel'):
+                        move.button_cancel()
+                        cancel_ok = True
+                except Exception as e2:
+                    _logger.exception("No se pudo cancelar la factura tras anular FEL.")
+                    raise UserError(_("FEL anulado (UUID: %s), pero no pude cancelar la factura en Odoo.\nDetalle: %s") %
+                                    ((annul_uuid or original_uuid or '-'), e2))
 
-            # 8) Mensajería
+            # Mensaje sobrio (sin XMLs crudos)
             body = _("FEL anulado correctamente en Megaprint.")
             if annul_uuid:
                 body += _(" UUID de anulación: %s.") % annul_uuid
-            if saved:
-                body += _(" PDF FEL actualizado.")
-            else:
-                body += _(" (No fue posible actualizar el PDF en este momento).")
             move.message_post(body=body)
         return True
 
-    # --------- Botón: refrescar/actualizar PDF FEL (manual) ---------
+    # --------- Botón nuevo: refrescar/actualizar PDF FEL ---------
     def action_refresh_fel_pdf_megaprint(self):
         for move in self:
             if not getattr(move, "requiere_certificacion", None) or not move.requiere_certificacion():
@@ -309,7 +281,7 @@ class AccountMove(models.Model):
             is_test = _env_is_test(move, modo)
             api_host = "dev2.api.ifacere-fel.com" if is_test else "apiv2.ifacere-fel.com"
 
-            token, _, _ = _request_token(api_host, usuario, apikey)
+            token, token_url, raw_token_resp = _request_token(api_host, usuario, apikey)
             original_uuid = getattr(move, 'firma_fel', False)
             pdf_bytes = None
 

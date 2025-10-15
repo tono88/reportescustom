@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <data>
+
+    <!-- Botón: Anular FEL (Megaprint) -->
+    <record id="view_move_form_annul_megaprint" model="ir.ui.view">
+      <field name="name">account.move.form.annul.megaprint.patch</field>
+      <field name="model">account.move</field>
+      <field name="inherit_id" ref="account.view_move_form"/>
+      <field name="arch" type="xml">
+        <xpath expr="//form/header" position="inside">
+          <button name="action_annul_fel_megaprint"
+                  string="Anular FEL (Megaprint)"
+                  type="object"
+                  class="btn-secondary"
+                  modifiers="{'invisible': [['|','|',('move_type','not in',('out_invoice','out_refund')),('state','!=','posted'),('firma_fel','=',False)]]}"/>
+        </xpath>
+      </field>
+    </record>
+
+    <!-- Botón: Actualizar PDF FEL -->
+    <record id="view_move_form_fel_megaprint_patch" model="ir.ui.view">
+      <field name="name">account.move.form.fel.megaprint.patch</field>
+      <field name="model">account.move</field>
+      <field name="inherit_id" ref="account.view_move_form"/>
+      <field name="arch" type="xml">
+        <xpath expr="//form/header" position="inside">
+          <button name="action_refresh_fel_pdf_megaprint"
+                  type="object"
+                  string="Actualizar PDF FEL"
+                  class="btn-secondary"/>
+        </xpath>
+      </field>
+    </record>
+
+    <!-- Checkbox en “Otra información” -->
+    <record id="view_move_form_fel_annulled_field" model="ir.ui.view">
+      <field name="name">account.move.form.fel.annulled.field</field>
+      <field name="model">account.move</field>
+      <field name="inherit_id" ref="account.view_move_form"/>
+      <field name="arch" type="xml">
+        <xpath expr="//page[@name='other_info']" position="inside">
+          <group string="FEL">
+            <field name="fel_annulled" force_save="1" modifiers="{'readonly': false}"/>
+          </group>
+        </xpath>
+      </field>
+    </record>
+
+    <!-- Columna en la vista de lista (Odoo 18 usa <list>) -->
+    <record id="view_move_tree_fel_annulled_field" model="ir.ui.view">
+      <field name="name">account.move.list.fel.annulled.field</field>
+      <field name="model">account.move</field>
+      <field name="inherit_id" ref="account.view_move_tree"/>
+      <field name="arch" type="xml">
+        <xpath expr="//list" position="inside">
+          <field name="fel_annulled" optional="show"/>
+        </xpath>
+      </field>
+    </record>
+
+  </data>
+</odoo>
