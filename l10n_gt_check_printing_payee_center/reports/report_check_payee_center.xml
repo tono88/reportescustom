@@ -1,14 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
   <template id="report_check_payee_center_inherit"
-            name="Cheque GT - Payee left-aligned between date and amount words"
+            name="Cheque GT - Payee + date + amount shifted 20mm; cents inline"
             inherit_id="l10n_gt_check_printing.report_check">
-    <!-- Insert the payee block just before the amount-in-words block -->
+
+    <!-- 1) Mover FECHA 20mm a la derecha -->
+    <xpath expr="//div[contains(@class,'chk-date')]" position="attributes">
+      <attribute name="style" add="margin-left:20mm;" separator=" "/>
+    </xpath>
+
+    <!-- 2) Beneficiario (payee), alineado a la izquierda y corrido 20mm (left:18mm + 20mm = 38mm) -->
     <xpath expr="//div[contains(@class,'chk-amount-text')]" position="before">
       <div class="chk-payee"
-           t-attf-style="position:absolute; top:19mm; left:18mm; width:120mm;
+           t-attf-style="position:absolute; top:19mm; left:38mm; width:120mm;
                          text-align:left; font-weight:700;">
         <t t-esc="(p.partner_id.name or '').upper()"/>
+      </div>
+    </xpath>
+
+    <!-- 3) Reemplazar el bloque de MONTO EN LETRAS para dejar los centavos en la misma línea
+           y además correrlo 20mm a la derecha. -->
+    <xpath expr="//div[contains(@class,'chk-amount-text')]" position="replace">
+      <div class="chk-amount-text"
+           t-attf-style="position:absolute; top:32mm; left:38mm; width:120mm; text-align:left;">
+        <!-- Obtener monto y centavos de manera robusta -->
+        <t t-set="amt" t-value="abs(getattr(p, 'amount', getattr(p, 'amount_total', 0.0)))"/>
+        <t t-set="s" t-value="'%.2f' % amt"/>
+        <t t-set="cent_str" t-value="s.split('.')[1]"/>
+        <!-- Texto en letras respetando idioma del partner (fallback es_GT) -->
+        <t t-set="words"
+           t-value="p.currency_id.with_context(lang=(p.partner_id.lang or 'es_GT')).amount_to_text(amt)"/>
+        <!-- Imprimir: 'PALABRAS 39/100' en la misma línea -->
+        <span t-esc="words"/><span>&#160;</span><span t-esc="cent_str"/>/100
       </div>
     </xpath>
   </template>
