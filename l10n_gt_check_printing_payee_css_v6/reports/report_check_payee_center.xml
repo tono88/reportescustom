@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <template id="report_check_payee_center_inherit"
+            name="Cheque GT - CSS shift + Payee (v6)"
+            inherit_id="l10n_gt_check_printing.report_check">
+
+    <!-- 0) Estilos CSS robustos para: mover +20mm y forzar centavos en la misma línea -->
+    <xpath expr="//template" position="inside">
+      <style>
+        /* Desplazar 20mm a la derecha sin tocar left/top existentes */
+        .gt-shift-x-20mm { transform: translateX(20mm); }
+
+        /* Forzar que el monto en letras y los centavos se muestren en la misma línea */
+        .chk-amount-text, .chk-amount-cents, .chk-amount-fraction {
+          display: inline;
+          position: relative;
+        }
+        /* Si los centavos están en el siguiente sibling, fuerce inline también */
+        .chk-amount-text + .chk-amount-cents,
+        .chk-amount-text + .chk-amount-fraction,
+        .chk-amount-text + div,
+        .chk-amount-text + span {
+          display: inline;
+          position: relative;
+          left: auto; top: auto;
+          margin-left: 2mm;
+        }
+      </style>
+    </xpath>
+
+    <!-- 1) Añadir beneficiario alineado a la izquierda, a mitad entre fecha y monto -->
+    <xpath expr="//div[contains(@class,'chk-amount-text')]" position="before">
+      <div class="chk-payee"
+           t-attf-style="position:absolute; top:19mm; left:38mm; width:120mm;
+                         text-align:left; font-weight:700;">
+        <t t-esc="(p.partner_id.name or '').upper()"/>
+      </div>
+    </xpath>
+
+    <!-- 2) Desplazar FECHA (+20mm) con clase CSS (sin tocar estilos originales) -->
+    <xpath expr="//div[contains(@class,'chk-date')]" position="attributes">
+      <attribute name="class" add="gt-shift-x-20mm" separator=" "/>
+    </xpath>
+
+    <!-- 3) Desplazar MONTO EN LETRAS (+20mm) con clase CSS (sin alterar su contenido original) -->
+    <xpath expr="//div[contains(@class,'chk-amount-text')]" position="attributes">
+      <attribute name="class" add="gt-shift-x-20mm" separator=" "/>
+    </xpath>
+  </template>
+</odoo>
