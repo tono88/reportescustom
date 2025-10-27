@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <template id="report_check_payee_center_inherit"
+            name="Cheque GT - Payee + fecha + monto desplazados 20mm; centavos inline (lang kwarg)"
+            inherit_id="l10n_gt_check_printing.report_check">
+
+    <xpath expr="//div[contains(@class,'chk-date')]" position="attributes">
+      <attribute name="style" add="margin-left:20mm;" separator=" "/>
+    </xpath>
+
+    <xpath expr="//div[contains(@class,'chk-amount-text')]" position="before">
+      <div class="chk-payee"
+           t-attf-style="position:absolute; top:19mm; left:38mm; width:120mm;
+                         text-align:left; font-weight:700;">
+        <t t-esc="(p.partner_id.name or '').upper()"/>
+      </div>
+    </xpath>
+
+    <xpath expr="//div[contains(@class,'chk-amount-text')]" position="replace">
+      <div class="chk-amount-text"
+           t-attf-style="position:absolute; top:32mm; left:38mm; width:120mm; text-align:left;">
+
+        <t t-set="amt" t-value="(getattr(p, 'amount', None) if p else None) or getattr(p, 'amount_total', 0.0)"/>
+        <t t-set="cur" t-value="(p.currency_id or p.company_id.currency_id) if p else False"/>
+        <t t-set="lang_code" t-value="(p.partner_id.lang or 'es_GT') if p else 'es_GT'"/>
+
+        <t t-set="words" t-value="cur and cur.amount_to_text((amt or 0.0), lang=lang_code) or ''"/>
+
+        <t t-set="amt100" t-value="int(round((amt or 0.0) * 100))"/>
+        <t t-set="cents_val" t-value="amt100 % 100"/>
+        <t t-set="cent_str" t-value="('%02d' % cents_val)"/>
+
+        <span t-esc="words"/><span>&#160;</span><span t-esc="cent_str"/>/100
+      </div>
+    </xpath>
+  </template>
+</odoo>
