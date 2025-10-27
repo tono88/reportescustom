@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <template id="report_check_payee_center_inherit"
+            name="Cheque GT - CSS shift + Payee (v7)"
+            inherit_id="l10n_gt_check_printing.report_check">
+
+    <!-- Inserta estilos antes del primer bloque de monto en letras -->
+    <xpath expr="//div[contains(@class,'chk-amount-text')][1]" position="before">
+      <style>
+        .gt-shift-x-20mm { transform: translateX(20mm); }
+
+        /* Forzar que el monto en letras y la fracción queden en la misma línea */
+        .chk-amount-text, .chk-amount-cents, .chk-amount-fraction { display: inline; }
+        .chk-amount-text + .chk-amount-cents,
+        .chk-amount-text + .chk-amount-fraction,
+        .chk-amount-text + div,
+        .chk-amount-text + span {
+          display: inline;
+          margin-left: 2mm;
+          position: static; /* anula absolute si el siguiente es fracción */
+        }
+      </style>
+    </xpath>
+
+    <!-- Beneficiario: entre fecha y monto; alineado a la izquierda; también corrido +20mm con clase -->
+    <xpath expr="//div[contains(@class,'chk-amount-text')]" position="before">
+      <div class="chk-payee gt-shift-x-20mm"
+           t-attf-style="position:absolute; top:19mm; left:18mm; width:120mm;
+                         text-align:left; font-weight:700;">
+        <t t-esc="(p.partner_id.name or '').upper()"/>
+      </div>
+    </xpath>
+
+    <!-- Desplazar FECHA +20mm -->
+    <xpath expr="//div[contains(@class,'chk-date')]" position="attributes">
+      <attribute name="class" add="gt-shift-x-20mm" separator=" "/>
+    </xpath>
+
+    <!-- Desplazar MONTO EN LETRAS +20mm -->
+    <xpath expr="//div[contains(@class,'chk-amount-text')]" position="attributes">
+      <attribute name="class" add="gt-shift-x-20mm" separator=" "/>
+    </xpath>
+
+  </template>
+</odoo>
