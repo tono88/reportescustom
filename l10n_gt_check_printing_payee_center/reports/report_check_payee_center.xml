@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
   <template id="report_check_payee_center_inherit"
-            name="Cheque GT - Payee centered between date and amount words"
+            name="Cheque GT - Payee left-aligned between date and amount words"
             inherit_id="l10n_gt_check_printing.report_check">
+    <!-- Insert the payee block just before the amount-in-words block -->
     <xpath expr="//div[contains(@class,'chk-amount-text')]" position="before">
       <div class="chk-payee"
-           t-attf-style="position:absolute; top:19mm; left:50%; transform: translateX(-50%);
-                         width:120mm; text-align:center; font-weight:700;">
+           t-attf-style="position:absolute; top:19mm; left:18mm; width:120mm;
+                         text-align:left; font-weight:700;">
         <t t-esc="(p.partner_id.name or '').upper()"/>
       </div>
     </xpath>

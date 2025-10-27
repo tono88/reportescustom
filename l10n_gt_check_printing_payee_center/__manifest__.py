@@ -2,7 +2,7 @@
 {
     "name": "Guatemala - Check Printing (Payee Center Patch)",
     "summary": "Muestra el nombre del proveedor centrado entre la fecha y el monto en letras en el cheque.",
-    "version": "18.0.1.0.1",
+    "version": "18.0.1.0.2",
     "author": "Estuardo Sandoval & ChatGPT",
     "website": "https://example.com",
     "category": "Accounting/Localizations",
