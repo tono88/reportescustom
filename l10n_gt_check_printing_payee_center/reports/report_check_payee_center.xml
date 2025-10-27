@@ -6,7 +6,7 @@
     <!-- Insert the payee block just before the amount-in-words block -->
     <xpath expr="//div[contains(@class,'chk-amount-text')]" position="before">
       <div class="chk-payee"
-           t-attf-style="position:absolute; top:19mm; left:18mm; width:120mm;
+           t-attf-style="position:absolute; top:19mm; left:38mm; width:120mm;
                          text-align:left; font-weight:700;">
         <t t-esc="(p.partner_id.name or '').upper()"/>
       </div>
