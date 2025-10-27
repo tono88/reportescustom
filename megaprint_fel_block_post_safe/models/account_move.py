@@ -21,7 +21,7 @@ class AccountMove(models.Model):
             "wait_timeout": int(_get("megaprint.wait_timeout_seconds", "60")),
             "call_if_missing": _get("megaprint.call_cert_if_missing", "1") == "1",
             "poll_seconds": int(_get("megaprint.poll_seconds", "2")),
-            "require_full_fel": _get("megaprint.require_full_fel", "0") == "1",
+            "require_full_fel": _get("megaprint.require_full_fel", "1") == "1",
             "chatter_audit": _get("megaprint.chatter_audit", "1") == "1",
             "attach_files": _get("megaprint.attach_files_in_chatter", "1") == "1",
             "attach_xml_result": _get("megaprint.attach_xml_result", "1") == "1",
