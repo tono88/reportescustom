@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <template id="report_check_payee_center_inherit"
+            name="Cheque GT - Force Left + Inline Cents (v8)"
+            inherit_id="l10n_gt_check_printing.report_check">
+
+    <!-- Estilos: forzar inline del siguiente nodo (fracción) con !important -->
+    <xpath expr="//div[contains(@class,'chk-amount-text')][1]" position="before">
+      <style>
+        .chk-amount-text + * {
+          display: inline !important;
+          position: static !important;
+          left: auto !important;
+          top: auto !important;
+          margin-left: 2mm !important;
+          white-space: nowrap !important;
+        }
+      </style>
+    </xpath>
+
+    <!-- Beneficiario (proveedor) exactamente entre fecha y monto; left fijo 38mm -->
+    <xpath expr="//div[contains(@class,'chk-amount-text')]" position="before">
+      <div class="chk-payee"
+           t-attf-style="position:absolute; top:19mm; left:38mm; width:120mm;
+                         text-align:left; font-weight:700;">
+        <t t-esc="(p.partner_id.name or '').upper()"/>
+      </div>
+    </xpath>
+
+    <!-- Fecha: sobreescribe left a 38mm con !important para asegurar el corrimiento -->
+    <xpath expr="//div[contains(@class,'chk-date')]" position="attributes">
+      <attribute name="style" add="left:38mm !important;" separator=" "/>
+    </xpath>
+
+    <!-- Monto en letras: sobreescribe left a 38mm con !important -->
+    <xpath expr="//div[contains(@class,'chk-amount-text')]" position="attributes">
+      <attribute name="style" add="left:38mm !important;" separator=" "/>
+    </xpath>
+
+  </template>
+</odoo>
