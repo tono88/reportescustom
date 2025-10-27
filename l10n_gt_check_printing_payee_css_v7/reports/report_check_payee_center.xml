@@ -25,7 +25,7 @@
     <!-- Beneficiario: entre fecha y monto; alineado a la izquierda; también corrido +20mm con clase -->
     <xpath expr="//div[contains(@class,'chk-amount-text')]" position="before">
       <div class="chk-payee gt-shift-x-20mm"
-           t-attf-style="position:absolute; top:19mm; left:18mm; width:120mm;
+           t-attf-style="position:absolute; top:19mm; left:38mm; width:120mm;
                          text-align:left; font-weight:700;">
         <t t-esc="(p.partner_id.name or '').upper()"/>
       </div>
