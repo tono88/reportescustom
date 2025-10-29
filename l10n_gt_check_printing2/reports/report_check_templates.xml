@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Acción de reporte específica de esta versión -->
+    <record id="action_report_check_gt2" model="ir.actions.report">
+        <field name="name">Cheque Guatemala 2</field>
+        <field name="model">account.payment</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">l10n_gt_check_printing2.report_check</field>
+        <field name="print_report_name">'Cheque - %s' % (object.name or '')</field>
+        <field name="paperformat_id" ref="l10n_gt_check_printing2.paperformat_check_letter"/>
+    </record>
+
+    <!-- Template base -->
+    <template id="report_check">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="p">
+
+                <!-- Aux monto -->
+                <t t-set="amount" t-value="p.amount or 0.0"/>
+                <t t-set="integer" t-value="int(amount)"/>
+                <t t-set="cents"   t-value="int(round((amount - integer) * 100))"/>
+
+                <div id="layout_root"
+                     t-attf-class="oe_structure {{ (p.company_id.account_check_printing_layout or '').split('.')[-1] }}"
+                     t-attf-style="position:relative; width:216mm; height:90mm;
+                                    margin-top: {{ (p.company_id.account_check_printing_margin_top or 0.0) }}mm;
+                                    margin-left: {{ (p.company_id.account_check_printing_margin_left or 0.0) }}mm;
+                                    margin-right: {{ (p.company_id.account_check_printing_margin_right or 0.0) }}mm;">
+
+                    <!-- Línea punteada vertical al centro -->
+                    <div class="center-dash"></div>
+
+                    <!-- FECHA -->
+                    <div class="chk-date">
+                        <t t-esc="'PALIN'"/>
+                        <t t-raw="', '"/>
+                        <t t-esc="fmt_date(p.date)"/>
+                    </div>
+
+                    <!-- MONTO NUMÉRICO -->
+                    <div class="chk-amount-num">
+                        <t t-esc="'%0.2f' % (p.amount or 0.0)"/>
+                    </div>
+
+                    <!-- ANULADO -->
+                    <div class="chk-void" t-if="is_void_payment(p)">
+                        ANULADO
+                    </div>
+
+                    <!-- PROVEEDOR / BENEFICIARIO -->
+                    <div class="chk-payee">
+                        <t t-esc="upper(p.partner_id.name)"/>
+                    </div>
+
+                    <!-- MONTO EN LETRAS + CENTAVOS MISMA LÍNEA -->
+                    <div class="chk-amount-text">
+                        <t t-esc="amount_words_line(p)"/>
+                    </div>
+
+                    <style>
+                        /* Caja principal del cheque */
+                        #layout_root { box-sizing: border-box; }
+
+                        /* Línea punteada central */
+                        .center-dash {
+                            position:absolute; top:0mm; bottom:0mm; left:108mm;
+                            border-left: 0.4mm dashed #aaa;
+                        }
+
+                        /* Texto ANULADO */
+                        .chk-void {
+                            position:absolute;
+                            top:20mm;
+                            left:10mm;
+                            font-weight:700;
+                            font-size:12pt;
+                            letter-spacing:0.3mm;
+                        }
+
+                        /* Posiciones (ajusta mm según tu papelería física) */
+                        .chk-date        { position:absolute; top:6mm;  left:40mm;  width:95mm;  font-weight:600; }
+                        .chk-amount-num  { position:absolute; top:6mm;  right:10mm; width:40mm;  text-align:right; font-weight:700; }
+                        .chk-payee       { position:absolute; top:19mm; left:40mm;  width:120mm; text-align:left; font-weight:700; }
+                        .chk-amount-text { position:absolute; top:32mm; left:40mm;  width:110mm; }
+
+                        /* Variantes de layout cheque (arriba / medio / abajo de la hoja) */
+                        .check_top    { transform: translateY(0mm); }
+                        .check_middle { transform: translateY(93mm); }
+                        .check_bottom { transform: translateY(186mm); }
+
+                        @page { margin: 0mm; }
+                    </style>
+                </div>
+
+                <div class="page"/>
+            </t>
+        </t>
+    </template>
+
+    <!-- Variantes de layout -->
+    <template id="check_top" inherit_id="l10n_gt_check_printing2.report_check" name="Cheque GT2 - Top">
+        <xpath expr="//div[@id='layout_root']" position="attributes">
+            <attribute name="class">oe_structure check_top</attribute>
+        </xpath>
+    </template>
+
+    <template id="check_middle" inherit_id="l10n_gt_check_printing2.report_check" name="Cheque GT2 - Middle">
+        <xpath expr="//div[@id='layout_root']" position="attributes">
+            <attribute name="class">oe_structure check_middle</attribute>
+        </xpath>
+    </template>
+
+    <template id="check_bottom" inherit_id="l10n_gt_check_printing2.report_check" name="Cheque GT2 - Bottom">
+        <xpath expr="//div[@id='layout_root']" position="attributes">
+            <attribute name="class">oe_structure check_bottom</attribute>
+        </xpath>
+    </template>
+
+</odoo>

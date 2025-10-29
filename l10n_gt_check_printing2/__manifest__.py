@@ -1,6 +1,7 @@
+# -*- coding: utf-8 -*-
 {
-    "name": "Guatemala - Check Printing",
-    "summary": "Custom printable check layouts for Guatemala (Community) con proveedor, corrimientos y monto en letras en una sola línea.",
+    "name": "Guatemala - Check Printing 2",
+    "summary": "Formato de cheque Guatemala con proveedor, corrimientos de fecha/monto y monto en letras en una sola línea.",
     "version": "18.0.2.0.0",
     "author": "Estuardo Sandoval & ChatGPT",
     "website": "https://example.com",

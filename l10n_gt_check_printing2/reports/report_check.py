@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 from odoo import api, models
 
-class ReportCheckGT(models.AbstractModel):
-    _name = "report.l10n_gt_check_printing.report_check"
-    _description = "Report: Guatemala Check"
+class ReportCheckGT2(models.AbstractModel):
+    _name = "report.l10n_gt_check_printing2.report_check"
+    _description = "Report: Guatemala Check 2"
 
     def _amount_words_line(self, payment):
         """Devuelve el monto en letras y los centavos en la MISMA línea.
@@ -13,12 +13,11 @@ class ReportCheckGT(models.AbstractModel):
         integer = int(amount)
         cents = int(round((amount - integer) * 100))
 
-        # Palabras del entero usando la propia moneda (respeta localización si existe)
+        # Convertir la parte entera a texto usando la moneda
         try:
             try:
                 words = payment.currency_id.amount_to_text(integer, lang=self.env.user.lang)
             except TypeError:
-                # Algunas implementaciones de amount_to_text no aceptan lang
                 words = payment.currency_id.amount_to_text(integer)
         except Exception:
             words = str(integer)
@@ -26,15 +25,15 @@ class ReportCheckGT(models.AbstractModel):
         if isinstance(words, str):
             words = words.strip()
             if words:
-                # Capitaliza la primera letra
+                # Capitaliza primera letra
                 words = words[0].upper() + words[1:]
-            # ' y ' -> ' Con '
+            # Cambiar " y " por " Con " para estilo de cheque
             words = words.replace(" y ", " Con ")
 
         return f"{words} {cents:02d}/100"
 
     def _fmt_date(self, d):
-        """Devuelve la fecha dd/mm/YYYY"""
+        """Devuelve fecha dd/mm/YYYY"""
         return d.strftime("%d/%m/%Y") if d else ""
 
     def _is_void_payment(self, payment):
@@ -54,8 +53,8 @@ class ReportCheckGT(models.AbstractModel):
         docs = self.env["account.payment"].browse(docids)
         return {
             "docs": docs,
-            "amount_words_line": self._amount_words_line,  # monto en letras + centavos en una línea
-            "fmt_date": self._fmt_date,                    # fecha dd/mm/YYYY
-            "upper": lambda s: (s or "").upper(),        # helper para mayúsculas
-            "is_void_payment": self._is_void_payment,      # cheque anulado
+            "amount_words_line": self._amount_words_line,
+            "fmt_date": self._fmt_date,
+            "upper": lambda s: (s or "").upper(),
+            "is_void_payment": self._is_void_payment,
         }
