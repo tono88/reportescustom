@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="paperformat_check_letter" model="report.paperformat">
+        <field name="name">Check Letter (no margins)</field>
+        <field name="format">Letter</field>
+        <field name="margin_top">0</field>
+        <field name="margin_left">0</field>
+        <field name="margin_right">0</field>
+        <field name="margin_bottom">0</field>
+        <field name="orientation">Portrait</field>
+    </record>
+
+</odoo>
