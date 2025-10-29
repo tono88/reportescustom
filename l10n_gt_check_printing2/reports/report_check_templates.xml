@@ -82,7 +82,7 @@
                         .chk-date        { position:absolute; top:6mm;  left:40mm;  width:95mm;  font-weight:600; }
                         .chk-amount-num  { position:absolute; top:6mm;  right:10mm; width:40mm;  text-align:right; font-weight:700; }
                         .chk-payee       { position:absolute; top:19mm; left:40mm;  width:120mm; text-align:left; font-weight:700; }
-                        .chk-amount-text { position:absolute; top:32mm; left:40mm;  width:110mm; }
+                        .chk-amount-text { position:absolute; top:32mm; left:40mm;  width:110mm; white-space: nowrap; }}
 
                         /* Variantes de layout cheque (arriba / medio / abajo de la hoja) */
                         .check_top    { transform: translateY(0mm); }

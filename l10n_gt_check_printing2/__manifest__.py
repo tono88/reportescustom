@@ -2,7 +2,7 @@
 {
     "name": "Guatemala - Check Printing 2",
     "summary": "Formato de cheque Guatemala con proveedor alineado, corrimientos de fecha/monto y monto en letras en una sola línea.",
-    "version": "18.0.2.0.1",
+    "version": "18.0.2.0.2",
     "author": "Estuardo Sandoval & ChatGPT",
     "website": "https://example.com",
     "category": "Accounting/Localizations",
