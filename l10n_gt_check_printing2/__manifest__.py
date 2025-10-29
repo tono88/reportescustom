@@ -9,8 +9,10 @@
     "license": "LGPL-3",
     "depends": ["account", "account_check_printing"],
     "data": [
+        "security/ir.model.access.csv",
         "reports/paperformat.xml",
-        "reports/report_check_templates.xml"
+        "reports/report_check_templates.xml",
+        "views/account_payment_views.xml"
     ],
     "assets": {},
     "installable": True,

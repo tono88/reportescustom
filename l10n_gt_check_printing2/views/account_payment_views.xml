@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_account_payment_form_check_void_gt2" model="ir.ui.view">
+    <field name="name">account.payment.form.check.void.gt2</field>
+    <field name="model">account.payment</field>
+    <field name="inherit_id" ref="account.view_account_payment_form"/>
+    <field name="arch" type="xml">
+      <!-- Insertamos bloque con 'Cheque (GT2)' para permitir marcar ANULADO y razón -->
+      <xpath expr="//sheet" position="inside">
+        <group string="Cheque (GT2)">
+          <field name="check_void_print"/>
+          <field name="check_void_reason" invisible="[('check_void_print','=',False)]"/>
+        </group>
+      </xpath>
+    </field>
+  </record>
+</odoo>
