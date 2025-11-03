@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+  <record id="ir_cron_fix_orphan_payments" model="ir.cron">
+    <field name="name">Reconciliar facturas con pagos no adjudicados</field>
+    <field name="model_id" ref="account.model_account_move"/>
+    <field name="state">code</field>
+    <field name="code">model.cron_fix_orphan_payments()</field>
+    <field name="interval_number">10</field>
+    <field name="interval_type">minutes</field>
+    <field name="active">True</field>
+  </record>
+</odoo>
