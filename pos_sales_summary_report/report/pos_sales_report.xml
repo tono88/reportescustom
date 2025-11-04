@@ -1,0 +1,21 @@
+<odoo>
+    <record id="paperformat_pos_sales_summary" model="report.paperformat">
+        <field name="name">POS Sales Summary A4 (auto)</field>
+        <field name="default" eval="False"/>
+        <field name="format">A4</field>
+        <field name="orientation">Portrait</field>
+        <field name="margin_top">10</field>
+        <field name="margin_bottom">10</field>
+        <field name="margin_left">8</field>
+        <field name="margin_right">8</field>
+        <field name="header_spacing">6</field>
+    </record>
+
+    <report id="action_report_pos_sales_summary"
+            model="pos.order"
+            string="Reporte de Ventas POS"
+            report_type="qweb-pdf"
+            name="pos_sales_summary_report.report_pos_sales_summary"
+            file="pos_sales_summary_report.report_pos_sales_summary"
+            paperformat="paperformat_pos_sales_summary"/>
+</odoo>

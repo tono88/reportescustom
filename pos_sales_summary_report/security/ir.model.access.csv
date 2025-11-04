@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_pos_sales_report_wizard_user,pos.sales.report.wizard (Users),model_pos_sales_report_wizard,base.group_user,1,0,1,0
+access_pos_sales_report_wizard_pos_user,pos.sales.report.wizard (POS User),model_pos_sales_report_wizard,point_of_sale.group_pos_user,1,0,1,0
+access_pos_sales_report_wizard_pos_manager,pos.sales.report.wizard (POS Manager),model_pos_sales_report_wizard,point_of_sale.group_pos_manager,1,0,1,0

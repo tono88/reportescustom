@@ -1,0 +1,68 @@
+<odoo>
+  <template id="report_pos_sales_summary">
+    <main class="o_report_layout">
+      <div class="page">
+        <div class="row">
+          <div class="col-9">
+            <h3>REPORTE DE VENTAS</h3>
+            <p>
+              DEL: <t t-esc="data.get('date_from') or ''"/>
+              AL: <t t-esc="data.get('date_to') or ''"/>
+            </p>
+          </div>
+          <div class="col-3" style="text-align:right;">
+            <strong t-esc="company.name"/>
+            <br/><span t-esc="user_label"/><br/><span t-esc="now_label"/>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:8px;">
+          <div class="col-6" style="border:1px solid #999; padding:8px; border-radius:6px;">
+            <div><strong>Usuario Imprimio:</strong> <t t-esc="user_label"/></div>
+            <div><strong>Fecha/Hora Imprimio:</strong> <t t-esc="now_label"/></div>
+            <div><strong>De la factura</strong> [<t t-esc="first_invoice"/>] a la factura [<t t-esc="last_invoice"/>]</div>
+          </div>
+        </div>
+
+        <table class="table table-sm mt16" style="width:100%;">
+          <thead>
+            <tr>
+              <th style="width:30%">Cliente</th>
+              <th style="width:20%">Factura</th>
+              <th style="width:16%; text-align:right;">Contado (Efectivo)</th>
+              <th style="width:16%; text-align:right;">Credito (Otros)</th>
+              <th style="width:18%; text-align:right;">Valor Factura</th>
+            </tr>
+          </thead>
+          <tbody>
+            <t t-foreach="grouped" t-as="grp">
+              <tr><td colspan="5"><strong t-esc="grp['partner']"/></td></tr>
+              <t t-foreach="grp['lines']" t-as="l">
+                <tr>
+                  <td t-esc="l['partner']"/>
+                  <td t-esc="l['invoice']"/>
+                  <td style="text-align:right;" t-esc="l['contado_fmt']"/>
+                  <td style="text-align:right;" t-esc="l['credito_fmt']"/>
+                  <td style="text-align:right;" t-esc="l['total_fmt']"/>
+                </tr>
+              </t>
+            </t>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td><strong>Total General</strong></td>
+              <td/>
+              <td style="text-align:right;"><strong><t t-esc="total_contado_fmt"/></strong></td>
+              <td style="text-align:right;"><strong><t t-esc="total_credito_fmt"/></strong></td>
+              <td style="text-align:right;"><strong><t t-esc="total_general_fmt"/></strong></td>
+            </tr>
+          </tfoot>
+        </table>
+
+        <div class="mt16 text-muted">
+          <small>Contado = suma de pagos con metodo de pago efectivo. Credito = suma de pagos con otros metodos. En pagos mixtos, ambas columnas muestran su parte.</small>
+        </div>
+      </div>
+    </main>
+  </template>
+</odoo>
