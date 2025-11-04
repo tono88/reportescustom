@@ -45,6 +45,7 @@ class ReportPosSalesSummary(models.AbstractModel):
         total = order.amount_total or 0.0
         return {
             "partner": partner,
+            "correlative": getattr(order, "internal_correlative", "") or "-",
             "invoice": factura,
             "contado": contado,
             "credito": credito,
