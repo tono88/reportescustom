@@ -22,6 +22,11 @@ class ReportPosSalesSummary(models.AbstractModel):
         contado = 0.0
         credito = 0.0
         for p in order.payment_ids:
+            # <<< AÑADE ESTAS LÍNEAS >>>
+            amt = p.amount or 0.0
+            if amt <= 0:
+                continue
+            # ---------------------------
             if self._is_cash_method(getattr(p, "payment_method_id", False)):
                 contado += p.amount or 0.0
             else:
@@ -79,7 +84,11 @@ class ReportPosSalesSummary(models.AbstractModel):
         invs = []
         for o in orders:
             L = self._line_from_order(o, currency)
+            if L["contado"] == 0 and L["credito"] == 0:
+                continue
             lines.append(L)
+            
+
             if L["invoice"] and L["invoice"] != "-":
                 invs.append(L["invoice"])
 
