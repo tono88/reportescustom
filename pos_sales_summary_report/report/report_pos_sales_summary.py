@@ -78,6 +78,27 @@ class ReportPosSalesSummary(models.AbstractModel):
             domain += [("account_move", "=", False)]
 
         orders = self.env["pos.order"].search(domain, order="partner_id, date_order, name")
+        # --- EXCLUIR ORDENES ORIGEN QUE TENGAN UN REEMBOLSO EN EL RANGO ---
+        # Detectar reembolsos por nombre "REEMBOLSO DE …" y excluir su orden original
+        refund_domain = [
+            ("state", "in", ["paid", "done", "invoiced"]),
+            ("date_order", ">=", start_utc),
+            ("date_order", "<=", end_utc),
+            ("amount_total", "<", 0),  # reembolsos suelen tener total negativo
+        ]
+        refund_orders = self.env["pos.order"].search(refund_domain)
+
+        # Extraer nombres originales desde "REEMBOLSO DE <NOMBRE-ORIGINAL>"
+        orig_names = []
+        for r in refund_orders:
+            n = (r.name or "").strip()
+            if n.upper().startswith("REEMBOLSO DE "):
+                orig_names.append(n.split("REEMBOLSO DE ", 1)[1].strip())
+
+        # Filtrar fuera esas órdenes originales del conjunto a reportar
+        if orig_names:
+            orders = orders.filtered(lambda o: o.name not in orig_names)
+        # --- FIN EXCLUSION ---
 
         currency = self.env.company.currency_id
         lines = []
