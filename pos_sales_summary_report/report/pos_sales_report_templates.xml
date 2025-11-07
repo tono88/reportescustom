@@ -52,7 +52,7 @@
           </tbody>
           <tfoot>
             <tr>
-               <td colspan="3" class="text-end fw-bold">Total General</td>
+               <td colspan="2" class="text-end fw-bold">Total General</td>
               <td/>
               <td style="text-align:right;"><strong><t t-esc="total_contado_fmt"/></strong></td>
               <td style="text-align:right;"><strong><t t-esc="total_credito_fmt"/></strong></td>
