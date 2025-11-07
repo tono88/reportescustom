@@ -27,12 +27,12 @@
         <table class="table table-sm mt16" style="width:100%;">
           <thead>
             <tr>
-              <th style="width:30%">Cliente</th>
-			  <th style="width:30%">Correlativo interno</th>
-              <th style="width:20%">Factura</th>
-              <th style="width:16%; text-align:right;">Contado (Efectivo)</th>
-              <th style="width:16%; text-align:right;">Credito (Otros)</th>
-              <th style="width:18%; text-align:right;">Valor Factura</th>
+              <th style="width:32%">Cliente</th>
+			  <th style="width:12%">Correlativo interno</th>
+              <th style="width:16%">Factura</th>
+              <th style="width:14%; text-align:right;">Contado (Efectivo)</th>
+              <th style="width:14%; text-align:right;">Credito (Otros)</th>
+              <th style="width:12%; text-align:right;">Valor Factura</th>
             </tr>
           </thead>
           <tbody>
@@ -52,7 +52,7 @@
           </tbody>
           <tfoot>
             <tr>
-              <td><strong>Total General</strong></td>
+               <td colspan="3" class="text-end fw-bold">Total General</td>
               <td/>
               <td style="text-align:right;"><strong><t t-esc="total_contado_fmt"/></strong></td>
               <td style="text-align:right;"><strong><t t-esc="total_credito_fmt"/></strong></td>
