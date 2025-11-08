@@ -69,6 +69,7 @@ class ReportPosSalesSummary(models.AbstractModel):
 
         domain = [
             ("state", "in", ["paid", "done", "invoiced"]),
+            ("state", "!=", "cancel"),   # ⬅️ añade esta línea
             ("date_order", ">=", start_utc),
             ("date_order", "<=", end_utc),
         ]
