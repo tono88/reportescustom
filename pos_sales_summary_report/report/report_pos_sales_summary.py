@@ -45,13 +45,19 @@ class ReportPosSalesSummary(models.AbstractModel):
     def _line_from_order(self, order, currency):
         partner = order.partner_id.name or _("Consumidor Final")
         move = getattr(order, "account_move", False)
-        factura = move.name if move else "-"
+        #factura = move.name if move else "-"
+        firma = "-"
+        if move:
+            # usa firma_fel si existe; si no, cae al nombre (número) de la factura
+            firma = getattr(move, "firma_fel", False) or move.name or "-"
+
         contado, credito = self._split_payments(order)
         total = order.amount_total or 0.0
         return {
             "partner": partner,
             "correlative": getattr(order, "internal_correlative", "") or "-",
-            "invoice": factura,
+            #"invoice": factura,
+            "invoice": firma,          # <--- aquí
             "contado": contado,
             "credito": credito,
             "total": total,
