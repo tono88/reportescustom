@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!-- Heredamos la lista de órdenes POS para añadir dos columnas -->
+    <record id="view_pos_order_tree_inherit_cash_cuenta" model="ir.ui.view">
+        <field name="name">pos.order.tree.inherit.cash.cuenta</field>
+        <field name="model">pos.order</field>
+        <field name="inherit_id" ref="point_of_sale.view_pos_order_tree"/>
+        <field name="arch" type="xml">
+            <!-- Insertar antes de amount_total -->
+            <xpath expr="//field[@name='amount_total']" position="before">
+                <field name="amount_payment_cash" sum="Efectivo" widget="monetary"/>
+                <field name="amount_payment_cuenta" sum="Cuenta" widget="monetary"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>
