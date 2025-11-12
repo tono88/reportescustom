@@ -83,6 +83,9 @@ class ReportPosSalesSummary(models.AbstractModel):
             domain += [("account_move", "!=", False)]
         elif invoice_filter == "not_invoiced":
             domain += [("account_move", "=", False)]
+        # 👇 nuevo: filtrar por PDV si viene seleccionado
+        if pos_config_id:
+            domain += [("config_id", "=", pos_config_id)]
 
         orders = self.env["pos.order"].search(domain, order="partner_id, date_order, name")
         # --- EXCLUIR ORDENES ORIGEN QUE TENGAN UN REEMBOLSO EN EL RANGO ---
@@ -93,6 +96,11 @@ class ReportPosSalesSummary(models.AbstractModel):
             ("date_order", "<=", end_utc),
             ("amount_total", "<", 0),  # reembolsos suelen tener total negativo
         ]
+        
+        # 👇 nuevo también para reembolsos
+        if pos_config_id:
+            refund_domain += [("config_id", "=", pos_config_id)]
+        
         refund_orders = self.env["pos.order"].search(refund_domain)
 
         # Extraer nombres originales desde "REEMBOLSO DE <NOMBRE-ORIGINAL>"
