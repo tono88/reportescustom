@@ -6,6 +6,26 @@ class ReportPosSalesSummary(models.AbstractModel):
     _name = "report.pos_sales_summary_report.report_pos_sales_summary"
     _description = "Reporte PDF: Resumen de ventas POS"
 
+
+    def _normalize_pos_config_id(self, data):
+        """Devuelve el ID (int) del pos.config o None, ya venga plano o en data['form']."""
+        if not data:
+            return None
+        # Caso A: lo mandaste plano
+        val = data.get("pos_config_id")
+        if val:
+            if isinstance(val, (list, tuple)):
+                    return int(val[0])
+            return int(val)
+        # Caso B: viene en 'form'
+        form = data.get("form")
+        if isinstance(form, dict) and form.get("pos_config_id"):
+            val = form["pos_config_id"]
+            if isinstance(val, (list, tuple)):
+                return int(val[0])
+            return int(val)
+        return None
+
     def _is_cash_method(self, method):
         if not method:
             return False
@@ -69,10 +89,12 @@ class ReportPosSalesSummary(models.AbstractModel):
 
     @api.model
     def _get_report_values(self, docids, data=None):
+        data = data or {}
         start_utc = data.get("start_utc")
         end_utc = data.get("end_utc")
         invoice_filter = data.get("invoice_filter", "all")
-
+        # 👇 NUEVO: siempre define pos_config_id
+        pos_config_id = self._normalize_pos_config_id(data)
         domain = [
             ("state", "in", ["paid", "done", "invoiced"]),
             ("state", "!=", "cancel"),   # ⬅️ añade esta línea
@@ -83,9 +105,9 @@ class ReportPosSalesSummary(models.AbstractModel):
             domain += [("account_move", "!=", False)]
         elif invoice_filter == "not_invoiced":
             domain += [("account_move", "=", False)]
-        # 👇 nuevo: filtrar por PDV si viene seleccionado
+        # 👇 CAMBIO: usar OR entre config_id y session_id.config_id
         if pos_config_id:
-            domain += [("config_id", "=", pos_config_id)]
+            domain += ["|", ("config_id", "=", pos_config_id), ("session_id.config_id", "=", pos_config_id)]
 
         orders = self.env["pos.order"].search(domain, order="partner_id, date_order, name")
         # --- EXCLUIR ORDENES ORIGEN QUE TENGAN UN REEMBOLSO EN EL RANGO ---
@@ -99,8 +121,8 @@ class ReportPosSalesSummary(models.AbstractModel):
         
         # 👇 nuevo también para reembolsos
         if pos_config_id:
-            refund_domain += [("config_id", "=", pos_config_id)]
-        
+            refund_domain += ["|", ("config_id", "=", pos_config_id), ("session_id.config_id", "=", pos_config_id)]
+
         refund_orders = self.env["pos.order"].search(refund_domain)
 
         # Extraer nombres originales desde "REEMBOLSO DE <NOMBRE-ORIGINAL>"
