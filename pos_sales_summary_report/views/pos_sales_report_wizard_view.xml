@@ -12,7 +12,12 @@
           <group>
             <field name="invoice_filter"/>
             <p class="text-muted">Contado = Efectivo / Credito = otros metodos de pago</p>
-          </group>
+		  <!-- 👇 nuevo -->
+		  <field name="pos_config_id"
+				 options="{'no_create': True}"
+				 placeholder="Todos"
+				 domain="[('company_id','in', allowed_company_ids)]"/>
+		  </group>
         </group>
         <footer>
           <button name="action_print_pdf" type="object" string="Imprimir PDF" class="btn-primary"/>

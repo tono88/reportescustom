@@ -11,6 +11,12 @@ class PosSalesReportWizard(models.TransientModel):
     _name = "pos.sales.report.wizard"
     _description = "Asistente de Reporte de Ventas POS (rango fechas)"
 
+    pos_config_id = fields.Many2one(
+        "pos.config",
+        string="Punto de venta",
+        help="Si no seleccionas nada, se incluyen todos los puntos de venta."
+    )
+
     date_from = fields.Date(string="Desde", required=True, default=lambda self: fields.Date.context_today(self))
     date_to = fields.Date(string="Hasta", required=True, default=lambda self: fields.Date.context_today(self))
     invoice_filter = fields.Selection([
@@ -50,6 +56,9 @@ class PosSalesReportWizard(models.TransientModel):
             "invoice_filter": self.invoice_filter,
             "start_utc": start_utc,
             "end_utc": end_utc,
+            # 👇 nuevo
+            "pos_config_id": self.pos_config_id.id if self.pos_config_id else False,
+            "pos_config_name": self.pos_config_id.display_name if self.pos_config_id else "Todos",
         }
         report = self.env.ref(REPORT_XMLID, raise_if_not_found=False) or self._fallback_report_action()
         return report.report_action(None, data=data)

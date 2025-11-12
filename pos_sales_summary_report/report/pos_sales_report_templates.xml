@@ -9,6 +9,11 @@
               DEL: <t t-esc="data.get('date_from') or ''"/>
               AL: <t t-esc="data.get('date_to') or ''"/>
             </p>
+			<p>
+			  Punto de venta:
+			  <t t-esc="data.get('pos_config_name') or 'Todos'"/>
+			</p>
+
           </div>
           <div class="col-3" style="text-align:right;">
             <strong t-esc="company.name"/>
