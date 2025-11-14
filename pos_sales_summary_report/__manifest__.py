@@ -6,11 +6,12 @@
     'website': '',
     'category': 'Point of Sale',
     'license': 'LGPL-3',
-    'depends': ['point_of_sale', 'account'],
+    'depends': ['point_of_sale', 'account', 'report_xlsx'],
     'data': [
         'security/ir.model.access.csv',
         'report/pos_sales_report.xml',
         'report/pos_sales_report_templates.xml',
+        'report/pos_sales_report_xlsx.xml',   # 👈 NUEVO
         'views/pos_sales_report_wizard_view.xml',
     ],
     'application': False,

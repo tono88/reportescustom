@@ -6,6 +6,7 @@ import pytz
 
 REPORT_XMLID = "pos_sales_summary_report.action_report_pos_sales_summary"
 REPORT_NAME = "pos_sales_summary_report.report_pos_sales_summary"
+REPORT_XLSX_XMLID = "pos_sales_summary_report.action_report_pos_sales_summary_xlsx"  # 👈 NUEVO
 
 class PosSalesReportWizard(models.TransientModel):
     _name = "pos.sales.report.wizard"
@@ -15,6 +16,11 @@ class PosSalesReportWizard(models.TransientModel):
         "pos.config",
         string="Punto de venta",
         help="Si no seleccionas nada, se incluyen todos los puntos de venta."
+    )
+    partner_ids = fields.Many2many(
+        "res.partner",
+        string="Clientes",
+        help="Si lo dejas vacío, se incluyen todos los clientes."
     )
 
     date_from = fields.Date(string="Desde", required=True, default=lambda self: fields.Date.context_today(self))
@@ -59,6 +65,51 @@ class PosSalesReportWizard(models.TransientModel):
             # 👇 nuevo
             "pos_config_id": self.pos_config_id.id if self.pos_config_id else False,
             "pos_config_name": self.pos_config_id.display_name if self.pos_config_id else "Todos",
-        }
+            # 👇 NUEVO: filtro por clientes
+            "partner_ids": self.partner_ids.ids,
+            "partner_names": ", ".join(self.partner_ids.mapped("display_name")) if self.partner_ids else "Todos",
+
+       }
         report = self.env.ref(REPORT_XMLID, raise_if_not_found=False) or self._fallback_report_action()
         return report.report_action(None, data=data)
+
+    def action_print_xlsx(self):
+        self.ensure_one()
+        start_utc, end_utc = self._get_utc_bounds()
+        data = {
+            "date_from": str(self.date_from),
+            "date_to": str(self.date_to),
+            "invoice_filter": self.invoice_filter,
+            "start_utc": start_utc,
+            "end_utc": end_utc,
+            "pos_config_id": self.pos_config_id.id if self.pos_config_id else False,
+            "pos_config_name": self.pos_config_id.display_name if self.pos_config_id else "Todos",
+            # 👇 NUEVO: filtro por clientes
+            "partner_ids": self.partner_ids.ids,
+            "partner_names": ", ".join(self.partner_ids.mapped("display_name")) if self.partner_ids else "Todos",
+
+        }
+        Report = self.env["ir.actions.report"].sudo()
+
+        # 1) Intentar por external id (si el XML sí se cargó)
+        report = self.env.ref(REPORT_XLSX_XMLID, raise_if_not_found=False)
+
+        # 2) Si no existe, buscar por nombre de reporte
+        if not report:
+            report = Report.search([
+                ("report_name", "=", "pos_sales_summary_report.report_pos_sales_summary_xlsx"),
+                ("report_type", "=", "xlsx"),
+                ("model", "=", "pos.order"),
+            ], limit=1)
+
+        # 3) Si tampoco existe, crearlo en caliente
+        if not report:
+            report = Report.create({
+                "name": "Reporte de Ventas POS (XLSX)",
+                "model": "pos.order",
+                "report_type": "xlsx",
+                "report_name": "pos_sales_summary_report.report_pos_sales_summary_xlsx",
+                "report_file": "pos_sales_summary_report.report_pos_sales_summary_xlsx",
+            })
+        return report.report_action(None, data=data)
+

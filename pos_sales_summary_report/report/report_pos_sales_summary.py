@@ -95,6 +95,10 @@ class ReportPosSalesSummary(models.AbstractModel):
         invoice_filter = data.get("invoice_filter", "all")
         # 👇 NUEVO: siempre define pos_config_id
         pos_config_id = self._normalize_pos_config_id(data)
+        # 👇 NUEVO: lista de clientes seleccionados
+        partner_ids = data.get("partner_ids") or []
+        if isinstance(partner_ids, int):
+            partner_ids = [partner_ids]
         domain = [
             ("state", "in", ["paid", "done", "invoiced"]),
             ("state", "!=", "cancel"),   # ⬅️ añade esta línea
@@ -108,7 +112,9 @@ class ReportPosSalesSummary(models.AbstractModel):
         # 👇 CAMBIO: usar OR entre config_id y session_id.config_id
         if pos_config_id:
             domain += ["|", ("config_id", "=", pos_config_id), ("session_id.config_id", "=", pos_config_id)]
-
+        # 👇 NUEVO: filtrar por clientes si se seleccionaron
+        if partner_ids:
+            domain.append(("partner_id", "in", partner_ids))
         orders = self.env["pos.order"].search(domain, order="partner_id, date_order, name")
         # --- EXCLUIR ORDENES ORIGEN QUE TENGAN UN REEMBOLSO EN EL RANGO ---
         # Detectar reembolsos por nombre "REEMBOLSO DE …" y excluir su orden original
@@ -124,7 +130,8 @@ class ReportPosSalesSummary(models.AbstractModel):
             refund_domain += ["|", ("config_id", "=", pos_config_id), ("session_id.config_id", "=", pos_config_id)]
 
         refund_orders = self.env["pos.order"].search(refund_domain)
-
+        if partner_ids:
+            refund_domain.append(("partner_id", "in", partner_ids))
         # Extraer nombres originales desde "REEMBOLSO DE <NOMBRE-ORIGINAL>"
         orig_names = []
         for r in refund_orders:

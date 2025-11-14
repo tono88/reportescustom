@@ -13,6 +13,10 @@
 			  Punto de venta:
 			  <t t-esc="data.get('pos_config_name') or 'Todos'"/>
 			</p>
+			<p>
+			  Clientes:
+			  <t t-esc="data.get('partner_names') or 'Todos'"/>
+			</p>
 
           </div>
           <div class="col-3" style="text-align:right;">
