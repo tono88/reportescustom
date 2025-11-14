@@ -70,7 +70,27 @@ class PosSalesReportWizard(models.TransientModel):
             "partner_names": ", ".join(self.partner_ids.mapped("display_name")) if self.partner_ids else "Todos",
 
        }
+        Report = self.env["ir.actions.report"].sudo()    
         report = self.env.ref(REPORT_XMLID, raise_if_not_found=False) or self._fallback_report_action()
+        # 2) Si no existe, buscar por nombre de reporte
+        if not report:
+            report = Report.search([
+                ("report_name", "=", "pos_sales_summary_report.report_pos_sales_summary"),
+                ("report_type", "=", "pdf"),
+                ("model", "=", "pos.order"),
+            ], limit=1)
+
+        # 3) Si tampoco existe, crearlo en caliente
+        if not report:
+            report = Report.create({
+                "name": "Reporte de Ventas POS",
+                "model": "pos.order",
+                "report_type": "pdf",
+                "report_name": "pos_sales_summary_report.report_pos_sales_summary",
+                "report_file": "pos_sales_summary_report.report_pos_sales_summary",
+            })
+        
+        
         return report.report_action(None, data=data)
 
     def action_print_xlsx(self):
