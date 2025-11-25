@@ -5,11 +5,16 @@
     <field name="model">pos.config</field>
     <field name="inherit_id" ref="point_of_sale.pos_config_view_form"/>
     <field name="arch" type="xml">
-      <!-- Añadimos un bloque al final del sheet -->
       <xpath expr="//sheet" position="inside">
         <group string="Correlativo interno POS">
-          <field name="pos_series_prefix"/>
-          <field name="pos_internal_sequence_id" readonly="1"/>
+          <group string="Órdenes FACTURADAS">
+            <field name="pos_series_prefix"/>
+            <field name="pos_internal_sequence_id" readonly="1"/>
+          </group>
+          <group string="Órdenes SIN FACTURA">
+            <field name="pos_series_prefix_no_invoice"/>
+            <field name="pos_internal_sequence_no_invoice_id" readonly="1"/>
+          </group>
         </group>
       </xpath>
     </field>
