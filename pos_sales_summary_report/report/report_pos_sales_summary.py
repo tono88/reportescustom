@@ -99,16 +99,35 @@ class ReportPosSalesSummary(models.AbstractModel):
         partner_ids = data.get("partner_ids") or []
         if isinstance(partner_ids, int):
             partner_ids = [partner_ids]
+            
+            
+            
+            
+        #domain = [
+        #    ("state", "in", ["paid", "done", "invoiced"]),
+        #    ("state", "!=", "cancel"),   # ⬅️ añade esta línea
+        #    ("date_order", ">=", start_utc),
+        #    ("date_order", "<=", end_utc),
+        #]
+        #if invoice_filter == "invoiced":
+        #    domain += [("account_move", "!=", False)]
+        #elif invoice_filter == "not_invoiced":
+        #    domain += [("account_move", "=", False)]
+            
         domain = [
             ("state", "in", ["paid", "done", "invoiced"]),
-            ("state", "!=", "cancel"),   # ⬅️ añade esta línea
+            ("state", "!=", "cancel"),   # ⬅️ mantiene fuera las órdenes canceladas
             ("date_order", ">=", start_utc),
             ("date_order", "<=", end_utc),
         ]
+        # Nota: el caso "not_invoiced" se filtrará más abajo en Python,
+        # para poder incluir también las órdenes con factura cancelada.
         if invoice_filter == "invoiced":
+            # pequeña optimización: solo traemos órdenes que tengan alguna factura enlazada
             domain += [("account_move", "!=", False)]
-        elif invoice_filter == "not_invoiced":
-            domain += [("account_move", "=", False)]
+          
+                    
+            
         # 👇 CAMBIO: usar OR entre config_id y session_id.config_id
         if pos_config_id:
             domain += ["|", ("config_id", "=", pos_config_id), ("session_id.config_id", "=", pos_config_id)]
@@ -143,6 +162,33 @@ class ReportPosSalesSummary(models.AbstractModel):
         if orig_names:
             orders = orders.filtered(lambda o: o.name not in orig_names)
         # --- FIN EXCLUSION ---
+
+        # --- Normalizar según el estado real de la factura asociada ---
+        # Consideramos "factura válida" únicamente cuando el move está en estado 'posted'.
+        # Esto evita que aparezcan en el reporte:
+        #   - Órdenes en estado FACTURADO pero cuya factura fue cancelada.
+        #   - Órdenes en estado FACTURADO pero a las que ya se les eliminó la factura.
+        def _has_valid_invoice(o):
+            move = getattr(o, "account_move", False)
+            if not move:
+                return False
+            return getattr(move, "state", False) == "posted"
+
+        if invoice_filter == "all":
+            # Dejamos:
+            #   - todas las órdenes pagadas/done que NO están marcadas como facturadas
+            #   - y solo las facturadas cuya factura siga vigente (posted)
+            orders = orders.filtered(
+                lambda o: o.state != "invoiced" or _has_valid_invoice(o)
+            )
+        elif invoice_filter == "invoiced":
+            # Solo órdenes con factura vigente
+            orders = orders.filtered(_has_valid_invoice)
+        elif invoice_filter == "not_invoiced":
+            # Órdenes sin factura o con factura cancelada/borrador
+            orders = orders.filtered(lambda o: not _has_valid_invoice(o))
+        # --- FIN NORMALIZACIÓN FACTURA ---
+
 
         currency = self.env.company.currency_id
         lines = []
