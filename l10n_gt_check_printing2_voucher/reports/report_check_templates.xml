@@ -139,9 +139,10 @@
                                             <t t-esc="line.account_id.name"/>
                                         </td>
                                         <td>
-                                            <t t-if="line.analytic_account_id">
+                                            <t t-esc="''"/>
+                                            <!--<t t-if="line.analytic_account_id">
                                                 <t t-esc="get_line_analytic(line)"/>
-                                            </t>
+                                            </t>-->
                                         </td>
                                         <td class="text-right">
                                             <t t-if="line.debit">
@@ -230,86 +231,71 @@
 
 
                         /* Voucher (respaldo contable) */
-                        .voucher-root {
-                            position:absolute;
-                            left:5mm;
-                            right:5mm;
-                            top:40mm;  /* Ajusta esta altura según la papelería física */
-                            font-size:8pt;
-                        }
-                        .voucher-root .vch-row {
-                            width:100%;
-                            margin-bottom:1.5mm;
-                        }
-                        .voucher-root .vch-header-1 span {
-                            margin-right:6mm;
-                        }
-                        .voucher-root .vch-header-1 .vch-amount-num,
-                        .voucher-root .vch-header-1 .vch-check-number {
-                            float:right;
-                            font-weight:700;
-                        }
-                        .voucher-root .vch-header-2,
-                        .voucher-root .vch-header-3 {
-                            font-weight:600;
-                        }
-                        .voucher-root .vch-label {
-                            font-weight:600;
-                            margin-right:2mm;
-                        }
-                        .voucher-table {
-                            width:100%;
-                            border-collapse:collapse;
-                            margin-top:2mm;
-                        }
-                        .voucher-table th,
-                        .voucher-table td {
-                            border:0.2mm solid #000;
-                            padding:0.8mm 1mm;
-                        }
-                        .voucher-table th {
-                            font-size:7pt;
-                            text-align:center;
-                        }
-                        .voucher-table td {
-                            font-size:7pt;
-                        }
-                        .voucher-table .text-right {
-                            text-align:right;
-                        }
-                        .voucher-total td {
-                            font-weight:700;
-                        }
-                        .voucher-footer {
-                            margin-top:6mm;
-                            border:0.3mm solid #000;
-                            padding:2mm 3mm;
-                        }
-                        .voucher-footer .vch-footer-top {
-                            display:flex;
-                            justify-content:space-between;
-                            font-size:7pt;
-                            margin-bottom:3mm;
-                        }
-                        .voucher-footer .vch-footer-bottom {
-                            display:flex;
-                            justify-content:space-between;
-                            gap:4mm;
-                            font-size:7pt;
-                        }
-                        .voucher-footer .vch-sign-block {
-                            flex:1;
-                            text-align:center;
-                        }
-                        .voucher-footer .vch-sign-block .line {
-                            display:block;
-                            height:0;
-                            border-top:0.2mm solid #000;
-                            margin-bottom:1mm;
-                        }
-                        .voucher-footer .vch-sign-block .label {
-                            font-size:7pt;
-                        }
+                        /* Voucher (respaldo contable) */
+						.voucher-root {
+							/* ya NO es absoluto, se comporta como un bloque normal */
+							position: relative;          /* o puedes simplemente quitar esta línea */
+							margin-top: 45mm;            /* mueve el voucher hacia abajo */
+							font-size: 8pt;
+						}
+
+						/* un poco más de aire entre filas del voucher */
+						.voucher-root .vch-row {
+							width: 100%;
+							margin-bottom: 2.5mm;
+						}
+
+						/* separa la tabla del encabezado */
+						.voucher-table {
+							width: 100%;
+							border-collapse: collapse;
+							margin-top: 4mm;
+						}
+						.voucher-table th,
+						.voucher-table td {
+							border: 0.2mm solid #000;
+							padding: 0.8mm 1mm;
+						}
+						.voucher-table th {
+							font-size: 7pt;
+							text-align: center;
+						}
+						.voucher-table td {
+							font-size: 7pt;
+						}
+
+						/* pie del voucher con más espacio */
+						.voucher-footer {
+							margin-top: 6mm;
+							border: 0.3mm solid #000;
+							padding: 2mm 3mm;
+						}
+						.voucher-footer .vch-footer-top {
+							display:flex;
+							justify-content:space-between;
+							font-size:7pt;
+							margin-bottom:3mm;
+						}
+						.voucher-footer .vch-footer-bottom {
+							display:flex;
+							justify-content:space-between;
+							gap:4mm;
+							font-size:7pt;
+						}
+						.voucher-footer .vch-sign-block {
+							flex:1;
+							text-align:center;
+						}
+						.voucher-footer .vch-sign-block .line {
+							display:block;
+							height:0;
+							border-top:0.2mm solid #000;
+							margin-bottom:1mm;
+						}
+						.voucher-footer .vch-sign-block .label {
+							font-size:7pt;
+						}
+
 
                         /* Variantes de layout cheque (arriba / medio / abajo de la hoja) */
                         .check_top    { transform: translateY(0mm); }
