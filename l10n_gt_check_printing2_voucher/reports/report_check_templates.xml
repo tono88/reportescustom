@@ -1,0 +1,347 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Acción de reporte específica de esta versión -->
+    <record id="action_report_check_gt2_voucher" model="ir.actions.report">
+        <field name="name">Cheque Guatemala 2 + Voucher</field>
+        <field name="model">account.payment</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">l10n_gt_check_printing2_voucher.report_check</field>
+        <field name="print_report_name">'Cheque - %s' % (object.name or '')</field>
+        <field name="paperformat_id" ref="l10n_gt_check_printing2.paperformat_check_letter"/>
+        <field name="binding_model_id" ref="account.model_account_payment"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <!-- Template base -->
+    <template id="report_check">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="p">
+
+                <!-- Aux monto -->
+                <t t-set="amount" t-value="p.amount or 0.0"/>
+                <t t-set="integer" t-value="int(amount)"/>
+                <t t-set="cents"   t-value="int(round((amount - integer) * 100))"/>
+
+                <div id="layout_root"
+                     t-attf-class="oe_structure {{ (p.company_id.account_check_printing_layout or '').split('.')[-1] }}"
+                     t-attf-style="position:relative; width:216mm; height:90mm;
+                                    margin-top: {{ (p.company_id.account_check_printing_margin_top or 0.0) }}mm;
+                                    margin-left: {{ (p.company_id.account_check_printing_margin_left or 0.0) }}mm;
+                                    margin-right: {{ (p.company_id.account_check_printing_margin_right or 0.0) }}mm;">
+
+                    <!-- Línea punteada vertical al centro -->
+                    <div class="center-dash"></div>
+
+                    <!-- FECHA -->
+                    <div class="chk-date">
+                        <t t-esc="'PALIN'"/>
+                        <t t-raw="', '"/>
+                        <t t-esc="fmt_date(p.date)"/>
+                    </div>
+
+                    <!-- MONTO NUMÉRICO -->
+                    <div class="chk-amount-num">
+                        <t t-esc="'%0.2f' % (p.amount or 0.0)"/>
+                    </div>
+
+                    <!-- ANULADO -->
+                    <div class="chk-void" t-if="is_void_payment(p)">
+                        ANULADO
+                    </div>
+
+                    <!-- PROVEEDOR / BENEFICIARIO -->
+                    <div class="chk-payee">
+                        <t t-esc="upper(p.partner_id.name)"/>
+                    </div>
+
+                    <!-- MONTO EN LETRAS + CENTAVOS MISMA LÍNEA -->
+                    <div class="chk-amount-text">
+                        <t t-esc="amount_words_line(p)"/>
+                    </div>
+
+                    <!-- ===== VOUCHER / RESPALDO CONTABLE (debajo del cheque) ===== -->
+                    <div class="voucher-root">
+                        <!-- Encabezado con ciudad, fecha, monto y número de cheque -->
+                        <div class="vch-row vch-header-1">
+                            <span class="vch-city">
+                                <t t-esc="upper(p.company_id.city or 'PALIN')"/>
+                            </span>
+                            <span class="vch-date">
+                                <t t-esc="fmt_date(p.date)"/>
+                            </span>
+                            <span class="vch-amount-num">
+                                <t t-esc="format_amount(p.amount)"/>
+                            </span>
+                            <span class="vch-check-number">
+                                <t t-esc="p.check_number or p.name"/>
+                            </span>
+                        </div>
+
+                        <!-- Nombre del beneficiario -->
+                        <div class="vch-row vch-header-2">
+                            <span class="vch-payee">
+                                <t t-esc="upper(p.partner_id.name)"/>
+                            </span>
+                        </div>
+
+                        <!-- Monto en letras -->
+                        <div class="vch-row vch-header-3">
+                            <span>
+                                <t t-esc="upper(amount_words_line(p))"/>
+                            </span>
+                        </div>
+
+                        <!-- Concepto -->
+                        <t t-set="concepto" t-value="get_concept(p)"/>
+                        <div class="vch-row vch-concept">
+                            <span class="vch-label">Concepto:</span>
+                            <span class="vch-value">
+                                <t t-esc="upper(concepto)"/>
+                            </span>
+                        </div>
+
+                        <!-- No. de asiento y No. de cheque -->
+                        <div class="vch-row vch-move">
+                            <span class="vch-move-name">
+                                <t t-esc="p.move_id.name or ''"/>
+                            </span>
+                            <span class="vch-check-label">No. Cheque</span>
+                            <span class="vch-check-number">
+                                <t t-esc="p.check_number or p.name"/>
+                            </span>
+                        </div>
+
+                        <!-- Tabla contable -->
+                        <table class="voucher-table" cellspacing="0" cellpadding="0">
+                            <thead>
+                                <tr>
+                                    <th class="col-account">Cta Contable</th>
+                                    <th class="col-desc">Descripción Cuenta</th>
+                                    <th class="col-cc">Centro Costo</th>
+                                    <th class="col-debit">DEBE</th>
+                                    <th class="col-credit">HABER</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-set="total_debit" t-value="0.0"/>
+                                <t t-set="total_credit" t-value="0.0"/>
+
+                                <t t-foreach="get_voucher_lines(p)" t-as="line">
+                                    <t t-set="total_debit" t-value="total_debit + (line.debit or 0.0)"/>
+                                    <t t-set="total_credit" t-value="total_credit + (line.credit or 0.0)"/>
+
+                                    <tr>
+                                        <td>
+                                            <t t-esc="line.account_id.code or ''"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="line.account_id.name"/>
+                                        </td>
+                                        <td>
+                                            <t t-if="line.analytic_account_id">
+                                                <t t-esc="line.analytic_account_id.code or line.analytic_account_id.name"/>
+                                            </t>
+                                        </td>
+                                        <td class="text-right">
+                                            <t t-if="line.debit">
+                                                <t t-esc="format_amount(line.debit)"/>
+                                            </t>
+                                        </td>
+                                        <td class="text-right">
+                                            <t t-if="line.credit">
+                                                <t t-esc="format_amount(line.credit)"/>
+                                            </t>
+                                        </td>
+                                    </tr>
+                                </t>
+
+                                <!-- Totales -->
+                                <tr class="voucher-total">
+                                    <td colspan="3" class="text-right">Total..&gt;</td>
+                                    <td class="text-right">
+                                        <t t-esc="format_amount(total_debit)"/>
+                                    </td>
+                                    <td class="text-right">
+                                        <t t-esc="format_amount(total_credit)"/>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <!-- Pie: emitido/revisado/autorizado/recibido -->
+                        <div class="voucher-footer">
+                            <div class="vch-footer-top">
+                                <span class="vch-issued-by">
+                                    <t t-esc="upper(user.name)"/>
+                                </span>
+                                <span class="vch-time">
+                                    <t t-esc="now_time()"/>
+                                </span>
+                            </div>
+                            <div class="vch-footer-bottom">
+                                <div class="vch-sign-block">
+                                    <span class="line"></span>
+                                    <span class="label">Emitido por</span>
+                                </div>
+                                <div class="vch-sign-block">
+                                    <span class="line"></span>
+                                    <span class="label">Revisado</span>
+                                </div>
+                                <div class="vch-sign-block">
+                                    <span class="line"></span>
+                                    <span class="label">Autorizado</span>
+                                </div>
+                                <div class="vch-sign-block">
+                                    <span class="line"></span>
+                                    <span class="label">Recibido por</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- ===== FIN VOUCHER ===== -->
+
+
+                    <style>
+                        /* Caja principal del cheque */
+                        #layout_root { box-sizing: border-box; }
+
+                        /* Línea punteada central */
+                        .center-dash {
+                            position:absolute; top:0mm; bottom:0mm; left:108mm;
+                            border-left: 0.4mm dashed #aaa;
+                        }
+
+                        /* Texto ANULADO */
+                        .chk-void {
+                            position:absolute;
+                            top:20mm;
+                            left:10mm;
+                            font-weight:700;
+                            font-size:12pt;
+                            letter-spacing:0.3mm;
+                        }
+
+                        /* Posiciones (ajusta mm según tu papelería física) */
+                        .chk-date        { position:absolute; top:6mm;  left:40mm;  width:95mm;  font-weight:600; }
+                        .chk-amount-num  { position:absolute; top:6mm;  right:10mm; width:40mm;  text-align:right; font-weight:700; }
+                        .chk-payee       { position:absolute; top:19mm; left:40mm;  width:120mm; text-align:left; font-weight:700; }
+                        .chk-amount-text { position:absolute; top:32mm; left:40mm;  width:110mm; white-space: nowrap; }}
+
+
+                        /* Voucher (respaldo contable) */
+                        .voucher-root {
+                            position:absolute;
+                            left:5mm;
+                            right:5mm;
+                            top:40mm;  /* Ajusta esta altura según la papelería física */
+                            font-size:8pt;
+                        }
+                        .voucher-root .vch-row {
+                            width:100%;
+                            margin-bottom:1.5mm;
+                        }
+                        .voucher-root .vch-header-1 span {
+                            margin-right:6mm;
+                        }
+                        .voucher-root .vch-header-1 .vch-amount-num,
+                        .voucher-root .vch-header-1 .vch-check-number {
+                            float:right;
+                            font-weight:700;
+                        }
+                        .voucher-root .vch-header-2,
+                        .voucher-root .vch-header-3 {
+                            font-weight:600;
+                        }
+                        .voucher-root .vch-label {
+                            font-weight:600;
+                            margin-right:2mm;
+                        }
+                        .voucher-table {
+                            width:100%;
+                            border-collapse:collapse;
+                            margin-top:2mm;
+                        }
+                        .voucher-table th,
+                        .voucher-table td {
+                            border:0.2mm solid #000;
+                            padding:0.8mm 1mm;
+                        }
+                        .voucher-table th {
+                            font-size:7pt;
+                            text-align:center;
+                        }
+                        .voucher-table td {
+                            font-size:7pt;
+                        }
+                        .voucher-table .text-right {
+                            text-align:right;
+                        }
+                        .voucher-total td {
+                            font-weight:700;
+                        }
+                        .voucher-footer {
+                            margin-top:6mm;
+                            border:0.3mm solid #000;
+                            padding:2mm 3mm;
+                        }
+                        .voucher-footer .vch-footer-top {
+                            display:flex;
+                            justify-content:space-between;
+                            font-size:7pt;
+                            margin-bottom:3mm;
+                        }
+                        .voucher-footer .vch-footer-bottom {
+                            display:flex;
+                            justify-content:space-between;
+                            gap:4mm;
+                            font-size:7pt;
+                        }
+                        .voucher-footer .vch-sign-block {
+                            flex:1;
+                            text-align:center;
+                        }
+                        .voucher-footer .vch-sign-block .line {
+                            display:block;
+                            height:0;
+                            border-top:0.2mm solid #000;
+                            margin-bottom:1mm;
+                        }
+                        .voucher-footer .vch-sign-block .label {
+                            font-size:7pt;
+                        }
+
+                        /* Variantes de layout cheque (arriba / medio / abajo de la hoja) */
+                        .check_top    { transform: translateY(0mm); }
+                        .check_middle { transform: translateY(93mm); }
+                        .check_bottom { transform: translateY(186mm); }
+
+                        @page { margin: 0mm; }
+                    </style>
+                </div>
+
+                <div class="page"/>
+            </t>
+        </t>
+    </template>
+
+    <!-- Variantes de layout -->
+    <template id="check_top" inherit_id="l10n_gt_check_printing2.report_check" name="Cheque GT2 - Top">
+        <xpath expr="//div[@id='layout_root']" position="attributes">
+            <attribute name="class">oe_structure check_top</attribute>
+        </xpath>
+    </template>
+
+    <template id="check_middle" inherit_id="l10n_gt_check_printing2.report_check" name="Cheque GT2 - Middle">
+        <xpath expr="//div[@id='layout_root']" position="attributes">
+            <attribute name="class">oe_structure check_middle</attribute>
+        </xpath>
+    </template>
+
+    <template id="check_bottom" inherit_id="l10n_gt_check_printing2.report_check" name="Cheque GT2 - Bottom">
+        <xpath expr="//div[@id='layout_root']" position="attributes">
+            <attribute name="class">oe_structure check_bottom</attribute>
+        </xpath>
+    </template>
+
+</odoo>
