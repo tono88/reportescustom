@@ -1,17 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
 
-<t t-name="l10n_gt_check_printing2_voucher.report_check">
+    <!-- Acción de reporte específica de esta versión -->
+    <record id="action_report_check_gt2_voucher" model="ir.actions.report">
+        <field name="name">Cheque Guatemala 2 + Voucher</field>
+        <field name="model">account.payment</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">l10n_gt_check_printing2_voucher.report_check</field>
+        <field name="print_report_name">'Cheque - %s' % (object.name or '')</field>
+        <field name="paperformat_id" ref="l10n_gt_check_printing2.paperformat_check_letter"/>
+        <field name="binding_model_id" ref="account.model_account_payment"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <!-- Template base -->
+    <template id="report_check">
         <t t-call="web.html_container">
             <t t-foreach="docs" t-as="p">
 
                 <!-- Aux monto -->
                 <t t-set="amount" t-value="p.amount or 0.0"/>
                 <t t-set="integer" t-value="int(amount)"/>
-                <t t-set="cents" t-value="int(round((amount - integer) * 100))"/>
+                <t t-set="cents"   t-value="int(round((amount - integer) * 100))"/>
 
-                <div id="layout_root" t-attf-class="oe_structure {{ (p.company_id.account_check_printing_layout or '').split('.')[-1] }}" t-attf-style="position:relative; width:216mm; height:150mm;                                     margin-top: {{ (p.company_id.account_check_printing_margin_top or 0.0) }}mm;                                     margin-left: {{ (p.company_id.account_check_printing_margin_left or 0.0) }}mm;                                     margin-right: {{ (p.company_id.account_check_printing_margin_right or 0.0) }}mm;">
+                <div id="layout_root"
+                     t-attf-class="oe_structure {{ (p.company_id.account_check_printing_layout or '').split('.')[-1] }}"
+                     t-attf-style="position:relative; width:216mm; height:150mm;
+                                    margin-top: {{ (p.company_id.account_check_printing_margin_top or 0.0) }}mm;
+                                    margin-left: {{ (p.company_id.account_check_printing_margin_left or 0.0) }}mm;
+                                    margin-right: {{ (p.company_id.account_check_printing_margin_right or 0.0) }}mm;">
 
                     <!-- Línea punteada vertical al centro -->
-                    <div class="center-dash"/>
+                    <div class="center-dash"></div>
 
                     <!-- FECHA -->
                     <div class="chk-date">
@@ -162,19 +182,19 @@
                             </div>
                             <div class="vch-footer-bottom">
                                 <div class="vch-sign-block">
-                                    <span class="line"/>
+                                    <span class="line"></span>
                                     <span class="label">Emitido por</span>
                                 </div>
                                 <div class="vch-sign-block">
-                                    <span class="line"/>
+                                    <span class="line"></span>
                                     <span class="label">Revisado</span>
                                 </div>
                                 <div class="vch-sign-block">
-                                    <span class="line"/>
+                                    <span class="line"></span>
                                     <span class="label">Autorizado</span>
                                 </div>
                                 <div class="vch-sign-block">
-                                    <span class="line"/>
+                                    <span class="line"></span>
                                     <span class="label">Recibido por</span>
                                 </div>
                             </div>
@@ -208,82 +228,79 @@
                         .chk-amount-num  { position:absolute; top:6mm;  right:10mm; width:40mm;  text-align:right; font-weight:700; }
                         .chk-payee       { position:absolute; top:19mm; left:40mm;  width:120mm; text-align:left; font-weight:700; }
                         .chk-amount-text {
-                            position:absolute;
-                            top:32mm;
-                            left:40mm;
-                            width:110mm;
-                            white-space:nowrap;
-                        }
+							position:absolute;
+							top:32mm;
+							left:40mm;
+							width:110mm;
+							white-space:nowrap;
+						}
 
 
-                        /* Voucher (respaldo contable) */
                        /* Voucher (respaldo contable) */
-                        .voucher-root {
-                            position:absolute;
-                            left:5mm;
-                            right:5mm;
-                            top:180mm;          /* aquí decides qué tan abajo va el voucher */
-                            font-size:8pt;
-                        }
-                        
-                        /* un poco más de aire entre filas del voucher */
-                        .voucher-root .vch-row {
-                            width: 100%;
-                            margin-bottom: 2.5mm;
-                        }
-                        
-                        /* separa la tabla del encabezado */
-                        .voucher-table {
-                            width: 100%;
-                            border-collapse: collapse;
-                            margin-top: 4mm;
-                        }
-                        .voucher-table th,
-                        .voucher-table td {
-                            border: 0.2mm solid #000;
-                            padding: 0.8mm 1mm;
-                        }
-                        .voucher-table th {
-                            font-size: 7pt;
-                            text-align: center;
-                        }
-                        .voucher-table td {
-                            font-size: 7pt;
-                        }
-                        
-                        /* pie del voucher con más espacio */
-                        .voucher-footer {
-                            margin-top: 6mm;
-                            border: 0.3mm solid #000;
-                            padding: 2mm 3mm;
-                        }
-                        .voucher-footer .vch-footer-top {
-                            display:flex;
-                            justify-content:space-between;
-                            font-size:7pt;
-                            margin-bottom:3mm;
-                        }
-                        .voucher-footer .vch-footer-bottom {
-                            display:flex;
-                            justify-content:space-between;
-                            gap:4mm;
-                            font-size:7pt;
-                        }
-                        .voucher-footer .vch-sign-block {
-                            flex:1;
-                            text-align:center;
-                        }
-                        .voucher-footer .vch-sign-block .line {
-                            display:block;
-                            height:0;
-                            border-top:0.2mm solid #000;
-                            margin-bottom:1mm;
-                        }
-                        .voucher-footer .vch-sign-block .label {
-                            font-size:7pt;
-                        }
-                        
-                        
+						.voucher-root {
+							position:absolute;
+							left:5mm;
+							right:5mm;
+							top:180mm;          /* aquí decides qué tan abajo va el voucher */
+							font-size:8pt;
+						}
+
+						/* un poco más de aire entre filas del voucher */
+						.voucher-root .vch-row {
+							width: 100%;
+							margin-bottom: 2.5mm;
+						}
+
+						/* separa la tabla del encabezado */
+						.voucher-table {
+							width: 100%;
+							border-collapse: collapse;
+							margin-top: 4mm;
+						}
+						.voucher-table th,
+						.voucher-table td {
+							border: 0.2mm solid #000;
+							padding: 0.8mm 1mm;
+						}
+						.voucher-table th {
+							font-size: 7pt;
+							text-align: center;
+						}
+						.voucher-table td {
+							font-size: 7pt;
+						}
+
+						/* pie del voucher con más espacio */
+						.voucher-footer {
+							margin-top: 6mm;
+							border: 0.3mm solid #000;
+							padding: 2mm 3mm;
+						}
+						.voucher-footer .vch-footer-top {
+							display:flex;
+							justify-content:space-between;
+							font-size:7pt;
+							margin-bottom:3mm;
+						}
+						.voucher-footer .vch-footer-bottom {
+							display:flex;
+							justify-content:space-between;
+							gap:4mm;
+							font-size:7pt;
+						}
+						.voucher-footer .vch-sign-block {
+							flex:1;
+							text-align:center;
+						}
+						.voucher-footer .vch-sign-block .line {
+							display:block;
+							height:0;
+							border-top:0.2mm solid #000;
+							margin-bottom:1mm;
+						}
+						.voucher-footer .vch-sign-block .label {
+							font-size:7pt;
+						}
 
 
                         /* Variantes de layout cheque (arriba / medio / abajo de la hoja) */
@@ -298,4 +315,25 @@
                 <div class="page"/>
             </t>
         </t>
-    </t>
+    </template>
+
+    <!-- Variantes de layout -->
+    <template id="check_top" inherit_id="l10n_gt_check_printing2.report_check" name="Cheque GT2 - Top">
+        <xpath expr="//div[@id='layout_root']" position="attributes">
+            <attribute name="class">oe_structure check_top</attribute>
+        </xpath>
+    </template>
+
+    <template id="check_middle" inherit_id="l10n_gt_check_printing2.report_check" name="Cheque GT2 - Middle">
+        <xpath expr="//div[@id='layout_root']" position="attributes">
+            <attribute name="class">oe_structure check_middle</attribute>
+        </xpath>
+    </template>
+
+    <template id="check_bottom" inherit_id="l10n_gt_check_printing2.report_check" name="Cheque GT2 - Bottom">
+        <xpath expr="//div[@id='layout_root']" position="attributes">
+            <attribute name="class">oe_structure check_bottom</attribute>
+        </xpath>
+    </template>
+
+</odoo>
