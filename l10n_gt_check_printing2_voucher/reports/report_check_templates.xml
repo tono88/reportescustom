@@ -30,35 +30,7 @@
                                     margin-left: {{ (p.company_id.account_check_printing_margin_left or 0.0) }}mm;
                                     margin-right: {{ (p.company_id.account_check_printing_margin_right or 0.0) }}mm;">
 
-                    <!-- Línea punteada vertical al centro -->
-                    <div class="center-dash"></div>
-
-                    <!-- FECHA -->
-                    <div class="chk-date">
-                        <t t-esc="'PALIN'"/>
-                        <t t-raw="', '"/>
-                        <t t-esc="fmt_date(p.date)"/>
-                    </div>
-
-                    <!-- MONTO NUMÉRICO -->
-                    <div class="chk-amount-num">
-                        <t t-esc="'%0.2f' % (p.amount or 0.0)"/>
-                    </div>
-
-                    <!-- ANULADO -->
-                    <div class="chk-void" t-if="is_void_payment(p)">
-                        ANULADO
-                    </div>
-
-                    <!-- PROVEEDOR / BENEFICIARIO -->
-                    <div class="chk-payee">
-                        <t t-esc="upper(p.partner_id.name)"/>
-                    </div>
-
-                    <!-- MONTO EN LETRAS + CENTAVOS MISMA LÍNEA -->
-                    <div class="chk-amount-text">
-                        <t t-esc="amount_words_line(p)"/>
-                    </div>
+                    
 
                     <!-- ===== VOUCHER / RESPALDO CONTABLE (debajo del cheque) ===== -->
                     <div class="voucher-root">
@@ -117,7 +89,7 @@
                             <thead>
                                 <tr>
                                     <th class="col-account">Cta Contable</th>
-                                    <th class="col-desc">Descripción Cuenta</th>
+                                    <th class="col-desc">Descripcion Cuenta</th>
                                     <th class="col-cc">Centro Costo</th>
                                     <th class="col-debit">DEBE</th>
                                     <th class="col-credit">HABER</th>
