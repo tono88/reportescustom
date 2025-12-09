@@ -42,19 +42,60 @@ class ReportCheckVoucher(models.AbstractModel):
         docs = self.env["account.payment"].browse(docids)
         base = self.env["report.l10n_gt_check_printing2.report_check"]
 
+        #return {
+        #    "docs": docs,
+        #    # helpers del módulo original
+        #    "amount_words_line": base._amount_words_line,
+        #    "fmt_date": base._fmt_date,
+        #    "upper": lambda s: (s or "").upper(),
+        #    "is_void_payment": base._is_void_payment,
+        #    # helpers extra para el voucher
+        #    "get_concept": self._get_concept,
+        #    "get_voucher_lines": self._get_voucher_lines,
+        #    "format_amount": self._format_amount,
+        #    "now_time": self._now_time,
+        #    "user": self.env.user,
+        #    # MUY IMPORTANTE: este helper ya NO usa ningún campo analítico
+        #    "get_line_analytic": lambda line: "",
+        #}
+        
         return {
             "docs": docs,
-            # helpers del módulo original
             "amount_words_line": base._amount_words_line,
             "fmt_date": base._fmt_date,
-            "upper": lambda s: (s or "").upper(),
+            "upper": self._upper_fixed,        # <-- usa el helper nuevo
             "is_void_payment": base._is_void_payment,
-            # helpers extra para el voucher
             "get_concept": self._get_concept,
             "get_voucher_lines": self._get_voucher_lines,
             "format_amount": self._format_amount,
             "now_time": self._now_time,
             "user": self.env.user,
-            # MUY IMPORTANTE: este helper ya NO usa ningún campo analítico
-            "get_line_analytic": lambda line: "",
+            "fix_text": self._fix_encoding,    # <-- para usarlo directo en QWeb
         }
+
+    def _fix_encoding(self, text):
+        """Corrige cadenas mal guardadas tipo PALÃN -> PALÍN.
+        Si el texto ya está bien, lo deja igual.
+        """
+        if not text:
+            return ""
+        # Si viniera en bytes
+        if isinstance(text, bytes):
+            for enc in ("utf-8", "latin-1"):
+                try:
+                    return text.decode(enc)
+                except Exception:
+                    continue
+            return text.decode("utf-8", errors="ignore")
+
+        # Aquí ya es str: probamos el caso típico PALÃN / DescripciÃ³n
+        try:
+            return text.encode("latin-1").decode("utf-8")
+        except Exception:
+            # Si no es ese caso, lo dejamos como venía
+            return text
+
+    def _upper_fixed(self, text):
+        """upper() que primero corrige acentos mal codificados."""
+        return self._fix_encoding(text).upper()
+
