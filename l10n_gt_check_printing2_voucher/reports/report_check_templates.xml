@@ -235,7 +235,7 @@
 						.voucher-root {
 							/* ya NO es absoluto, se comporta como un bloque normal */
 							position: relative;          /* o puedes simplemente quitar esta línea */
-							margin-top: 45mm;            /* mueve el voucher hacia abajo */
+							margin-top: 85mm;            /* mueve el voucher hacia abajo */
 							font-size: 8pt;
 						}
 
