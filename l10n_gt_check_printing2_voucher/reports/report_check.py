@@ -2,30 +2,17 @@
 from odoo import api, models, fields
 
 
-class ReportCheckGT2Voucher(models.AbstractModel):
+class ReportCheckVoucher(models.AbstractModel):
     _name = "report.l10n_gt_check_printing2_voucher.report_check"
-    _description = "Report: Guatemala Check 2 + Voucher"
+    _description = "Guatemala Check 2 + Voucher"
 
-    # Reutilizamos la lógica del reporte base para monto en letras, fecha y anulado
-    def _base_report(self):
-        return self.env["report.l10n_gt_check_printing2.report_check"]
-
-    def _amount_words_line(self, payment):
-        return self._base_report()._amount_words_line(payment)
-
-    def _fmt_date(self, d):
-        return self._base_report()._fmt_date(d)
-
-    def _is_void_payment(self, payment):
-        return self._base_report()._is_void_payment(payment)
-
-    # ==== Helpers específicos del voucher ====
+    # ===================== HELPERS VOUCHER =====================
 
     def _get_concept(self, payment):
         """Texto que saldrá como 'Concepto' en el voucher."""
-        for field in ("ref", "communication", "narration"):
-            if hasattr(payment, field):
-                value = getattr(payment, field)
+        for field_name in ("ref", "communication", "narration"):
+            if hasattr(payment, field_name):
+                value = getattr(payment, field_name)
                 if value:
                     return value
         return ""
@@ -35,7 +22,7 @@ class ReportCheckGT2Voucher(models.AbstractModel):
         move = getattr(payment, "move_id", False)
         if not move:
             return self.env["account.move.line"]
-        # Normalmente serán 2 líneas: banco y cuenta por pagar, pero soporta más.
+        # normalmente serán 2 líneas: banco y cuenta por pagar
         return move.line_ids.filtered(lambda l: l.debit or l.credit)
 
     def _format_amount(self, amount):
@@ -47,42 +34,27 @@ class ReportCheckGT2Voucher(models.AbstractModel):
         now = fields.Datetime.context_timestamp(self, fields.Datetime.now())
         return now.strftime("%H:%M:%S")
 
+    # ===================== VALORES PARA QWEB =====================
+
     @api.model
     def _get_report_values(self, docids, data=None):
+        """Usa la lógica del módulo base y añade los helpers del voucher."""
         docs = self.env["account.payment"].browse(docids)
+        base = self.env["report.l10n_gt_check_printing2.report_check"]
+
         return {
             "docs": docs,
-            "amount_words_line": self._amount_words_line,
-            "fmt_date": self._fmt_date,
+            # helpers del módulo original
+            "amount_words_line": base._amount_words_line,
+            "fmt_date": base._fmt_date,
             "upper": lambda s: (s or "").upper(),
-            "is_void_payment": self._is_void_payment,
-            # Helpers extra para el voucher
+            "is_void_payment": base._is_void_payment,
+            # helpers extra para el voucher
             "get_concept": self._get_concept,
             "get_voucher_lines": self._get_voucher_lines,
             "format_amount": self._format_amount,
             "now_time": self._now_time,
             "user": self.env.user,
-            # NUEVO:
-            "get_line_analytic": self._get_line_analytic,
+            # MUY IMPORTANTE: este helper ya NO usa ningún campo analítico
+            "get_line_analytic": lambda line: "",
         }
-    def _get_line_analytic(self, line):
-        """Devuelve el centro de costo/analítica de la línea si existe.
-        Si no hay nada analítico, devuelve cadena vacía y nunca revienta.
-        """
-        # Caso 1: versiones con analytic_account_id
-        analytic = getattr(line, "analytic_account_id", False)
-        if analytic:
-            # analytic es un record de account.analytic.account
-            return analytic.code or analytic.name
-
-        # Caso 2: versiones nuevas con analytic_distribution (dict {id: porcentaje})
-        dist = getattr(line, "analytic_distribution", False)
-        if dist and isinstance(dist, dict):
-            analytic_ids = list(dist.keys())
-            if analytic_ids:
-                analytic = self.env["account.analytic.account"].browse(int(analytic_ids[0]))
-                if analytic:
-                    return analytic.code or analytic.name
-
-        # Si no hay analítica configurada
-        return ""
