@@ -62,4 +62,26 @@ class ReportCheckGT2Voucher(models.AbstractModel):
             "format_amount": self._format_amount,
             "now_time": self._now_time,
             "user": self.env.user,
+            # NUEVO:
+            "get_line_analytic": self._get_line_analytic,
         }
+    def _get_line_analytic(self, line):
+        """Devuelve el centro de costo/analítica de la línea si existe.
+        Si no hay campo analítico, devuelve cadena vacía para no romper.
+        """
+        # Caso 1: base antigua con analytic_account_id M2O
+        if 'analytic_account_id' in line._fields and line.analytic_account_id:
+            return line.analytic_account_id.code or line.analytic_account_id.name
+
+        # Caso 2: distribución analítica (Odoo nuevo)
+        if 'analytic_distribution' in line._fields and line.analytic_distribution:
+            dist = line.analytic_distribution
+            # dist suele ser un dict {analytic_id: porcentaje}
+            if isinstance(dist, dict) and dist:
+                analytic_id = int(list(dist.keys())[0])
+                analytic = self.env['account.analytic.account'].browse(analytic_id)
+                if analytic:
+                    return analytic.code or analytic.name
+
+        # Si no hay nada analítico configurado
+        return ""
