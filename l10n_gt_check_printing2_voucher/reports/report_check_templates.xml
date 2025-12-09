@@ -64,20 +64,20 @@
                     <div class="voucher-root">
                         <!-- Encabezado con ciudad, fecha, monto y número de cheque -->
                         <div class="vch-row vch-header-1">
-                            <span class="vch-city">
+                            <!--<span class="vch-city">
                                 <t t-esc="upper(p.company_id.city or 'PALIN')"/>
-                            </span>
+                            </span>-->
                             <span class="vch-date">
                                 <t t-esc="'PALIN'"/>
 								<t t-raw="', '"/>
 								<t t-esc="fmt_date(p.date)"/>
                             </span>
-                            <span class="vch-amount-num">
+                          <!--  <span class="vch-amount-num">
                                 <t t-esc="'%0.2f' % (p.amount or 0.0)"/>
                             </span>
                             <span class="vch-check-number">
                                 <t t-esc="p.check_number or p.name"/>
-                            </span>
+                            </span>-->
                         </div>
 
                         <!-- Nombre del beneficiario -->
