@@ -26,9 +26,8 @@ class ReportCheckVoucher(models.AbstractModel):
         return move.line_ids.filtered(lambda l: l.debit or l.credit)
 
     def _format_amount(self, amount):
-         """Formateo estándar con miles y 2 decimales: 1,234.56."""
-        amt = amount or 0.0
-        return f"{amt:,.2f}"
+        """Formateo estándar 0.00 para el voucher."""
+        return "%0.2f" % (amount or 0.0)
 
     def _now_time(self):
         """Hora local del usuario para la parte inferior del voucher."""

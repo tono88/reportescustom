@@ -174,44 +174,33 @@
 
                         <!-- Pie: emitido/revisado/autorizado/recibido -->
                         <div class="voucher-footer">
-    <!-- Fila superior: hora centrada -->
-    <div class="vch-footer-time-row">
-        <span class="vch-time">
-            <t t-esc="now_time()"/>
-        </span>
-    </div>
-
-    <!-- Fila inferior: 4 bloques de firma -->
-    <div class="vch-footer-bottom">
-				<!-- Bloque 1: Emitido por (con nombre arriba de la línea) -->
-				<div class="vch-sign-block vch-sign-emitido">
-					<span class="vch-name">
-						<t t-esc="upper(user.name)"/>
-					</span>
-					<span class="line"/>
-					<span class="label">Emitido Por</span>
-				</div>
-
-				<!-- Bloque 2: Revisado -->
-				<div class="vch-sign-block">
-					<span class="line"/>
-					<span class="label">Revisado:</span>
-				</div>
-
-				<!-- Bloque 3: Autorizado -->
-				<div class="vch-sign-block">
-					<span class="line"/>
-					<span class="label">Autorizado</span>
-				</div>
-
-				<!-- Bloque 4: Recibido Por -->
-				<div class="vch-sign-block">
-					<span class="line"/>
-					<span class="label">Recibido Por</span>
-				</div>
-			</div>
-		</div>
-
+                            <div class="vch-footer-top">
+                                <span class="vch-issued-by">
+                                    <t t-esc="upper(user.name)"/>
+                                </span>
+                                <span class="vch-time">
+                                    <t t-esc="now_time()"/>
+                                </span>
+                            </div>
+                            <div class="vch-footer-bottom">
+                                <div class="vch-sign-block">
+                                    <span class="line"></span>
+                                    <span class="label">Emitido por</span>
+                                </div>
+                                <div class="vch-sign-block">
+                                    <span class="line"></span>
+                                    <span class="label">Revisado</span>
+                                </div>
+                                <div class="vch-sign-block">
+                                    <span class="line"></span>
+                                    <span class="label">Autorizado</span>
+                                </div>
+                                <div class="vch-sign-block">
+                                    <span class="line"></span>
+                                    <span class="label">Recibido por</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <!-- ===== FIN VOUCHER ===== -->
 
@@ -248,22 +237,6 @@
 							white-space:nowrap;
 						}
 
-						/* Fila de concepto: label + texto en la misma línea */
-						.vch-concept {
-							display: flex;
-							align-items: flex-start;
-						}
-
-						.vch-concept .vch-label {
-							flex: 0 0 auto;
-							margin-right: 2mm;
-							white-space: nowrap;   /* evita que se parta "Concepto:" */
-						}
-
-						.vch-concept .vch-value {
-							flex: 1 1 auto;
-							display: block;        /* el texto puede romper en varias líneas */
-						}
 
                        /* Voucher (respaldo contable) */
 						.voucher-root {
