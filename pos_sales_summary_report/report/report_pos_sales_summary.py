@@ -5,6 +5,15 @@ from odoo import api, fields, models, _
 class ReportPosSalesSummary(models.AbstractModel):
     _name = "report.pos_sales_summary_report.report_pos_sales_summary"
     _description = "Reporte PDF: Resumen de ventas POS"
+    def _has_valid_invoice(o):
+        move = getattr(o, "account_move", False)
+        if not move:
+            return False
+        return getattr(move, "state", False) == "posted"
+
+    def _is_invoiced_without_move(o):
+        """Orden marcada como facturada pero sin factura enlazada (factura eliminada)."""
+        return o.state == "invoiced" and not getattr(o, "account_move", False)
 
 
     def _normalize_pos_config_id(self, data):
@@ -174,20 +183,41 @@ class ReportPosSalesSummary(models.AbstractModel):
                 return False
             return getattr(move, "state", False) == "posted"
 
+#        if invoice_filter == "all":
+#            # Dejamos:
+#            #   - todas las órdenes pagadas/done que NO están marcadas como facturadas
+#            #   - y solo las facturadas cuya factura siga vigente (posted)
+#            orders = orders.filtered(
+#                lambda o: o.state != "invoiced" or _has_valid_invoice(o)
+#            )
+#        elif invoice_filter == "invoiced":
+#            # Solo órdenes con factura vigente
+#            orders = orders.filtered(_has_valid_invoice)
+#        elif invoice_filter == "not_invoiced":
+#            # Órdenes sin factura o con factura cancelada/borrador
+#            orders = orders.filtered(lambda o: not _has_valid_invoice(o))
+#        # --- FIN NORMALIZACIÓN FACTURA ---
+
         if invoice_filter == "all":
-            # Dejamos:
-            #   - todas las órdenes pagadas/done que NO están marcadas como facturadas
-            #   - y solo las facturadas cuya factura siga vigente (posted)
+            # Igual que antes, pero explícitamente dejamos fuera las
+            # órdenes facturadas sin factura enlazada.
             orders = orders.filtered(
-                lambda o: o.state != "invoiced" or _has_valid_invoice(o)
+                lambda o: (o.state != "invoiced" or _has_valid_invoice(o))
+                and not _is_invoiced_without_move(o)
             )
+
         elif invoice_filter == "invoiced":
-            # Solo órdenes con factura vigente
+            # Solo órdenes con factura vigente (posted)
             orders = orders.filtered(_has_valid_invoice)
+
         elif invoice_filter == "not_invoiced":
-            # Órdenes sin factura o con factura cancelada/borrador
-            orders = orders.filtered(lambda o: not _has_valid_invoice(o))
-        # --- FIN NORMALIZACIÓN FACTURA ---
+            # Órdenes sin factura válida o con factura cancelada/borrador,
+            # PERO excluimos las que están en estado 'invoiced' y sin move.
+            orders = orders.filtered(
+                lambda o: not _has_valid_invoice(o)
+                and not _is_invoiced_without_move(o)
+            )
+
 
 
         currency = self.env.company.currency_id
