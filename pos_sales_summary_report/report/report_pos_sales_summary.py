@@ -5,12 +5,13 @@ from odoo import api, fields, models, _
 class ReportPosSalesSummary(models.AbstractModel):
     _name = "report.pos_sales_summary_report.report_pos_sales_summary"
     _description = "Reporte PDF: Resumen de ventas POS"
+    @staticmethod
     def _has_valid_invoice(o):
         move = getattr(o, "account_move", False)
         if not move:
             return False
         return getattr(move, "state", False) == "posted"
-
+    @staticmethod
     def _is_invoiced_without_move(o):
         """Orden marcada como facturada pero sin factura enlazada (factura eliminada)."""
         return o.state == "invoiced" and not getattr(o, "account_move", False)
@@ -177,11 +178,6 @@ class ReportPosSalesSummary(models.AbstractModel):
         # Esto evita que aparezcan en el reporte:
         #   - Órdenes en estado FACTURADO pero cuya factura fue cancelada.
         #   - Órdenes en estado FACTURADO pero a las que ya se les eliminó la factura.
-        def _has_valid_invoice(o):
-            move = getattr(o, "account_move", False)
-            if not move:
-                return False
-            return getattr(move, "state", False) == "posted"
 
 #        if invoice_filter == "all":
 #            # Dejamos:
@@ -202,20 +198,20 @@ class ReportPosSalesSummary(models.AbstractModel):
             # Igual que antes, pero explícitamente dejamos fuera las
             # órdenes facturadas sin factura enlazada.
             orders = orders.filtered(
-                lambda o: (o.state != "invoiced" or _has_valid_invoice(o))
-                and not _is_invoiced_without_move(o)
+                lambda o: (o.state != "invoiced" or self._has_valid_invoice(o))
+                and not self._is_invoiced_without_move(o)
             )
 
         elif invoice_filter == "invoiced":
             # Solo órdenes con factura vigente (posted)
-            orders = orders.filtered(_has_valid_invoice)
+            orders = orders.filtered(self._has_valid_invoice)
 
         elif invoice_filter == "not_invoiced":
             # Órdenes sin factura válida o con factura cancelada/borrador,
             # PERO excluimos las que están en estado 'invoiced' y sin move.
             orders = orders.filtered(
-                lambda o: not _has_valid_invoice(o)
-                and not _is_invoiced_without_move(o)
+                lambda o: not self._has_valid_invoice(o)
+                and not self._is_invoiced_without_move(o)
             )
 
 
