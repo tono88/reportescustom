@@ -22,6 +22,8 @@
 				 widget="many2many_tags"
 				 domain="[('customer_rank','>',0)]"
 				 options="{'no_create': True}"/>
+		  <!-- 👇 NUEVO: alternar vista agrupada / lineal -->
+           <field name="order_by_internal_correlative"/>
 		  </group>
         </group>
         <footer>

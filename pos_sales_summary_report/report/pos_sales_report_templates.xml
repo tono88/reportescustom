@@ -45,12 +45,28 @@
             </tr>
           </thead>
           <tbody>
-            <t t-foreach="grouped" t-as="grp">
-              <tr><td colspan="6"><strong t-esc="grp['partner']"/></td></tr>
-              <t t-foreach="grp['lines']" t-as="l">
+		   <!-- Modo original: agrupado por cliente -->
+            <t t-if="not data.get('order_by_internal_correlative')">
+				<t t-foreach="grouped" t-as="grp">
+				  <tr><td colspan="6"><strong t-esc="grp['partner']"/></td></tr>
+				  <t t-foreach="grp['lines']" t-as="l">
+					<tr>
+					  <td t-esc="l['partner']"/>
+					  <td t-esc="l['correlative']"/>
+					  <td t-esc="l['invoice']"/>
+					  <td style="text-align:right;" t-esc="l['contado_fmt']"/>
+					  <td style="text-align:right;" t-esc="l['credito_fmt']"/>
+					  <td style="text-align:right;" t-esc="l['total_fmt']"/>
+					</tr>
+				  </t>
+				</t>
+			</t>
+			<!-- NUEVO: modo lineal, ordenado por correlativo interno -->
+            <t t-else="">
+              <t t-foreach="lines_linear" t-as="l">
                 <tr>
                   <td t-esc="l['partner']"/>
-				  <td t-esc="l['correlative']"/>
+                  <td t-esc="l['correlative']"/>
                   <td t-esc="l['invoice']"/>
                   <td style="text-align:right;" t-esc="l['contado_fmt']"/>
                   <td style="text-align:right;" t-esc="l['credito_fmt']"/>

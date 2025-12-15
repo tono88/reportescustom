@@ -110,6 +110,9 @@ class ReportPosSalesSummary(models.AbstractModel):
         if isinstance(partner_ids, int):
             partner_ids = [partner_ids]
             
+        # 👇 NUEVO: flag para alternar vista
+        order_by_correlative = bool(data.get("order_by_internal_correlative"))
+            
             
             
             
@@ -232,6 +235,21 @@ class ReportPosSalesSummary(models.AbstractModel):
         total_contado = sum(l["contado"] for l in lines)
         total_credito = sum(l["credito"] for l in lines)
         total_general = sum(l["total"] for l in lines)
+        
+        
+        # 👇 NUEVO: lista lineal ordenada por correlativo interno
+        if order_by_correlative:
+            def _correlative_key(line):
+                corr = line.get("correlative") or ""
+                try:
+                    return (0, int(corr))
+                except (TypeError, ValueError):
+                    return (1, str(corr))
+            lines_linear = sorted(lines, key=_correlative_key)
+        else:
+            # modo original: simplemente usamos la lista tal cual
+            lines_linear = lines
+
 
         # Agrupar por partner
         grouped_map = {}
@@ -249,6 +267,8 @@ class ReportPosSalesSummary(models.AbstractModel):
             "doc_model": "pos.order",
             "data": data,
             "grouped": grouped_list,
+            # 👇 NUEVO: lista plana para vista lineal por correlativo
+            "lines_linear": lines_linear,
             "total_contado": total_contado,
             "total_credito": total_credito,
             "total_general": total_general,

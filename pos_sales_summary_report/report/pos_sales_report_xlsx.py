@@ -13,6 +13,9 @@ class PosSalesSummaryXlsx(models.AbstractModel):
         vals = pdf_report._get_report_values(docids=None, data=data or {})
 
         grouped = vals.get("grouped", [])
+        lines_linear = vals.get("lines_linear") or []
+        order_by_correlative = bool(vals.get("order_by_internal_correlative"))    
+        
         total_contado = vals.get("total_contado") or 0.0
         total_credito = vals.get("total_credito") or 0.0
         total_general = vals.get("total_general") or 0.0
@@ -51,18 +54,28 @@ class PosSalesSummaryXlsx(models.AbstractModel):
         for col, h in enumerate(headers):
             sheet.write(row, col, h, bold)
         row += 1
-
-        # Detalle por cliente
-        for group in grouped:
-            partner_name = group.get("partner") or ""
-            for line in group.get("lines", []):
-                sheet.write(row, 0, partner_name)
+        if order_by_correlative:
+            # Modo lineal: usamos la lista ya ordenada por correlativo
+            for line in lines_linear:
+                sheet.write(row, 0, line.get("partner") or "")
                 sheet.write(row, 1, line.get("correlative") or "")
                 sheet.write(row, 2, line.get("invoice") or "")
                 sheet.write_number(row, 3, line.get("contado") or 0.0, money)
                 sheet.write_number(row, 4, line.get("credito") or 0.0, money)
                 sheet.write_number(row, 5, line.get("total") or 0.0, money)
                 row += 1
+        else:
+            # Detalle por cliente
+            for group in grouped:
+                partner_name = group.get("partner") or ""
+                for line in group.get("lines", []):
+                    sheet.write(row, 0, partner_name)
+                    sheet.write(row, 1, line.get("correlative") or "")
+                    sheet.write(row, 2, line.get("invoice") or "")
+                    sheet.write_number(row, 3, line.get("contado") or 0.0, money)
+                    sheet.write_number(row, 4, line.get("credito") or 0.0, money)
+                    sheet.write_number(row, 5, line.get("total") or 0.0, money)
+                    row += 1
 
         # Totales generales
         row += 1

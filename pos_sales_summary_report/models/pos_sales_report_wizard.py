@@ -20,7 +20,13 @@ class PosSalesReportWizard(models.TransientModel):
     partner_ids = fields.Many2many(
         "res.partner",
         string="Clientes",
-        help="Si lo dejas vacío, se incluyen todos los clientes."
+        help="Si lo dejas vacio, se incluyen todos los clientes."
+    )
+
+
+    order_by_internal_correlative = fields.Boolean(
+        string="Ordenar lineal por correlativo interno",
+        help="Si esta marcado, el reporte se mostrara lineal, ordenado por el correlativo interno, sin agrupar por cliente."
     )
 
     date_from = fields.Date(string="Desde", required=True, default=lambda self: fields.Date.context_today(self))
@@ -50,8 +56,12 @@ class PosSalesReportWizard(models.TransientModel):
     def _fallback_report_action(self):
         report = self.env["ir.actions.report"].sudo().search([("report_name", "=", REPORT_NAME)], limit=1)
         if not report:
-            raise models.ValidationError(_("No se encontró la acción de reporte '%s'. Reinstale el módulo o cree la acción en Ajustes → Técnico → Acciones → Reportes.") % REPORT_NAME)
+            raise models.ValidationError(
+                _("No se encontro la accion de reporte %s. Verifique la configuracion en Ajustes / Tecnico / Acciones / Reportes.")
+                % REPORT_NAME
+            )
         return report
+
 
     def action_print_pdf(self):
         self.ensure_one()
@@ -68,6 +78,8 @@ class PosSalesReportWizard(models.TransientModel):
             # 👇 NUEVO: filtro por clientes
             "partner_ids": self.partner_ids.ids,
             "partner_names": ", ".join(self.partner_ids.mapped("display_name")) if self.partner_ids else "Todos",
+            # ?? NUEVO: flag de vista lineal por correlativo
+            "order_by_internal_correlative": self.order_by_internal_correlative,
 
        }
         Report = self.env["ir.actions.report"].sudo()    
@@ -107,6 +119,8 @@ class PosSalesReportWizard(models.TransientModel):
             # 👇 NUEVO: filtro por clientes
             "partner_ids": self.partner_ids.ids,
             "partner_names": ", ".join(self.partner_ids.mapped("display_name")) if self.partner_ids else "Todos",
+            # ?? NUEVO: flag de vista lineal por correlativo
+            "order_by_internal_correlative": self.order_by_internal_correlative,
 
         }
         Report = self.env["ir.actions.report"].sudo()
