@@ -12,10 +12,21 @@
         <field name="binding_model_id" ref="account.model_account_payment"/>
         <field name="binding_type">report</field>
     </record>
-
+<template id="check_utf8_container">
+  <html>
+    <head>
+      <meta charset="utf-8"/>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+      <t t-call-assets="web.report_assets_common" t-js="false"/>
+    </head>
+    <body class="o_report_body">
+      <t t-raw="0"/>
+    </body>
+  </html>
+</template>
     <!-- Template base -->
     <template id="report_check">
-        <t t-call="web.html_container">
+          <t t-call="l10n_gt_check_printing2_voucher.check_utf8_container"> 	
             <t t-foreach="docs" t-as="p">
 
                 <!-- Aux monto -->
@@ -57,7 +68,7 @@
 
                     <!-- MONTO EN LETRAS + CENTAVOS MISMA LÍNEA -->
                     <div class="chk-amount-text">
-                        <t t-esc="amount_words_line(p)"/>
+                        <t t-esc="fix_text(amount_words_line(p))"/>
                     </div>
 
                     <!-- ===== VOUCHER / RESPALDO CONTABLE (debajo del cheque) ===== -->
@@ -90,7 +101,7 @@
                         <!-- Monto en letras -->
                         <div class="vch-row vch-header-3">
                             <span>
-                                <t t-esc="upper(amount_words_line(p))"/>
+                                <t t-esc="upper(fix_text(amount_words_line(p)))"/>
                             </span>
                         </div>
 
@@ -104,7 +115,7 @@
                         </div>
 
                         <!-- No. de asiento y No. de cheque -->
-                        <div class="vch-row vch-move">
+                       <!-- <div class="vch-row vch-move">
                             <span class="vch-move-name">
                                 <t t-esc="p.move_id.name or ''"/>
                             </span>
@@ -113,6 +124,21 @@
                                 <t t-esc="p.check_number or p.name"/>
                             </span>
                         </div>
+						-->
+						
+						<table class="vch-move-table" cellspacing="0" cellpadding="0">
+						  <tr>
+							<td class="vch-move-name">
+							  <t t-esc="p.move_id.name or ''"/>
+							</td>
+							<td class="vch-check-cell">
+							  <span class="vch-check-label">No. Cheque</span>
+							  <span class="vch-check-number">
+								<t t-esc="p.check_number or p.name"/>
+							  </span>
+							</td>
+						  </tr>
+						</table>
 
                         <!-- Tabla contable -->
                         <table class="voucher-table" cellspacing="0" cellpadding="0">
@@ -318,11 +344,26 @@
 						  margin-left:auto;     /* empuja a la derecha */
 						  white-space:nowrap;
 						}
-						.vch-check-number{
-						  white-space:nowrap;
-						  text-align:right;
-						  min-width:28mm;       /* ajusta al ancho que te guste */
+						.vch-move-table{
+						  width:100%;
+						  border-collapse:collapse;
+						  margin-top:0; /* opcional */
 						}
+						.vch-move-table td{
+						  padding:0;
+						  border:0;
+						  vertical-align:baseline;
+						}
+						.vch-check-cell{
+						  text-align:right;
+						  white-space:nowrap;
+						}
+						.vch-check-number{
+						  display:inline-block;
+						  min-width:28mm; /* ajusta si quieres */
+						  text-align:right;
+						}
+
 
                         /* Variantes de layout cheque (arriba / medio / abajo de la hoja) */
                         .check_top    { transform: translateY(0mm); }
