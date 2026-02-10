@@ -114,7 +114,7 @@
                         <div class="vch-row vch-concept">
                             <span class="vch-label">Concepto:</span>
                             <span class="vch-value">
-                                <t t-esc="upper(concepto)"/>
+                                <t t-esc="upper(memo)"/>
                             </span>
                         </div>
 

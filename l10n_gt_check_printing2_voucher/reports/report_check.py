@@ -100,4 +100,20 @@ class ReportCheckVoucher(models.AbstractModel):
     def _upper_fixed(self, text):
         """upper() que primero corrige acentos mal codificados."""
         return self._fix_encoding(text).upper()
+        
+    def fix_text(self, s):
+        if not s:
+            return ''
+        # si viene bytes
+        if isinstance(s, (bytes, bytearray)):
+            return s.decode('utf-8', errors='ignore')
+
+        # mojibake típico: "Ã³" etc.
+        try:
+            if 'Ã' in s or 'Â' in s:
+                s = s.encode('latin1', errors='ignore').decode('utf-8', errors='ignore')
+        except Exception:
+            pass
+        return s
+
 
