@@ -27,7 +27,9 @@ class ReportCheckVoucher(models.AbstractModel):
 
     def _format_amount(self, amount):
         """Formateo estándar 0.00 para el voucher."""
-        return "%0.2f" % (amount or 0.0)
+        #return "%0.2f" % (amount or 0.0)
+        amount = amount or 0.0
+        return f"{amount:,.2f}"  # 6,522.86
 
     def _now_time(self):
         """Hora local del usuario para la parte inferior del voucher."""
