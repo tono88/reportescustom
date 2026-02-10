@@ -18,15 +18,19 @@
       <meta charset="utf-8"/>
       <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
       <t t-call-assets="web.report_assets_common" t-js="false"/>
+      <t t-call-assets="web.report_assets_pdf" t-js="false"/>
     </head>
     <body class="o_report_body">
-      <t t-raw="0"/>
+      <main>
+        <t t-raw="0"/>
+      </main>
     </body>
   </html>
 </template>
+
     <!-- Template base -->
     <template id="report_check">
-          <t t-call="l10n_gt_check_printing2_voucher.check_utf8_container"> 	
+          <t t-call="l10n_gt_check_printing2_voucher.check_utf8_container">	
             <t t-foreach="docs" t-as="p">
 
                 <!-- Aux monto -->
