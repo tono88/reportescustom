@@ -90,7 +90,7 @@
                         <!-- Monto en letras -->
                         <div class="vch-row vch-header-3">
                             <span>
-                                <t t-esc="upper(amount_words_line(p))"/>
+                                <t t-esc="(amount_words_line(p) or '').upper()"/>
                             </span>
                         </div>
 
@@ -303,7 +303,10 @@
 						.voucher-footer .vch-sign-block .label {
 							font-size:7pt;
 						}
-
+						.vch-check-label{
+						  margin-left:auto;     /* empuja a la derecha */
+						  white-space:nowrap;
+						}
 
                         /* Variantes de layout cheque (arriba / medio / abajo de la hoja) */
                         .check_top    { transform: translateY(0mm); }
