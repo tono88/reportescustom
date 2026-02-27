@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_db_auto_backup_rule,access_db_auto_backup_rule,model_db_auto_backup_rule,base.group_erp_manager,1,1,1,1
+access_db_backup_destination,access_db_backup_destination,model_db_backup_destination,base.group_erp_manager,1,1,1,1

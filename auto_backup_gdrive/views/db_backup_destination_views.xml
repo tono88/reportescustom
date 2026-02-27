@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="db_backup_destination_tree" model="ir.ui.view">
+        <field name="name">db.backup.destination.tree</field>
+        <field name="model">db.backup.destination</field>
+        <field name="arch" type="xml">
+            <list string="Database Backup Destinations">
+                <field name="name" />
+                <field name="backup_destination" required="1" /> 
+            </list>
+        </field>
+    </record>
+    <record id="db_backup_destination_form" model="ir.ui.view">
+        <field name="name">db.backup.destination.form</field>
+        <field name="model">db.backup.destination</field>
+        <field name="arch" type="xml">
+            <form string="Database Backup Destination">
+                <header>
+                    <button type='object' string='Authorize &amp; Get Token' name='authorize_and_get_token' class='oe_highlight'></button>
+                </header>
+                <sheet>
+                    <div class="oe_title oe_inline">
+                        <label for="name"/>
+                        <h1><field name="name" /></h1>
+                    </div>
+                    <group>
+                        <field name="backup_destination" required="1" /> 
+                    </group>
+                    <notebook>
+                        <page string="Google Drive Configuration" invisible="backup_destination != 'gdrive'">
+                            <group>
+                                <field name="gdrive_client_id" />
+                                <field name="gdrive_client_secret" password="True" />
+                                <field name="gdrive_redirect_uri" />
+                                <field name="gdrive_refresh_token" readonly="1" force_save="1" />
+                                <field name="gdrive_access_token" readonly="1" force_save="1" />
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="db_backup_dests_action" model="ir.actions.act_window">
+        <field name="name">DB Backup Destinations</field>
+        <field name="res_model">db.backup.destination</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="db_auto_backup_rule_tree" model="ir.ui.view">
+        <field name="name">db.auto.backup.rule.tree</field>
+        <field name="model">db.auto.backup.rule</field>
+        <field name="arch" type="xml">
+            <list string="Databse Automatic Backup Rule">
+                <field name="name" />
+            </list>
+        </field>
+    </record>
+    <record id="db_auto_backup_rule_form" model="ir.ui.view">
+        <field name="name">db.auto.backup.rule.form</field>
+        <field name="model">db.auto.backup.rule</field>
+        <field name="arch" type="xml">
+            <form string="Databse Automatic Backup Rule">
+                <sheet>
+                    <div class="oe_title oe_inline">
+                        <label for="name"/>
+                        <h1><field name="name" /></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="db_backup_destinations" widget="many2many_tags" />
+                            <field name="backup_type" />
+                            <label for="interval_type" />
+                            <div>
+                                <field name="interval_type" />
+                                <field name="interval_number" />
+                            </div>
+                        </group>
+                        <group>
+                            <field name="backup_filename" required="1" />
+                            <field name="delete_old_backups" />
+                            <field name="delete_days" invisible=" not delete_old_backups" required="delete_old_backups" />
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Odoo Configurations">
+                            <group>
+                                <field name="limit_time_cpu" required="1"/>
+                                <field name="limit_time_real" required="1"/>
+                                <field name="limit_time_real_cron" required="1"/>
+                            </group>
+                            <b style="color:red">
+                                **It is highly recommended to use higher time limits in case if you have large size backups.
+                            </b>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="db_automatic_backup_rules_action" model="ir.actions.act_window">
+        <field name="name">DB Automatic Backup Rules</field>
+        <field name="res_model">db.auto.backup.rule</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

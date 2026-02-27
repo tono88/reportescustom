@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_db_auto_backup" name="Databse Automatic Backup" parent="base.menu_custom" />
+    <menuitem id="db_auto_backup_rule_menu" parent="menu_db_auto_backup" action="db_automatic_backup_rules_action" sequence="100" />
+    <menuitem id="db_backup_destination_menu" parent="menu_db_auto_backup" action="db_backup_dests_action" sequence="500" />
+</odoo>
