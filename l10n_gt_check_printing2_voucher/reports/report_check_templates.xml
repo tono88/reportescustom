@@ -114,7 +114,7 @@
                         <div class="vch-row vch-concept">
                             <span class="vch-label">Concepto:</span>
                             <span class="vch-value">
-                                <t t-esc="upper(memo)"/>
+                                <t t-esc="upper(p.memo)"/>
                             </span>
                         </div>
 
@@ -273,7 +273,7 @@
 							position:absolute;
 							left:5mm;
 							right:5mm;
-							top:180mm;          /* aquí decides qué tan abajo va el voucher */
+							top:30mm;          /* aquí decides qué tan abajo va el voucher */
 							font-size:8pt;
 						}
 
