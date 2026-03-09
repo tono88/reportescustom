@@ -212,24 +212,24 @@
                                     <t t-esc="now_time()"/>
                                 </span>
                             </div>
-                            <div class="vch-footer-bottom">
-                                <div class="vch-sign-block">
-                                    <span class="line"></span>
-                                    <span class="label">Emitido por</span>
-                                </div>
-                                <div class="vch-sign-block">
-                                    <span class="line"></span>
-                                    <span class="label">Revisado</span>
-                                </div>
-                                <div class="vch-sign-block">
-                                    <span class="line"></span>
-                                    <span class="label">Autorizado</span>
-                                </div>
-                                <div class="vch-sign-block">
-                                    <span class="line"></span>
-                                    <span class="label">Recibido por</span>
-                                </div>
-                            </div>
+                           <div class="vch-footer-bottom">
+							<div class="vch-sign-block">
+								<span class="line"></span>
+								<span class="label">Emitido por</span>
+							</div>
+							<div class="vch-sign-block">
+								<span class="line"></span>
+								<span class="label">Revisado</span>
+							</div>
+							<div class="vch-sign-block">
+								<span class="line"></span>
+								<span class="label">Autorizado</span>
+							</div>
+							<div class="vch-sign-block">
+								<span class="line"></span>
+								<span class="label">Recibido por</span>
+							</div>
+						</div>
                         </div>
                     </div>
                     <!-- ===== FIN VOUCHER ===== -->
@@ -334,23 +334,29 @@
 							margin-bottom:3mm;
 						}
 						.voucher-footer .vch-footer-bottom {
-							display:flex;
-							justify-content:space-between;
-							gap:4mm;
-							font-size:7pt;
+							display: flex;
+							width: 100%;
+							justify-content: space-between;
+							align-items: flex-start;
+							gap: 4mm;
 						}
 						.voucher-footer .vch-sign-block {
 							flex:1;
 							text-align:center;
 						}
 						.voucher-footer .vch-sign-block .line {
-							display:block;
-							height:0;
-							border-top:0.2mm solid #000;
-							margin-bottom:1mm;
+							display: block;
+							width: 100%;
+							height: 0;
+							border-top: 0.2mm solid #000;
+							margin-bottom: 1mm;
 						}
+
 						.voucher-footer .vch-sign-block .label {
-							font-size:7pt;
+							display: block;
+							text-align: center;
+							white-space: nowrap;
+							font-size: 7pt;
 						}
 						.vch-move{
 						  display:flex;
