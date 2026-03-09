@@ -46,34 +46,34 @@
                                     margin-right: {{ (p.company_id.account_check_printing_margin_right or 0.0) }}mm;">
 
                     <!-- Línea punteada vertical al centro -->
-                    <div class="center-dash"></div>
+<!--                    <div class="center-dash"/>-->
 
                     <!-- FECHA -->
-                    <div class="chk-date">
-                        <t t-esc="'PALIN'"/>
-                        <t t-raw="', '"/>
-                        <t t-esc="fmt_date(p.date)"/>
-                    </div>
+<!--                    <div class="chk-date">-->
+<!--                        <t t-esc="'PALIN'"/>-->
+<!--                        <t t-raw="', '"/>-->
+<!--                        <t t-esc="fmt_date(p.date)"/>-->
+<!--                    </div>-->
 
                     <!-- MONTO NUMÉRICO -->
-                    <div class="chk-amount-num">
-                        <t t-esc="'%0.2f' % (p.amount or 0.0)"/>
-                    </div>
+<!--                    <div class="chk-amount-num">-->
+                        <!--<t t-esc="'%0.2f' % (p.amount or 0.0)"/>-->
+                    <!--</div>-->
 
                     <!-- ANULADO -->
-                    <div class="chk-void" t-if="is_void_payment(p)">
-                        ANULADO
-                    </div>
+<!--                    <div class="chk-void" t-if="is_void_payment(p)">-->
+                    <!--    ANULADO-->
+                <!--    </div>-->
 
                     <!-- PROVEEDOR / BENEFICIARIO -->
-                    <div class="chk-payee">
-                        <t t-esc="upper(p.partner_id.name)"/>
-                    </div>
+<!--                    <div class="chk-payee">-->
+        <!--                <t t-esc="upper(p.partner_id.name)"/>-->
+            <!--        </div>-->
 
                     <!-- MONTO EN LETRAS + CENTAVOS MISMA LÍNEA -->
-                    <div class="chk-amount-text">
-                        <t t-esc="fix_text(amount_words_line(p))"/>
-                    </div>
+<!--                    <div class="chk-amount-text">-->
+<!--                        <t t-esc="fix_text(amount_words_line(p))"/>-->
+    <!--                </div>-->
 
                     <!-- ===== VOUCHER / RESPALDO CONTABLE (debajo del cheque) ===== -->
                     <div class="voucher-root">
@@ -176,12 +176,12 @@
                                                 <t t-esc="get_line_analytic(line)"/>
                                             </t>-->
                                         </td>
-                                        <td class="text-right">
+                                        <td class="amount-col">
                                             <t t-if="line.debit">
                                                 <t t-esc="format_amount(line.debit)"/>
                                             </t>
                                         </td>
-                                        <td class="text-right">
+                                        <td class="amount-col">
                                             <t t-if="line.credit">
                                                 <t t-esc="format_amount(line.credit)"/>
                                             </t>
@@ -191,11 +191,11 @@
 
                                 <!-- Totales -->
                                 <tr class="voucher-total">
-                                    <td colspan="3" class="text-right">Total..&gt;</td>
-                                    <td class="text-right">
+                                    <td colspan="3" class="total-label">Total..&gt;</td>
+                                    <td class="amount-col">
                                         <t t-esc="format_amount(total_debit)"/>
                                     </td>
-                                    <td class="text-right">
+                                    <td class="amount-col">
                                         <t t-esc="format_amount(total_credit)"/>
                                     </td>
                                 </tr>
@@ -288,6 +288,25 @@
 							width: 100%;
 							border-collapse: collapse;
 							margin-top: 4mm;
+							table-layout: fixed;
+						}
+						
+						.voucher-table th.col-debit,
+						.voucher-table th.col-credit {
+							text-align: right !important;
+							padding-right: 1.5mm !important;
+							white-space: nowrap;
+						}
+
+						.voucher-table td.amount-col {
+							text-align: right !important;
+							padding-right: 1.5mm !important;
+							white-space: nowrap;
+						}
+
+						.voucher-table td.total-label {
+							text-align: right !important;
+							padding-right: 1.5mm !important;
 						}
 						.voucher-table th,
 						.voucher-table td {
