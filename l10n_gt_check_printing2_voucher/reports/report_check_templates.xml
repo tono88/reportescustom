@@ -212,25 +212,28 @@
                                     <t t-esc="now_time()"/>
                                 </span>
                             </div>
-                           <div class="vch-footer-bottom">
-							<div class="vch-sign-block">
-								<span class="line"></span>
-								<span class="label">Emitido por</span>
-							</div>
-							<div class="vch-sign-block">
-								<span class="line"></span>
-								<span class="label">Revisado</span>
-							</div>
-							<div class="vch-sign-block">
-								<span class="line"></span>
-								<span class="label">Autorizado</span>
-							</div>
-							<div class="vch-sign-block">
-								<span class="line"></span>
-								<span class="label">Recibido por</span>
-							</div>
+							<table class="vch-footer-sign-table" cellspacing="0" cellpadding="0">
+								<tr>
+									<td>
+										<span class="line"></span>
+										<span class="label">Emitido por</span>
+									</td>
+									<td>
+										<span class="line"></span>
+										<span class="label">Revisado</span>
+									</td>
+									<td>
+										<span class="line"></span>
+										<span class="label">Autorizado</span>
+									</td>
+									<td>
+										<span class="line"></span>
+										<span class="label">Recibido por</span>
+									</td>
+								</tr>
+							</table>
+						
 						</div>
-                        </div>
                     </div>
                     <!-- ===== FIN VOUCHER ===== -->
 
@@ -333,31 +336,34 @@
 							font-size:7pt;
 							margin-bottom:3mm;
 						}
-						.voucher-footer .vch-footer-bottom {
-							display: flex;
-							width: 100%;
-							justify-content: space-between;
-							align-items: flex-start;
-							gap: 4mm;
-						}
-						.voucher-footer .vch-sign-block {
-							flex:1;
-							text-align:center;
-						}
-						.voucher-footer .vch-sign-block .line {
-							display: block;
-							width: 100%;
-							height: 0;
-							border-top: 0.2mm solid #000;
-							margin-bottom: 1mm;
-						}
+						.vch-footer-sign-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    margin-top: 2mm;
+}
 
-						.voucher-footer .vch-sign-block .label {
-							display: block;
-							text-align: center;
-							white-space: nowrap;
-							font-size: 7pt;
-						}
+.vch-footer-sign-table td {
+    width: 25%;
+    text-align: center;
+    vertical-align: top;
+    padding: 0 2mm;
+}
+
+.vch-footer-sign-table .line {
+    display: block;
+    width: 100%;
+    height: 0;
+    border-top: 0.2mm solid #000;
+    margin: 0 0 1mm 0;
+}
+
+.vch-footer-sign-table .label {
+    display: block;
+    text-align: center;
+    white-space: nowrap;
+    font-size: 7pt;
+}
 						.vch-move{
 						  display:flex;
 						  align-items:baseline;
