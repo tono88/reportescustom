@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_move_form_fel_megaprint_post_bypass" model="ir.ui.view">
+        <field name="name">account.move.form.fel.megaprint.post.bypass</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="action_post_without_fel"
+                        string="Contabilizar sin recertificar FEL"
+                        type="object"
+                        class="btn-secondary"
+                        groups="account.group_account_manager"
+                        invisible="state != 'draft' or move_type not in ('out_invoice', 'out_refund')"
+                        confirm="Esto contabilizará el documento sin volver a certificar ni esperar respuesta FEL en Megaprint. ¿Deseas continuar?"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>
