@@ -277,7 +277,7 @@
 							left:5mm;
 							right:5mm;
 							top:30mm;          /* aquí decides qué tan abajo va el voucher */
-							font-size:8pt;
+							font-size:10pt;
 						}
 
 						/* un poco más de aire entre filas del voucher */
@@ -317,11 +317,11 @@
 							padding: 0.8mm 1mm;
 						}
 						.voucher-table th {
-							font-size: 7pt;
+							font-size: 9pt;
 							text-align: center;
 						}
 						.voucher-table td {
-							font-size: 7pt;
+							font-size: 9pt;
 						}
 
 						/* pie del voucher con más espacio */
@@ -333,7 +333,7 @@
 						.voucher-footer .vch-footer-top {
 							display:flex;
 							justify-content:space-between;
-							font-size:7pt;
+							font-size:9pt;
 							margin-bottom:3mm;
 						}
 						.vch-footer-sign-table {
@@ -362,7 +362,7 @@
     display: block;
     text-align: center;
     white-space: nowrap;
-    font-size: 7pt;
+    font-size: 9pt;
 }
 						.vch-move{
 						  display:flex;
