@@ -74,7 +74,7 @@
 <!--                    <div class="chk-amount-text">-->
 <!--                        <t t-esc="fix_text(amount_words_line(p))"/>-->
     <!--                </div>-->
-<t t-foreach="docs" t-as="o">
+
 
       <!-- Definir company ANTES del t-call para que el external_layout no falle -->
       <t t-set="company" t-value="o.company_id or env.company"/>
