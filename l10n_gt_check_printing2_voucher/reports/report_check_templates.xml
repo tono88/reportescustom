@@ -74,11 +74,20 @@
 <!--                    <div class="chk-amount-text">-->
 <!--                        <t t-esc="fix_text(amount_words_line(p))"/>-->
     <!--                </div>-->
+<t t-foreach="docs" t-as="o">
 
+      <!-- Definir company ANTES del t-call para que el external_layout no falle -->
+      <t t-set="company" t-value="o.company_id or env.company"/>
                     <!-- ===== VOUCHER / RESPALDO CONTABLE (debajo del cheque) ===== -->
                     <div class="voucher-root">
                         <!-- Encabezado con ciudad, fecha, monto y número de cheque -->
-                        <div class="vch-row vch-header-1">
+						 <img t-if="o.company_id.logo and not o.journal_id.direccion.image_1920" t-att-src="image_data_uri(o.company_id.logo)" style="max-height: 45px;" alt="Logo"/>
+                        <div class="fw-bold" style="font-size:11pt; text-transform:uppercase;">
+							<span t-esc="o.company_id.name or ''"/>
+						  </div>
+						  <div>NIT: <span t-esc="o.company_id.vat or ''"/></div>
+						  <div style="text-transform:uppercase;">BLOCKERA BUSTAMANTE</div>
+						<div class="vch-row vch-header-1">
                             <!--<span class="vch-city">
                                 <t t-esc="upper(p.company_id.city or 'PALIN')"/>
                             </span>-->
@@ -254,7 +263,7 @@
                             top:20mm;
                             left:10mm;
                             font-weight:700;
-                            font-size:12pt;
+                            font-size:13pt;
                             letter-spacing:0.3mm;
                         }
 
@@ -277,7 +286,7 @@
 							left:5mm;
 							right:5mm;
 							top:30mm;          /* aquí decides qué tan abajo va el voucher */
-							font-size:10pt;
+							font-size:11pt;
 						}
 
 						/* un poco más de aire entre filas del voucher */
@@ -317,11 +326,11 @@
 							padding: 0.8mm 1mm;
 						}
 						.voucher-table th {
-							font-size: 9pt;
+							font-size: 10pt;
 							text-align: center;
 						}
 						.voucher-table td {
-							font-size: 9pt;
+							font-size: 10pt;
 						}
 
 						/* pie del voucher con más espacio */
@@ -333,7 +342,7 @@
 						.voucher-footer .vch-footer-top {
 							display:flex;
 							justify-content:space-between;
-							font-size:9pt;
+							font-size:10pt;
 							margin-bottom:3mm;
 						}
 						.vch-footer-sign-table {
@@ -362,7 +371,7 @@
     display: block;
     text-align: center;
     white-space: nowrap;
-    font-size: 9pt;
+    font-size: 10pt;
 }
 						.vch-move{
 						  display:flex;
