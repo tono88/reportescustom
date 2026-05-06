@@ -1,0 +1,56 @@
+# POS Multi Warehouse Sales Report
+
+Módulo para Odoo 18 Community que agrega un reporte de ventas POS por almacén y producto.
+
+## Dependencias
+
+- point_of_sale
+- stock
+- account
+- bi_pos_multi_warehouse
+
+## Ruta del menú
+
+Punto de venta → Órdenes → Ventas por almacén
+
+## Filtros del asistente
+
+- Fecha inicial
+- Fecha final
+- Compañías
+- Cliente
+- Almacén
+- Facturación: todos, solo facturados o solo no facturados
+
+## Campos principales del reporte
+
+- Fecha de venta
+- Compañía
+- Almacén
+- Producto
+- Cantidad
+- Precio unitario
+- Descuento
+- Subtotal sin impuesto
+- Total con impuesto
+- Cliente
+- Orden POS
+- Referencia/recibo
+- Factura
+- Sesión
+- Punto de venta
+- Cajero
+- Estado POS
+
+## Uso
+
+1. Copiar la carpeta `pos_multi_warehouse_sales_report` en la ruta de addons personalizada.
+2. Reiniciar Odoo.
+3. Activar modo desarrollador.
+4. Actualizar lista de aplicaciones.
+5. Instalar `POS Multi Warehouse Sales Report`.
+6. Ir a Punto de venta → Órdenes → Ventas por almacén.
+
+
+## Fix 18.0.1.0.5
+El menú se declara de forma estática bajo el XML ID oficial `point_of_sale.menu_point_of_sale`, que corresponde a Punto de venta / Órdenes en Odoo 18 Community.

@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_pos_warehouse_sales_report_wizard_form" model="ir.ui.view">
+        <field name="name">pos.warehouse.sales.report.wizard.form</field>
+        <field name="model">pos.warehouse.sales.report.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Reporte de ventas POS por almacén">
+                <sheet>
+                    <group>
+                        <group string="Rango">
+                            <field name="date_from"/>
+                            <field name="date_to"/>
+                            <field name="company_ids" widget="many2many_tags" groups="base.group_multi_company"/>
+                        </group>
+                        <group string="Filtros">
+                            <field name="partner_id"/>
+                            <field name="warehouse_id"/>
+                            <field name="invoice_filter"/>
+                        </group>
+                    </group>
+                    <p class="text-muted">
+                        El reporte toma las líneas de órdenes POS y las agrupa por almacén y producto. Para líneas sin almacén explícito se usa el almacén del tipo de operación del Punto de Venta.
+                    </p>
+                </sheet>
+                <footer>
+                    <button name="action_view_report" type="object" string="Generar reporte" class="btn-primary"/>
+                    <button string="Cancelar" special="cancel" class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_pos_warehouse_sales_report_line_list" model="ir.ui.view">
+        <field name="name">pos.warehouse.sales.report.line.list</field>
+        <field name="model">pos.warehouse.sales.report.line</field>
+        <field name="arch" type="xml">
+            <list string="Ventas POS por almacén" create="false" edit="false" delete="false">
+                <field name="currency_id" column_invisible="1"/>
+                <field name="date_order"/>
+                <field name="company_id" groups="base.group_multi_company" optional="show"/>
+                <field name="warehouse_display" string="Almacén"/>
+                <field name="product_id"/>
+                <field name="qty" sum="Cantidad"/>
+                <field name="uom_id" optional="hide"/>
+                <field name="price_unit" widget="monetary" options="{'currency_field': 'currency_id'}" optional="show"/>
+                <field name="discount" optional="hide"/>
+                <field name="price_subtotal" widget="monetary" options="{'currency_field': 'currency_id'}" sum="Subtotal"/>
+                <field name="price_total" widget="monetary" options="{'currency_field': 'currency_id'}" sum="Total"/>
+                <field name="partner_id"/>
+                <field name="order_id"/>
+                <field name="pos_reference"/>
+                <field name="invoice_status"/>
+                <field name="invoice_id" optional="hide"/>
+                <field name="session_id" optional="hide"/>
+                <field name="config_id" optional="show"/>
+                <field name="cashier_id" optional="hide"/>
+                <field name="order_state" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_pos_warehouse_sales_report_line_pivot" model="ir.ui.view">
+        <field name="name">pos.warehouse.sales.report.line.pivot</field>
+        <field name="model">pos.warehouse.sales.report.line</field>
+        <field name="arch" type="xml">
+            <pivot string="Resumen ventas POS por almacén">
+                <field name="warehouse_display" type="row"/>
+                <field name="product_id" type="row"/>
+                <field name="date_order" interval="day" type="col"/>
+                <field name="qty" type="measure"/>
+                <field name="price_subtotal" type="measure"/>
+                <field name="price_total" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_pos_warehouse_sales_report_line_graph" model="ir.ui.view">
+        <field name="name">pos.warehouse.sales.report.line.graph</field>
+        <field name="model">pos.warehouse.sales.report.line</field>
+        <field name="arch" type="xml">
+            <graph string="Ventas POS por almacén" type="bar">
+                <field name="warehouse_display"/>
+                <field name="price_total" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="view_pos_warehouse_sales_report_line_search" model="ir.ui.view">
+        <field name="name">pos.warehouse.sales.report.line.search</field>
+        <field name="model">pos.warehouse.sales.report.line</field>
+        <field name="arch" type="xml">
+            <search string="Buscar ventas POS por almacén">
+                <field name="date_order"/>
+                <field name="product_id"/>
+                <field name="partner_id"/>
+                <field name="warehouse_id"/>
+                <field name="order_id"/>
+                <field name="pos_reference"/>
+                <field name="config_id"/>
+                <separator/>
+                <filter name="filter_invoiced" string="Facturados" domain="[('invoice_status', '=', 'invoiced')]"/>
+                <filter name="filter_not_invoiced" string="No facturados" domain="[('invoice_status', '=', 'not_invoiced')]"/>
+                <separator/>
+                <filter name="group_by_warehouse" string="Almacén" context="{'group_by': 'warehouse_display'}"/>
+                <filter name="group_by_product" string="Producto" context="{'group_by': 'product_id'}"/>
+                <filter name="group_by_partner" string="Cliente" context="{'group_by': 'partner_id'}"/>
+                <filter name="group_by_order" string="Orden POS" context="{'group_by': 'order_id'}"/>
+                <filter name="group_by_date" string="Fecha" context="{'group_by': 'date_order:day'}"/>
+                <filter name="group_by_invoice_status" string="Estado facturación" context="{'group_by': 'invoice_status'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_pos_warehouse_sales_report_wizard" model="ir.actions.act_window">
+        <field name="name">Ventas por almacén</field>
+        <field name="res_model">pos.warehouse.sales.report.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_pos_warehouse_sales_report_wizard_form"/>
+        <field name="target">new</field>
+    </record>
+</odoo>
