@@ -79,6 +79,41 @@ class PosWarehouseSalesReportWizard(models.TransientModel):
                 return invoice
         return self.env["account.move"]
 
+    def _get_valid_invoice_move(self, order):
+        """Return the linked invoice only when it really exists and is not cancelled.
+
+        Some POS orders can remain with state ``invoiced`` even after the linked
+        account.move is cancelled or no longer available. Those orders must not
+        be treated as invoiced for this report.
+        """
+        invoice = self._get_invoice_move(order)
+        if not invoice or not invoice.exists():
+            return self.env["account.move"]
+        if "state" in invoice._fields and invoice.state == "cancel":
+            return self.env["account.move"]
+        return invoice
+
+    def _line_passes_invoice_rules(self, line):
+        """Apply invoice filters using only valid, non-cancelled invoices.
+
+        If the POS order says it is invoiced but the invoice is missing or
+        cancelled, the line is ignored in every filter because the sale should
+        not be counted as a valid invoiced POS sale.
+        """
+        order = line.order_id
+        valid_invoice = self._get_valid_invoice_move(order)
+
+        if order.state == "invoiced" and not valid_invoice:
+            return False
+
+        if self.invoice_filter == "invoiced":
+            return bool(valid_invoice)
+
+        if self.invoice_filter == "not_invoiced":
+            return not valid_invoice and order.state != "invoiced"
+
+        return True
+
     def _get_selection_label(self, record, field_name):
         if field_name not in record._fields:
             return ""
@@ -159,10 +194,7 @@ class PosWarehouseSalesReportWizard(models.TransientModel):
         invoice_field = self._get_invoice_field_name()
         if self.invoice_filter == "invoiced":
             if invoice_field:
-                domain = expression.AND([
-                    domain,
-                    ["|", ("order_id.state", "=", "invoiced"), (f"order_id.{invoice_field}", "!=", False)],
-                ])
+                domain.append((f"order_id.{invoice_field}", "!=", False))
             else:
                 domain.append(("order_id.state", "=", "invoiced"))
         elif self.invoice_filter == "not_invoiced":
@@ -175,8 +207,8 @@ class PosWarehouseSalesReportWizard(models.TransientModel):
     def _prepare_report_line_values(self, line):
         order = line.order_id
         warehouse, warehouse_display = self._resolve_line_warehouse(line)
-        invoice = self._get_invoice_move(order)
-        invoice_status = "invoiced" if order.state == "invoiced" or bool(invoice) else "not_invoiced"
+        invoice = self._get_valid_invoice_move(order)
+        invoice_status = "invoiced" if bool(invoice) else "not_invoiced"
 
         currency = order.company_id.currency_id
         if "currency_id" in order._fields and order.currency_id:
@@ -206,6 +238,8 @@ class PosWarehouseSalesReportWizard(models.TransientModel):
             "price_subtotal": line.price_subtotal if "price_subtotal" in line._fields else line.qty * line.price_unit,
             "price_total": line.price_subtotal_incl if "price_subtotal_incl" in line._fields else line.qty * line.price_unit,
             "invoice_id": invoice.id if invoice else False,
+            "invoice_number": invoice.name if invoice and "name" in invoice._fields else "",
+            "invoice_numero_fel": invoice.numero_fel if invoice and "numero_fel" in invoice._fields else "",
             "invoice_status": invoice_status,
             "order_state": self._get_selection_label(order, "state"),
         }
@@ -218,6 +252,8 @@ class PosWarehouseSalesReportWizard(models.TransientModel):
         pos_lines = self.env["pos.order.line"].search(self._build_line_domain())
         values = []
         for line in pos_lines:
+            if not self._line_passes_invoice_rules(line):
+                continue
             warehouse, _warehouse_display = self._resolve_line_warehouse(line)
             if self.warehouse_id and warehouse != self.warehouse_id:
                 continue

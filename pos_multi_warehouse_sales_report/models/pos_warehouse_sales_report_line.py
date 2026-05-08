@@ -42,6 +42,8 @@ class PosWarehouseSalesReportLine(models.TransientModel):
     price_total = fields.Monetary(string="Total con impuesto", currency_field="currency_id", readonly=True)
 
     invoice_id = fields.Many2one("account.move", string="Factura", readonly=True)
+    invoice_number = fields.Char(string="Número", readonly=True)
+    invoice_numero_fel = fields.Char(string="Número DTE", readonly=True)
     invoice_status = fields.Selection(
         [
             ("invoiced", "Facturado"),

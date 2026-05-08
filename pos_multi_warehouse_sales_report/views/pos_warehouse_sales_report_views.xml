@@ -50,6 +50,8 @@
                 <field name="order_id"/>
                 <field name="pos_reference"/>
                 <field name="invoice_status"/>
+                <field name="invoice_number"/>
+                <field name="invoice_numero_fel"/>
                 <field name="invoice_id" optional="hide"/>
                 <field name="session_id" optional="hide"/>
                 <field name="config_id" optional="show"/>
@@ -96,6 +98,8 @@
                 <field name="warehouse_id"/>
                 <field name="order_id"/>
                 <field name="pos_reference"/>
+                <field name="invoice_number"/>
+                <field name="invoice_numero_fel"/>
                 <field name="config_id"/>
                 <separator/>
                 <filter name="filter_invoiced" string="Facturados" domain="[('invoice_status', '=', 'invoiced')]"/>
