@@ -261,26 +261,13 @@ class AccountMove(models.Model):
                 raise UserError(msg)
 
     def action_post(self):
-        # During Odoo's normal posting flow, account.move writes state='posted'
-        # before every inherited action_post() has finished executing.
-        # The write() hook below used to run the FEL wait/certification logic at
-        # that intermediate point, which could make certificar_megaprint() run
-        # before fel_megaprint's own action_post() finished, causing a second
-        # certification attempt in the same transaction.
-        #
-        # We keep the final verification after super().action_post(), but skip
-        # this module's write-time FEL hook only for writes produced by this
-        # normal action_post() call. Direct custom writes to state='posted' keep
-        # the previous safety behavior.
-        moves = self.with_context(bb_skip_fel_block_post_write=True)
-        res = super(AccountMove, moves).action_post()
+        res = super().action_post()
         self._bb_wait_fel_or_fail()
         return res
 
     def write(self, vals):
         posting = "state" in vals and vals.get("state") == "posted"
-        skip_post_write_hook = self.env.context.get("bb_skip_fel_block_post_write")
         res = super().write(vals)
-        if posting and not skip_post_write_hook:
+        if posting:
             self._bb_wait_fel_or_fail()
         return res
