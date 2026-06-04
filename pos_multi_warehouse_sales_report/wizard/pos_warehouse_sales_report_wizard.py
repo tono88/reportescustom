@@ -202,6 +202,13 @@ class PosWarehouseSalesReportWizard(models.TransientModel):
         notes do not remove the original invoice from this report.
         """
         order = line.order_id
+
+        # The report must not show refund POS orders nor the original orders that
+        # generated/received a refund in any mode: Facturados, No facturados or
+        # Todos. This keeps the report aligned with the POS sales report criteria.
+        if self._order_is_refund_or_refunded_origin(order):
+            return False
+
         valid_invoice = self._get_valid_invoice_move(order)
 
         if order.state == "invoiced" and not valid_invoice:
@@ -214,8 +221,6 @@ class PosWarehouseSalesReportWizard(models.TransientModel):
             return bool(valid_invoice)
 
         if self.invoice_filter == "not_invoiced":
-            if self._order_is_refund_or_refunded_origin(order):
-                return False
             return not valid_invoice and order.state != "invoiced"
 
         return True
@@ -224,10 +229,9 @@ class PosWarehouseSalesReportWizard(models.TransientModel):
     def _order_is_refund_or_refunded_origin(self, order):
         """Return True when a POS order is a refund or has been refunded.
 
-        This is used only for the "Solo no facturados" report. In that view,
-        the customer does not want to see refund POS orders nor the original POS
-        order that generated/received that refund, because both distort the list
-        of pending non-invoiced sales.
+        The customer does not want refund POS orders nor the original POS order
+        that generated/received that refund in any report mode. This avoids
+        double effects in Facturados, No facturados and Todos.
         """
         if not order or not order.exists():
             return False
@@ -409,7 +413,12 @@ class PosWarehouseSalesReportWizard(models.TransientModel):
         more than one warehouse and the accounting invoice total belongs to the
         whole invoice.
         """
-        if self.warehouse_id or not values:
+        # Keep the invoice-total correction only for the explicit invoiced
+        # report, where the goal is to reconcile with account.move. For the
+        # global POS report (Todos), keep the raw POS order/line totals so it
+        # matches the operational POS sales report and does not introduce the
+        # Q1.10 rounding difference seen in mixed reports.
+        if self.invoice_filter != "invoiced" or self.warehouse_id or not values:
             return values
 
         grouped_indexes = {}
