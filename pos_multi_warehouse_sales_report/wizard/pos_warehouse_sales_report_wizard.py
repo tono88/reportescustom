@@ -79,32 +79,44 @@ class PosWarehouseSalesReportWizard(models.TransientModel):
                 return invoice
         return self.env["account.move"]
 
-    def _invoice_has_related_credit_note(self, invoice):
-        """Return True when the invoice has a posted related customer credit note.
+    def _get_move_report_date(self, move):
+        """Return the fiscal date used by this report for an account.move."""
+        if not move or not move.exists():
+            return False
+        if "invoice_date" in move._fields and move.invoice_date:
+            return move.invoice_date
+        if "date" in move._fields and move.date:
+            return move.date
+        return False
 
-        The report must not rely on ``payment_state`` because some invoices can
-        be marked as reversed/paid/partial depending on reconciliations. The
-        business rule requested for this report is simpler: exclude the sale
-        only when the invoice has a related credit note. In standard Odoo this
-        relation is stored with ``reversed_entry_id`` / ``reversal_move_ids``.
+    def _move_date_in_selected_range(self, move):
+        """Return True when the accounting document belongs to the wizard range."""
+        move_date = self._get_move_report_date(move)
+        return bool(move_date and self.date_from <= move_date <= self.date_to)
+
+    def _invoice_has_related_credit_note(self, invoice):
+        """Return True only for posted related customer credit notes in range.
+
+        A January accounting/fiscal report must not remove a January invoice just
+        because a credit note was issued in a later month. Therefore this method
+        only excludes the invoice when the related credit note is posted and the
+        credit note's own fiscal date is inside the selected report range.
         """
         if not invoice or not invoice.exists():
             return False
 
         AccountMove = self.env["account.move"].sudo()
 
-        def _is_active_customer_credit_note(move):
+        def _is_posted_customer_credit_note_in_range(move):
             return (
                 move.exists()
-                # Only posted credit notes are final/valid for excluding the
-                # original invoice. Draft reversals/credit notes must not remove
-                # the invoice from the sales report.
                 and ("state" not in move._fields or move.state == "posted")
                 and ("move_type" not in move._fields or move.move_type == "out_refund")
+                and self._move_date_in_selected_range(move)
             )
 
         if "reversal_move_ids" in invoice._fields:
-            related_credit_notes = invoice.reversal_move_ids.filtered(_is_active_customer_credit_note)
+            related_credit_notes = invoice.reversal_move_ids.filtered(_is_posted_customer_credit_note_in_range)
             if related_credit_notes:
                 return True
 
@@ -114,7 +126,8 @@ class PosWarehouseSalesReportWizard(models.TransientModel):
                 domain.append(("state", "=", "posted"))
             if "move_type" in AccountMove._fields:
                 domain.append(("move_type", "=", "out_refund"))
-            if AccountMove.search_count(domain):
+            credit_notes = AccountMove.search(domain)
+            if credit_notes.filtered(_is_posted_customer_credit_note_in_range):
                 return True
 
         return False
@@ -137,17 +150,31 @@ class PosWarehouseSalesReportWizard(models.TransientModel):
             return self.env["account.move"]
         return invoice
 
-    def _line_passes_invoice_rules(self, line):
-        """Apply invoice filters using only valid, non-cancelled invoices.
+    def _line_date_in_selected_range(self, line, valid_invoice):
+        """Use invoice date for invoiced sales and POS date for non-invoiced sales."""
+        if valid_invoice:
+            return self._move_date_in_selected_range(valid_invoice)
 
-        If the POS order says it is invoiced but the invoice is missing or
-        cancelled, the line is ignored in every filter because the sale should
-        not be counted as a valid invoiced POS sale.
+        order = line.order_id
+        if not order.date_order:
+            return False
+        start_dt, end_dt = self._get_utc_datetime_bounds()
+        return start_dt <= order.date_order <= end_dt
+
+    def _line_passes_invoice_rules(self, line):
+        """Apply invoice/date filters using valid, non-cancelled invoices.
+
+        Invoiced lines are evaluated by the invoice fiscal date. Non-invoiced
+        lines, when requested, keep using the POS order date. A future credit
+        note does not remove a historical invoice from the selected month.
         """
         order = line.order_id
         valid_invoice = self._get_valid_invoice_move(order)
 
         if order.state == "invoiced" and not valid_invoice:
+            return False
+
+        if not self._line_date_in_selected_range(line, valid_invoice):
             return False
 
         if self.invoice_filter == "invoiced":
@@ -226,8 +253,6 @@ class PosWarehouseSalesReportWizard(models.TransientModel):
         companies = self.company_ids or self.env.companies
 
         domain = [
-            ("order_id.date_order", ">=", fields.Datetime.to_string(start_dt)),
-            ("order_id.date_order", "<=", fields.Datetime.to_string(end_dt)),
             ("order_id.company_id", "in", companies.ids),
             ("order_id.state", "!=", "cancel"),
         ]
@@ -235,16 +260,35 @@ class PosWarehouseSalesReportWizard(models.TransientModel):
         if self.partner_id:
             domain.append(("order_id.partner_id", "=", self.partner_id.id))
 
+        order_date_domain = [
+            ("order_id.date_order", ">=", fields.Datetime.to_string(start_dt)),
+            ("order_id.date_order", "<=", fields.Datetime.to_string(end_dt)),
+        ]
+
         invoice_field = self._get_invoice_field_name()
+        if invoice_field:
+            invoice_date_domain = [
+                (f"order_id.{invoice_field}", "!=", False),
+                (f"order_id.{invoice_field}.invoice_date", ">=", self.date_from),
+                (f"order_id.{invoice_field}.invoice_date", "<=", self.date_to),
+            ]
+        else:
+            invoice_date_domain = []
+
         if self.invoice_filter == "invoiced":
-            if invoice_field:
-                domain.append((f"order_id.{invoice_field}", "!=", False))
+            if invoice_date_domain:
+                domain = expression.AND([domain, invoice_date_domain])
             else:
-                domain.append(("order_id.state", "=", "invoiced"))
+                domain = expression.AND([domain, order_date_domain, [("order_id.state", "=", "invoiced")]])
         elif self.invoice_filter == "not_invoiced":
-            domain.append(("order_id.state", "!=", "invoiced"))
+            domain = expression.AND([domain, order_date_domain, [("order_id.state", "!=", "invoiced")]])
             if invoice_field:
                 domain.append((f"order_id.{invoice_field}", "=", False))
+        else:
+            if invoice_date_domain:
+                domain = expression.AND([domain, expression.OR([order_date_domain, invoice_date_domain])])
+            else:
+                domain = expression.AND([domain, order_date_domain])
 
         return domain
 
@@ -282,6 +326,7 @@ class PosWarehouseSalesReportWizard(models.TransientModel):
             "price_subtotal": line.price_subtotal if "price_subtotal" in line._fields else line.qty * line.price_unit,
             "price_total": line.price_subtotal_incl if "price_subtotal_incl" in line._fields else line.qty * line.price_unit,
             "invoice_id": invoice.id if invoice else False,
+            "invoice_date": self._get_move_report_date(invoice) if invoice else False,
             "invoice_number": invoice.name if invoice and "name" in invoice._fields else "",
             "invoice_numero_fel": invoice.numero_fel if invoice and "numero_fel" in invoice._fields else "",
             "invoice_status": invoice_status,

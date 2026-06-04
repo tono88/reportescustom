@@ -64,3 +64,9 @@ El menú se declara de forma estática bajo el XML ID oficial `point_of_sale.men
 
 ## 18.0.1.0.10
 - Ajuste: solo excluye facturas con nota de crédito relacionada si la nota de crédito está publicada (`state = posted`). Las notas de crédito en borrador ya no sacan la factura del reporte.
+
+
+## 18.0.1.0.11
+- Usa fecha de factura para ventas facturadas.
+- Las notas de crédito futuras ya no excluyen facturas de períodos anteriores.
+- Solo se excluyen facturas con notas de crédito de cliente publicadas dentro del rango seleccionado.
