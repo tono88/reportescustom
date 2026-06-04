@@ -70,3 +70,14 @@ El menú se declara de forma estática bajo el XML ID oficial `point_of_sale.men
 - Usa fecha de factura para ventas facturadas.
 - Las notas de crédito futuras ya no excluyen facturas de períodos anteriores.
 - Solo se excluyen facturas con notas de crédito de cliente publicadas dentro del rango seleccionado.
+
+
+## 18.0.1.0.12
+- Se removió la exclusión de facturas originales por tener nota de crédito relacionada.
+- Las facturas publicadas del período permanecen en el reporte aunque tengan nota de crédito.
+- Se siguen excluyendo facturas canceladas, inexistentes y documentos tipo nota de crédito (`out_refund`) cuando vienen como factura enlazada de la orden POS.
+
+
+## 18.0.1.0.13
+- Agrega fallback para encontrar facturas por `account.move.ref = pos.order.name` cuando el pedido POS está facturado pero no tiene vínculo técnico `account_move`.
+- El filtro Solo facturados ya no depende exclusivamente del campo `account_move` de la orden POS.

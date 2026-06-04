@@ -71,13 +71,46 @@ class PosWarehouseSalesReportWizard(models.TransientModel):
                 return field_name
         return False
 
+    def _find_invoice_by_order_reference(self, order):
+        """Fallback for POS orders marked as invoiced but not linked to account_move.
+
+        Some migrated/adjusted POS orders can have state = invoiced and the
+        customer invoice can show the POS order in account.move.ref, but the
+        technical Many2one pos.order.account_move is empty. In that case, the
+        report must still find the fiscal invoice using the POS order reference.
+        """
+        if not order or not order.exists():
+            return self.env["account.move"]
+
+        AccountMove = self.env["account.move"].sudo()
+        domain = []
+        if "ref" in AccountMove._fields and order.name:
+            domain.append(("ref", "=", order.name))
+        else:
+            return self.env["account.move"]
+
+        if "company_id" in AccountMove._fields and order.company_id:
+            domain.append(("company_id", "=", order.company_id.id))
+        if "move_type" in AccountMove._fields:
+            domain.append(("move_type", "=", "out_invoice"))
+        if "state" in AccountMove._fields:
+            domain.append(("state", "!=", "cancel"))
+
+        candidates = AccountMove.search(domain, order="invoice_date desc, date desc, id desc")
+        if not candidates:
+            return self.env["account.move"]
+
+        # Prefer the invoice whose fiscal date belongs to the selected range.
+        in_range = candidates.filtered(lambda move: self._move_date_in_selected_range(move))
+        return (in_range or candidates)[:1]
+
     def _get_invoice_move(self, order):
         invoice_field = self._get_invoice_field_name()
         if invoice_field:
             invoice = order[invoice_field]
             if invoice and invoice._name == "account.move":
                 return invoice
-        return self.env["account.move"]
+        return self._find_invoice_by_order_reference(order)
 
     def _get_move_report_date(self, move):
         """Return the fiscal date used by this report for an account.move."""
@@ -133,11 +166,13 @@ class PosWarehouseSalesReportWizard(models.TransientModel):
         return False
 
     def _get_valid_invoice_move(self, order):
-        """Return the linked invoice only when it is valid for the sales report.
+        """Return the linked customer invoice when it is valid for the report.
 
-        A POS order can remain with state ``invoiced`` even if the linked invoice
-        is missing, cancelled or already has a related credit note. Those cases
-        must not be counted as valid invoiced sales.
+        This report is based on invoiced POS sales for the selected fiscal
+        period. A customer invoice must stay in the period where it was posted,
+        even if it has a related credit note. Credit notes must be analyzed as
+        their own accounting documents, not by removing the original invoice.
+        Therefore, this method only rejects missing, cancelled or refund moves.
         """
         invoice = self._get_invoice_move(order)
         if not invoice or not invoice.exists():
@@ -145,8 +180,6 @@ class PosWarehouseSalesReportWizard(models.TransientModel):
         if "state" in invoice._fields and invoice.state == "cancel":
             return self.env["account.move"]
         if "move_type" in invoice._fields and invoice.move_type == "out_refund":
-            return self.env["account.move"]
-        if self._invoice_has_related_credit_note(invoice):
             return self.env["account.move"]
         return invoice
 
@@ -165,8 +198,8 @@ class PosWarehouseSalesReportWizard(models.TransientModel):
         """Apply invoice/date filters using valid, non-cancelled invoices.
 
         Invoiced lines are evaluated by the invoice fiscal date. Non-invoiced
-        lines, when requested, keep using the POS order date. A future credit
-        note does not remove a historical invoice from the selected month.
+        lines, when requested, keep using the POS order date. Related credit
+        notes do not remove the original invoice from this report.
         """
         order = line.order_id
         valid_invoice = self._get_valid_invoice_move(order)
@@ -276,10 +309,11 @@ class PosWarehouseSalesReportWizard(models.TransientModel):
             invoice_date_domain = []
 
         if self.invoice_filter == "invoiced":
-            if invoice_date_domain:
-                domain = expression.AND([domain, invoice_date_domain])
-            else:
-                domain = expression.AND([domain, order_date_domain, [("order_id.state", "=", "invoiced")]])
+            # Keep the domain broad enough to include POS orders whose invoice
+            # exists in account.move.ref but whose technical account_move link is
+            # empty. The precise invoice/date validation is applied afterwards in
+            # _line_passes_invoice_rules().
+            domain = expression.AND([domain, [("order_id.state", "=", "invoiced")]])
         elif self.invoice_filter == "not_invoiced":
             domain = expression.AND([domain, order_date_domain, [("order_id.state", "!=", "invoiced")]])
             if invoice_field:
