@@ -80,7 +80,7 @@ class PosWarehouseSalesReportWizard(models.TransientModel):
         return self.env["account.move"]
 
     def _invoice_has_related_credit_note(self, invoice):
-        """Return True when the invoice has an active related customer credit note.
+        """Return True when the invoice has a posted related customer credit note.
 
         The report must not rely on ``payment_state`` because some invoices can
         be marked as reversed/paid/partial depending on reconciliations. The
@@ -96,7 +96,10 @@ class PosWarehouseSalesReportWizard(models.TransientModel):
         def _is_active_customer_credit_note(move):
             return (
                 move.exists()
-                and ("state" not in move._fields or move.state != "cancel")
+                # Only posted credit notes are final/valid for excluding the
+                # original invoice. Draft reversals/credit notes must not remove
+                # the invoice from the sales report.
+                and ("state" not in move._fields or move.state == "posted")
                 and ("move_type" not in move._fields or move.move_type == "out_refund")
             )
 
@@ -108,7 +111,7 @@ class PosWarehouseSalesReportWizard(models.TransientModel):
         if "reversed_entry_id" in AccountMove._fields:
             domain = [("reversed_entry_id", "=", invoice.id)]
             if "state" in AccountMove._fields:
-                domain.append(("state", "!=", "cancel"))
+                domain.append(("state", "=", "posted"))
             if "move_type" in AccountMove._fields:
                 domain.append(("move_type", "=", "out_refund"))
             if AccountMove.search_count(domain):

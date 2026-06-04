@@ -60,3 +60,7 @@ El menú se declara de forma estática bajo el XML ID oficial `point_of_sale.men
 
 - Excluye del reporte las órdenes POS cuya factura relacionada tenga una nota de crédito de cliente activa relacionada por `reversed_entry_id` / `reversal_move_ids`.
 - No usa `payment_state` para decidir si una factura está revertida.
+
+
+## 18.0.1.0.10
+- Ajuste: solo excluye facturas con nota de crédito relacionada si la nota de crédito está publicada (`state = posted`). Las notas de crédito en borrador ya no sacan la factura del reporte.
