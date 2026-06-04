@@ -214,9 +214,37 @@ class PosWarehouseSalesReportWizard(models.TransientModel):
             return bool(valid_invoice)
 
         if self.invoice_filter == "not_invoiced":
+            if self._order_is_refund_or_refunded_origin(order):
+                return False
             return not valid_invoice and order.state != "invoiced"
 
         return True
+
+
+    def _order_is_refund_or_refunded_origin(self, order):
+        """Return True when a POS order is a refund or has been refunded.
+
+        This is used only for the "Solo no facturados" report. In that view,
+        the customer does not want to see refund POS orders nor the original POS
+        order that generated/received that refund, because both distort the list
+        of pending non-invoiced sales.
+        """
+        if not order or not order.exists():
+            return False
+
+        # Refund order: its lines point to original POS lines.
+        if "refunded_order_id" in order._fields and order.refunded_order_id:
+            return True
+        if "refunded_orderline_id" in order.lines._fields and order.lines.filtered("refunded_orderline_id"):
+            return True
+
+        # Original order: some later POS refund order points back to its lines.
+        if "refund_orders_count" in order._fields and order.refund_orders_count:
+            return True
+        if "refund_orderline_ids" in order.lines._fields and order.lines.filtered("refund_orderline_ids"):
+            return True
+
+        return False
 
     def _get_selection_label(self, record, field_name):
         if field_name not in record._fields:
@@ -367,6 +395,71 @@ class PosWarehouseSalesReportWizard(models.TransientModel):
             "order_state": self._get_selection_label(order, "state"),
         }
 
+    def _apply_invoice_total_adjustments(self, values):
+        """Adjust small line rounding differences to match account.move totals.
+
+        The report is line-based because it must show product and warehouse. In
+        some POS invoices Odoo stores a final accounting total that differs by a
+        small cash/fiscal rounding amount from the raw POS line sum. To make the
+        report reconcile with account.move, apply only small differences from the
+        invoice totals to the last report line of each invoice.
+
+        The adjustment is intentionally skipped when filtering by a specific
+        warehouse, because a single invoice can theoretically contain lines from
+        more than one warehouse and the accounting invoice total belongs to the
+        whole invoice.
+        """
+        if self.warehouse_id or not values:
+            return values
+
+        grouped_indexes = {}
+        for index, vals in enumerate(values):
+            invoice_id = vals.get("invoice_id")
+            if invoice_id:
+                grouped_indexes.setdefault(invoice_id, []).append(index)
+
+        if not grouped_indexes:
+            return values
+
+        invoices = self.env["account.move"].sudo().browse(list(grouped_indexes)).exists()
+        invoice_by_id = {invoice.id: invoice for invoice in invoices}
+
+        for invoice_id, indexes in grouped_indexes.items():
+            invoice = invoice_by_id.get(invoice_id)
+            if not invoice:
+                continue
+
+            currency = invoice.currency_id or invoice.company_currency_id or self.env.company.currency_id
+            rounding = currency.rounding or 0.01
+
+            line_subtotal = sum(values[i].get("price_subtotal") or 0.0 for i in indexes)
+            line_total = sum(values[i].get("price_total") or 0.0 for i in indexes)
+            invoice_subtotal = invoice.amount_untaxed if "amount_untaxed" in invoice._fields else line_subtotal
+            invoice_total = invoice.amount_total if "amount_total" in invoice._fields else line_total
+
+            subtotal_diff = invoice_subtotal - line_subtotal
+            total_diff = invoice_total - line_total
+
+            # Only absorb small rounding/cash-rounding differences. A larger
+            # difference usually means missing lines or a different business
+            # document and should not be hidden inside a product line.
+            max_adjustment = max(rounding * 500, 5.0)
+            if abs(subtotal_diff) > max_adjustment or abs(total_diff) > max_adjustment:
+                continue
+
+            if abs(subtotal_diff) <= rounding / 2 and abs(total_diff) <= rounding / 2:
+                continue
+
+            target_index = indexes[-1]
+            values[target_index]["price_subtotal"] = currency.round(
+                (values[target_index].get("price_subtotal") or 0.0) + subtotal_diff
+            )
+            values[target_index]["price_total"] = currency.round(
+                (values[target_index].get("price_total") or 0.0) + total_diff
+            )
+
+        return values
+
     def _generate_report_lines(self):
         self.ensure_one()
         ReportLine = self.env["pos.warehouse.sales.report.line"]
@@ -381,6 +474,8 @@ class PosWarehouseSalesReportWizard(models.TransientModel):
             if self.warehouse_id and warehouse != self.warehouse_id:
                 continue
             values.append(self._prepare_report_line_values(line))
+
+        values = self._apply_invoice_total_adjustments(values)
 
         if values:
             ReportLine.create(values)

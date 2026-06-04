@@ -81,3 +81,15 @@ El menú se declara de forma estática bajo el XML ID oficial `point_of_sale.men
 ## 18.0.1.0.13
 - Agrega fallback para encontrar facturas por `account.move.ref = pos.order.name` cuando el pedido POS está facturado pero no tiene vínculo técnico `account_move`.
 - El filtro Solo facturados ya no depende exclusivamente del campo `account_move` de la orden POS.
+
+
+## 18.0.1.0.14
+- Ajusta diferencias pequeñas de redondeo entre suma de líneas POS y totales oficiales de `account.move`.
+- El ajuste se aplica a la última línea del documento para que el total del reporte cuadre con la factura contable.
+- No se aplica cuando se filtra por un almacén específico, para no trasladar el total completo de una factura a un solo almacén.
+
+
+## 18.0.1.0.15
+- En el filtro **Solo no facturados**, se excluyen las órdenes POS de reembolso.
+- También se excluye la orden POS original de donde proviene el reembolso.
+- El objetivo es que el listado de no facturados muestre únicamente ventas pendientes reales y no pares de devolución/origen.
