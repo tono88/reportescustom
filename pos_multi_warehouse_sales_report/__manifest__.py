@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 {
     "name": "POS Multi Warehouse Sales Report",
-    "version": "18.0.1.0.16",
+    "version": "18.0.1.0.17",
     "category": "Point of Sale/Reporting",
     "summary": "Reporte de ventas POS agrupado por almacén y producto",
     "description": """
 Reporte de ventas de Punto de Venta por almacén para instalaciones que usan
 bi_pos_multi_warehouse. Permite filtrar por rango de fechas, cliente, estado de
 facturación, almacén y compañía; muestra detalle por orden, producto, cantidad,
-precio, cliente, cajero, número de factura, número DTE y totales. Incluye ventas POS facturadas y no facturadas según filtros, valida facturas canceladas, usa fecha fiscal para ventas facturadas y ajusta diferencias pequeñas de redondeo contra los totales oficiales de la factura contable solo en el filtro de facturados, mantiene totales POS en Todos y excluye reembolsos/orígenes de reembolso en todos los filtros.
+precio, cliente, cajero, número de factura, número DTE y totales. Incluye ventas POS facturadas y no facturadas según filtros, valida facturas canceladas, usa fecha fiscal para ventas facturadas y ajusta diferencias pequeñas de redondeo contra los totales oficiales de la factura contable solo en el filtro de facturados, mantiene totales POS en Todos y excluye reembolsos/orígenes de reembolso en todos los filtros y muestra Consumidor Final cuando la orden no tiene cliente asignado.
     """,
     "author": "Tecnodyne",
     "license": "LGPL-3",

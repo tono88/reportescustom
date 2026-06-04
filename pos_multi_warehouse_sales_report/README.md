@@ -100,3 +100,7 @@ El menú se declara de forma estática bajo el XML ID oficial `point_of_sale.men
 - Excluye órdenes POS de reembolso y órdenes origen de reembolso en todos los modos: Facturados, No facturados y Todos.
 - Mantiene los totales POS sin ajuste contra factura cuando el filtro es Todos, para cuadrar contra el Reporte de Ventas POS global.
 - Conserva el ajuste contra `account.move` únicamente en Solo facturados.
+
+## 18.0.1.0.17
+
+- Muestra **Consumidor Final** cuando la orden POS no tiene cliente asignado, evitando clientes en blanco en el reporte.
