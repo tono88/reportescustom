@@ -79,82 +79,70 @@ class PosWarehouseSalesReportWizard(models.TransientModel):
                 return invoice
         return self.env["account.move"]
 
-    def _is_invoice_fully_reversed_by_credit_note(self, invoice):
-        """Return True when the invoice has active reversal moves that cover it.
+    def _invoice_has_related_credit_note(self, invoice):
+        """Return True when the invoice has an active related customer credit note.
 
-        This is a defensive complement to ``payment_state == 'reversed'``. Some
-        localizations or custom flows keep the invoice posted but still link it
-        to one or more credit notes through ``reversal_move_ids``. We only treat
-        it as reversed when the active credit notes cover the invoice total, so
-        a partial credit note does not remove the whole invoice from the report.
-        """
-        if "reversal_move_ids" not in invoice._fields:
-            return False
-
-        reversals = invoice.reversal_move_ids.filtered(lambda move: (
-            move.exists()
-            and ("state" not in move._fields or move.state != "cancel")
-            and ("move_type" not in move._fields or move.move_type in ("out_refund", "in_refund", "entry"))
-        ))
-        if not reversals:
-            return False
-
-        if "amount_total_signed" in invoice._fields:
-            invoice_amount = abs(invoice.amount_total_signed or 0.0)
-            reversed_amount = sum(abs(move.amount_total_signed or 0.0) for move in reversals)
-        elif "amount_total" in invoice._fields:
-            invoice_amount = abs(invoice.amount_total or 0.0)
-            reversed_amount = sum(abs(move.amount_total or 0.0) for move in reversals)
-        else:
-            return False
-
-        currency = invoice.company_currency_id if "company_currency_id" in invoice._fields else invoice.currency_id
-        rounding = currency.rounding if currency else 0.01
-        return invoice_amount and reversed_amount >= (invoice_amount - rounding)
-
-    def _is_invalid_report_invoice(self, invoice):
-        """Return True when a linked move must not be counted as a valid sale.
-
-        The report must exclude cancelled invoices, credit notes/refunds and
-        invoices reversed by credit notes. It should only count normal customer
-        invoices that remain valid.
+        The report must not rely on ``payment_state`` because some invoices can
+        be marked as reversed/paid/partial depending on reconciliations. The
+        business rule requested for this report is simpler: exclude the sale
+        only when the invoice has a related credit note. In standard Odoo this
+        relation is stored with ``reversed_entry_id`` / ``reversal_move_ids``.
         """
         if not invoice or not invoice.exists():
-            return True
-        if "state" in invoice._fields and invoice.state == "cancel":
-            return True
-        if "move_type" in invoice._fields and invoice.move_type != "out_invoice":
-            return True
-        if "payment_state" in invoice._fields and invoice.payment_state == "reversed":
-            return True
-        if self._is_invoice_fully_reversed_by_credit_note(invoice):
-            return True
+            return False
+
+        AccountMove = self.env["account.move"].sudo()
+
+        def _is_active_customer_credit_note(move):
+            return (
+                move.exists()
+                and ("state" not in move._fields or move.state != "cancel")
+                and ("move_type" not in move._fields or move.move_type == "out_refund")
+            )
+
+        if "reversal_move_ids" in invoice._fields:
+            related_credit_notes = invoice.reversal_move_ids.filtered(_is_active_customer_credit_note)
+            if related_credit_notes:
+                return True
+
+        if "reversed_entry_id" in AccountMove._fields:
+            domain = [("reversed_entry_id", "=", invoice.id)]
+            if "state" in AccountMove._fields:
+                domain.append(("state", "!=", "cancel"))
+            if "move_type" in AccountMove._fields:
+                domain.append(("move_type", "=", "out_refund"))
+            if AccountMove.search_count(domain):
+                return True
+
         return False
 
     def _get_valid_invoice_move(self, order):
-        """Return the linked invoice only when it is valid for the report.
+        """Return the linked invoice only when it is valid for the sales report.
 
-        POS orders can remain as ``invoiced`` even when the linked invoice was
-        cancelled or reversed. For this report, those orders must be ignored
-        instead of being counted as invoiced or not invoiced sales.
+        A POS order can remain with state ``invoiced`` even if the linked invoice
+        is missing, cancelled or already has a related credit note. Those cases
+        must not be counted as valid invoiced sales.
         """
         invoice = self._get_invoice_move(order)
-        if self._is_invalid_report_invoice(invoice):
+        if not invoice or not invoice.exists():
+            return self.env["account.move"]
+        if "state" in invoice._fields and invoice.state == "cancel":
+            return self.env["account.move"]
+        if "move_type" in invoice._fields and invoice.move_type == "out_refund":
+            return self.env["account.move"]
+        if self._invoice_has_related_credit_note(invoice):
             return self.env["account.move"]
         return invoice
 
     def _line_passes_invoice_rules(self, line):
-        """Apply invoice filters using only valid, non-reversed invoices.
+        """Apply invoice filters using only valid, non-cancelled invoices.
 
-        If the POS order has a linked invoice but that invoice is cancelled,
-        reversed, or is a credit note, the line is ignored in every filter.
+        If the POS order says it is invoiced but the invoice is missing or
+        cancelled, the line is ignored in every filter because the sale should
+        not be counted as a valid invoiced POS sale.
         """
         order = line.order_id
-        linked_invoice = self._get_invoice_move(order)
         valid_invoice = self._get_valid_invoice_move(order)
-
-        if linked_invoice and linked_invoice.exists() and not valid_invoice:
-            return False
 
         if order.state == "invoiced" and not valid_invoice:
             return False
@@ -248,9 +236,6 @@ class PosWarehouseSalesReportWizard(models.TransientModel):
         if self.invoice_filter == "invoiced":
             if invoice_field:
                 domain.append((f"order_id.{invoice_field}", "!=", False))
-                domain.append((f"order_id.{invoice_field}.state", "!=", "cancel"))
-                domain.append((f"order_id.{invoice_field}.move_type", "=", "out_invoice"))
-                domain.append((f"order_id.{invoice_field}.payment_state", "!=", "reversed"))
             else:
                 domain.append(("order_id.state", "=", "invoiced"))
         elif self.invoice_filter == "not_invoiced":

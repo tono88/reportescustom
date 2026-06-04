@@ -56,9 +56,7 @@ Punto de venta → Órdenes → Ventas por almacén
 El menú se declara de forma estática bajo el XML ID oficial `point_of_sale.menu_point_of_sale`, que corresponde a Punto de venta / Órdenes en Odoo 18 Community.
 
 
-## Versión 18.0.1.0.8
+## 18.0.1.0.9
 
-- Excluye facturas canceladas.
-- Excluye notas de crédito / reembolsos (`out_refund`).
-- Excluye facturas revertidas (`payment_state = reversed`).
-- Excluye facturas con notas de crédito activas que revierten completamente el total.
+- Excluye del reporte las órdenes POS cuya factura relacionada tenga una nota de crédito de cliente activa relacionada por `reversed_entry_id` / `reversal_move_ids`.
+- No usa `payment_state` para decidir si una factura está revertida.
