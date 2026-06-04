@@ -113,14 +113,14 @@
                 </td>
                 <td style="width:22.5%;">
                   <div class="fw-bold">FECHA DE EMISIÓN:</div>
-                  <div>
-                    <t t-if="o.create_date">
-                      <span t-field="o.create_date" t-options='{"widget":"datetime"}'/>
-                    </t>
-                    <t t-elif="o.invoice_date">
-                      <span t-field="o.invoice_date" t-options='{"widget":"date"}'/>
-                    </t>
-                  </div>
+				  <div>
+					<t t-if="o.invoice_date">
+					  <span t-field="o.invoice_date" t-options='{"widget":"date"}'/>
+					</t>
+					<t t-elif="o.date">
+					  <span t-field="o.date" t-options='{"widget":"date"}'/>
+					</t>
+				  </div>
                 </td>
                 <td style="width:22.5%;">
                   <div class="fw-bold">NÚMERO DTE:</div>
