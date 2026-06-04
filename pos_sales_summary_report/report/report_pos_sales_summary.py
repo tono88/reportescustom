@@ -210,12 +210,9 @@ class ReportPosSalesSummary(models.AbstractModel):
             orders = orders.filtered(self._has_valid_invoice)
 
         elif invoice_filter == "not_invoiced":
-            # Órdenes sin factura válida o con factura cancelada/borrador,
-            # PERO excluimos las que están en estado 'invoiced' y sin move.
-            orders = orders.filtered(
-                lambda o: not self._has_valid_invoice(o)
-                and not self._is_invoiced_without_move(o)
-            )
+            # Solo órdenes que NO están en estado facturado.
+            # Si la orden está en estado 'invoiced', se excluye aunque su factura esté cancelada.
+            orders = orders.filtered(lambda o: o.state != "invoiced")
 
 
 
