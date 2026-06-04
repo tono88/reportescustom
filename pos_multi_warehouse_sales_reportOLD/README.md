@@ -54,11 +54,3 @@ Punto de venta → Órdenes → Ventas por almacén
 
 ## Fix 18.0.1.0.5
 El menú se declara de forma estática bajo el XML ID oficial `point_of_sale.menu_point_of_sale`, que corresponde a Punto de venta / Órdenes en Odoo 18 Community.
-
-
-## Versión 18.0.1.0.8
-
-- Excluye facturas canceladas.
-- Excluye notas de crédito / reembolsos (`out_refund`).
-- Excluye facturas revertidas (`payment_state = reversed`).
-- Excluye facturas con notas de crédito activas que revierten completamente el total.
