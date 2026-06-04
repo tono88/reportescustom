@@ -384,6 +384,7 @@ class PosWarehouseSalesReportWizard(models.TransientModel):
             "cashier_id": order.user_id.id if "user_id" in order._fields and order.user_id else False,
             "partner_id": order.partner_id.id,
             "partner_display": order.partner_id.display_name if order.partner_id else _("Consumidor Final"),
+            "customer_name": order.partner_id.display_name if order.partner_id else _("Consumidor Final"),
             "product_id": product.id,
             "categ_id": product.categ_id.id,
             "uom_id": product.uom_id.id,

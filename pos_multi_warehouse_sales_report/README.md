@@ -104,3 +104,8 @@ El menú se declara de forma estática bajo el XML ID oficial `point_of_sale.men
 ## 18.0.1.0.17
 
 - Muestra **Consumidor Final** cuando la orden POS no tiene cliente asignado, evitando clientes en blanco en el reporte.
+
+
+## 18.0.1.0.18
+- La columna visible Cliente ahora usa un campo texto (`customer_name`) para que las órdenes sin cliente exporten “Consumidor Final” en XLSX.
+- El cliente técnico Many2one queda oculto en la vista de lista.

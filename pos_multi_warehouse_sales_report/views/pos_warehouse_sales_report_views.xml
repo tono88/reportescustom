@@ -47,8 +47,9 @@
                 <field name="discount" optional="hide"/>
                 <field name="price_subtotal" widget="monetary" options="{'currency_field': 'currency_id'}" sum="Subtotal"/>
                 <field name="price_total" widget="monetary" options="{'currency_field': 'currency_id'}" sum="Total"/>
-                <field name="partner_display" string="Cliente"/>
-                <field name="partner_id" optional="hide"/>
+                <field name="customer_name" string="Cliente" optional="show"/>
+                <field name="partner_display" column_invisible="1"/>
+                <field name="partner_id" column_invisible="1"/>
                 <field name="order_id"/>
                 <field name="pos_reference"/>
                 <field name="invoice_status"/>
@@ -97,6 +98,7 @@
                 <field name="date_order"/>
                 <field name="invoice_date"/>
                 <field name="product_id"/>
+                <field name="customer_name"/>
                 <field name="partner_display"/>
                 <field name="partner_id"/>
                 <field name="warehouse_id"/>
@@ -111,7 +113,7 @@
                 <separator/>
                 <filter name="group_by_warehouse" string="Almacén" context="{'group_by': 'warehouse_display'}"/>
                 <filter name="group_by_product" string="Producto" context="{'group_by': 'product_id'}"/>
-                <filter name="group_by_partner" string="Cliente" context="{'group_by': 'partner_display'}"/>
+                <filter name="group_by_partner" string="Cliente" context="{'group_by': 'customer_name'}"/>
                 <filter name="group_by_order" string="Orden POS" context="{'group_by': 'order_id'}"/>
                 <filter name="group_by_date" string="Fecha" context="{'group_by': 'date_order:day'}"/>
                 <filter name="group_by_invoice_status" string="Estado facturación" context="{'group_by': 'invoice_status'}"/>

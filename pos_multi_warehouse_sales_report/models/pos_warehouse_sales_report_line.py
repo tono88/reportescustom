@@ -31,6 +31,7 @@ class PosWarehouseSalesReportLine(models.TransientModel):
     cashier_id = fields.Many2one("res.users", string="Cajero", readonly=True)
     partner_id = fields.Many2one("res.partner", string="Cliente técnico", readonly=True)
     partner_display = fields.Char(string="Cliente", readonly=True)
+    customer_name = fields.Char(string="Cliente", readonly=True)
 
     product_id = fields.Many2one("product.product", string="Producto", readonly=True)
     categ_id = fields.Many2one("product.category", string="Categoría", readonly=True)
