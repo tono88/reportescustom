@@ -18,6 +18,6 @@ def post_init_assign_existing_correlatives(cr, registry):
         for order in orders:
             order.internal_correlative = seq.next_by_id()
             # copiar a facturas relacionadas si existen
-            if order.account_move and not order.account_move.internal_correlative:
-                order.account_move.internal_correlative = order.internal_correlative
+            if order.account_move and not order.account_move.pos_internal_correlative:
+                order.account_move.pos_internal_correlative = order.internal_correlative
         offset += batch

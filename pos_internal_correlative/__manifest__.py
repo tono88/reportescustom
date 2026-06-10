@@ -1,7 +1,7 @@
 {
     "name": "POS Internal Correlative",
     "summary": "Correlativo interno para pedidos del POS; se copia a la factura y se imprime en el recibo.",
-    "version": "18.0.1.0.3",
+    "version": "18.0.1.0.2",
     "category": "Point of Sale",
     "author": "Tu Equipo",
     "license": "LGPL-3",

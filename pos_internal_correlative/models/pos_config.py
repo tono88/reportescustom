@@ -41,7 +41,7 @@ class PosConfig(models.Model):
             if not config.pos_internal_sequence_id:
                 seq = self.env["ir.sequence"].create({
                     "name": f"POS {config.display_name} Internal Seq (Facturadas)",
-                    "implementation": "no_gap",
+                    "implementation": "standard",
                     "prefix": (config.pos_series_prefix or "A-"),
                     "padding": 5,
                     "code": f"pos.internal.correlative.config_{config.id}",
@@ -53,7 +53,7 @@ class PosConfig(models.Model):
             if not config.pos_internal_sequence_no_invoice_id:
                 seq2 = self.env["ir.sequence"].create({
                     "name": f"POS {config.display_name} Internal Seq (Sin Factura)",
-                    "implementation": "no_gap",
+                    "implementation": "standard",
                     "prefix": (
                         config.pos_series_prefix_no_invoice
                         or config.pos_series_prefix
@@ -64,10 +64,6 @@ class PosConfig(models.Model):
                     "company_id": config.company_id.id,
                 })
                 config.pos_internal_sequence_no_invoice_id = seq2.id
-
-            # Evitar saltos por rollback/reintentos en correlativos internos POS
-            sequences = config.pos_internal_sequence_id | config.pos_internal_sequence_no_invoice_id
-            sequences.filtered(lambda s: s.implementation != "no_gap").write({"implementation": "no_gap"})
 
     def write(self, vals):
         res = super().write(vals)
