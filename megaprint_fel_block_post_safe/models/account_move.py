@@ -6,20 +6,29 @@ import requests
 
 _logger = logging.getLogger(__name__)
 
+
 class AccountMove(models.Model):
     _inherit = "account.move"
 
     def _bb_cfg(self):
         ICP = self.env['ir.config_parameter'].sudo()
+
         def _get(name, default):
             try:
                 return ICP.get_param(name, default)
             except Exception:
                 return default
+
         return {
             "block_enabled": _get("megaprint.block_post_until_fel", "1") == "1",
             "wait_timeout": int(_get("megaprint.wait_timeout_seconds", "60")),
-            "call_if_missing": _get("megaprint.call_cert_if_missing", "1") == "1",
+            # SAFE DEFAULT:
+            # Previous versions used megaprint.call_cert_if_missing=1 by default.
+            # That is risky when fel_megaprint already certifies inside action_post(), because
+            # the block module can trigger a second call before the first one finishes writing
+            # the FEL fields.  From 18.0.1.12 this module only waits/blocks by default.
+            # To intentionally restore old behavior, set megaprint.block_post_auto_certify=1.
+            "call_if_missing": _get("megaprint.block_post_auto_certify", "0") == "1",
             "poll_seconds": int(_get("megaprint.poll_seconds", "2")),
             "require_full_fel": _get("megaprint.require_full_fel", "1") == "1",
             "chatter_audit": _get("megaprint.chatter_audit", "1") == "1",
@@ -52,17 +61,27 @@ class AccountMove(models.Model):
         return bool(firma)
 
     def _bb_refresh_fields(self, rec, fields):
+        existing_fields = [f for f in fields if f in rec._fields]
+        if not existing_fields:
+            return
         try:
-            rec.invalidate_recordset(fields)
+            rec.invalidate_recordset(existing_fields)
             return
         except Exception:
             pass
         try:
-            rec.invalidate_cache(fields)
+            rec.invalidate_cache(existing_fields)
             return
         except Exception:
             pass
-        rec.read(fields)
+        rec.read(existing_fields)
+
+    def _bb_lock_move_row(self, move):
+        """Serialize post/certification checks per invoice inside the DB transaction."""
+        try:
+            self.env.cr.execute("SELECT id FROM account_move WHERE id = %s FOR UPDATE", [move.id])
+        except Exception as e:
+            _logger.warning("[FEL_BLOCK_SAFE] Could not lock account.move id=%s: %s", move.id, e)
 
     # ---------- HTTP capture ----------
     def _bb_capture_http(self):
@@ -70,10 +89,14 @@ class AccountMove(models.Model):
         captured = {"url": None, "status": None, "text": None}
         if not cfg["log_http"]:
             class Dummy:
-                def __enter__(self2): return None
-                def __exit__(self2, *exc): return False
+                def __enter__(self2):
+                    return None
+
+                def __exit__(self2, *exc):
+                    return False
             return captured, Dummy()
         original_post = requests.post
+
         def wrapped(url, *args, **kwargs):
             resp = original_post(url, *args, **kwargs)
             try:
@@ -83,9 +106,11 @@ class AccountMove(models.Model):
             except Exception:
                 pass
             return resp
+
         class PatchCtx:
             def __enter__(self2):
                 requests.post = wrapped
+
             def __exit__(self2, exc_type, exc, tb):
                 requests.post = original_post
                 return False
@@ -124,16 +149,19 @@ class AccountMove(models.Model):
         names = list(fields.keys())
         xml_candidates = [n for n in names if "fel" in n and "xml" in n and fields[n].type == "binary"]
         pdf_candidates = [n for n in names if "fel" in n and "pdf" in n and fields[n].type == "binary"]
-        xml_candidates += [n for n in ["documento_xml_fel","xml_fel","fel_xml","fel_xml_document","xml_documento_fel"] if n in names]
-        pdf_candidates += [n for n in ["pdf_fel","fel_pdf","fel_pdf_document","documento_pdf_fel"] if n in names]
-        seen = set(); xml_candidates = [x for x in xml_candidates if not (x in seen or seen.add(x))]
-        seen = set(); pdf_candidates = [x for x in pdf_candidates if not (x in seen or seen.add(x))]
+        xml_candidates += [n for n in ["documento_xml_fel", "xml_fel", "fel_xml", "fel_xml_document", "xml_documento_fel"] if n in names]
+        pdf_candidates += [n for n in ["pdf_fel", "fel_pdf", "fel_pdf_document", "documento_pdf_fel"] if n in names]
+        seen = set()
+        xml_candidates = [x for x in xml_candidates if not (x in seen or seen.add(x))]
+        seen = set()
+        pdf_candidates = [x for x in pdf_candidates if not (x in seen or seen.add(x))]
         return {"xml": xml_candidates, "pdf": pdf_candidates}
 
     def _bb_collect_fel_attachments(self, move):
         cfg = self._bb_cfg()
         att = []
         cand = self._bb_guess_binary_fields(move)
+
         def _add(field_name, filename, mimetype):
             try:
                 data = getattr(move, field_name, False)
@@ -141,6 +169,7 @@ class AccountMove(models.Model):
                 data = False
             if data:
                 att.append((filename, data, mimetype))
+
         for fname in cand["xml"]:
             _add(fname, (move.name or "invoice") + "_fel.xml", "application/xml")
             break
@@ -157,7 +186,8 @@ class AccountMove(models.Model):
     def _bb_already_posted_success(self, move):
         try:
             msgs = self.env["mail.message"].sudo().search_read(
-                [("model","=","account.move"),("res_id","=",move.id)], ["body"], limit=5, order="id desc")
+                [("model", "=", "account.move"), ("res_id", "=", move.id)],
+                ["body"], limit=5, order="id desc")
             for m in msgs:
                 if "FEL certificado" in (m.get("body") or ""):
                     return True
@@ -225,25 +255,33 @@ class AccountMove(models.Model):
 
     def _bb_wait_fel_or_fail(self):
         cfg = self._bb_cfg()
-        if not cfg["block_enabled"]:
+        if not cfg["block_enabled"] or self.env.context.get("bb_fel_block_skip"):
             return
         for move in self:
             if not move._bb_needs_fel():
                 continue
+
+            move._bb_lock_move_row(move)
+            self._bb_refresh_fields(move, ["firma_fel", "serie_fel", "numero_fel"])
+
             if move._bb_has_fel_fields():
                 self._bb_chatter_success(move, "")
                 continue
+
             captured, patch = self._bb_capture_http()
             if cfg["call_if_missing"] and hasattr(move, "certificar_megaprint"):
                 try:
-                    _logger.info("[FEL_BLOCK_SAFE] Trigger certificar_megaprint (missing FEL) move_id=%s", move.id)
+                    _logger.info("[FEL_BLOCK_SAFE] Trigger certificar_megaprint (explicit auto-certify enabled) move_id=%s", move.id)
                     with patch:
-                        move.certificar_megaprint()
+                        move.with_context(bb_fel_block_skip=True).certificar_megaprint()
                 except Exception as e:
                     _logger.warning("[FEL_BLOCK_SAFE] certificar_megaprint() raised: %s", e)
+            else:
+                _logger.info("[FEL_BLOCK_SAFE] Waiting FEL fields without calling certificar_megaprint move_id=%s", move.id)
+
             start = time.time()
             while time.time() - start < cfg["wait_timeout"]:
-                self._bb_refresh_fields(move, ["firma_fel","serie_fel","numero_fel"])
+                self._bb_refresh_fields(move, ["firma_fel", "serie_fel", "numero_fel"])
                 if move._bb_has_fel_fields():
                     _logger.info("[FEL_BLOCK_SAFE] FEL present after wait move_id=%s", move.id)
                     snippet = self._bb_render_http_snippet_html(captured)
@@ -253,21 +291,24 @@ class AccountMove(models.Model):
             else:
                 snippet_txt = self._bb_render_http_snippet_text(captured) if cfg["include_http_in_popup"] else ""
                 msg = _("FEL certification not received within %s seconds; posting aborted.") % cfg["wait_timeout"]
-                if snippet_txt:
+                if snippet_txt and cfg["call_if_missing"]:
                     msg += "\n\nLast FEL response:\n%s" % snippet_txt
-                # Also try to log to chatter for post-mortem (will rollback with tx but helpful when success)
-                snippet_html = self._bb_render_http_snippet_html(captured)
+                snippet_html = self._bb_render_http_snippet_html(captured) if cfg["call_if_missing"] else ""
                 self._bb_chatter_timeout(move, cfg["wait_timeout"], snippet_html)
                 raise UserError(msg)
 
     def action_post(self):
-        res = super().action_post()
+        # Mark the whole downstream post as protected so our write() hook does not
+        # run in the middle of action_post().  Without this, the module may call
+        # certificar_megaprint() before fel_megaprint's own action_post() finishes,
+        # causing duplicate certification.
+        res = super(AccountMove, self.with_context(bb_fel_block_from_action_post=True)).action_post()
         self._bb_wait_fel_or_fail()
         return res
 
     def write(self, vals):
         posting = "state" in vals and vals.get("state") == "posted"
         res = super().write(vals)
-        if posting:
+        if posting and not self.env.context.get("bb_fel_block_from_action_post"):
             self._bb_wait_fel_or_fail()
         return res
