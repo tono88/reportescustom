@@ -29,6 +29,15 @@ class AccountMove(models.Model):
             # the FEL fields.  From 18.0.1.12 this module only waits/blocks by default.
             # To intentionally restore old behavior, set megaprint.block_post_auto_certify=1.
             "call_if_missing": _get("megaprint.block_post_auto_certify", "0") == "1",
+            # POS special case:
+            # In some fel_megaprint installations, normal accounting invoices are
+            # certified by fel_megaprint during action_post(), but POS invoices are
+            # only posted by point_of_sale and no FEL call is made automatically.
+            # Therefore, after super().action_post() finishes, this module may call
+            # certificar_megaprint() only for POS-related invoices and only if the
+            # FEL fields are still missing.  This keeps normal invoices protected
+            # from double certification while allowing POS to certify once.
+            "call_if_missing_pos": _get("megaprint.block_post_auto_certify_pos", "1") == "1",
             "poll_seconds": int(_get("megaprint.poll_seconds", "2")),
             "require_full_fel": _get("megaprint.require_full_fel", "1") == "1",
             "chatter_audit": _get("megaprint.chatter_audit", "1") == "1",
@@ -82,6 +91,33 @@ class AccountMove(models.Model):
             self.env.cr.execute("SELECT id FROM account_move WHERE id = %s FOR UPDATE", [move.id])
         except Exception as e:
             _logger.warning("[FEL_BLOCK_SAFE] Could not lock account.move id=%s: %s", move.id, e)
+
+    def _bb_is_pos_invoice(self):
+        """Return True when this invoice was generated from a POS order.
+
+        The module does not depend on point_of_sale, so every POS access is
+        defensive.  The most reliable link in Odoo POS is pos.order.account_move.
+        """
+        self.ensure_one()
+        try:
+            if "pos.order" in self.env:
+                order = self.env["pos.order"].sudo().search([("account_move", "=", self.id)], limit=1)
+                if order:
+                    return True
+        except Exception as e:
+            _logger.debug("[FEL_BLOCK_SAFE] POS invoice lookup failed for move_id=%s: %s", self.id, e)
+        # Fallbacks for custom POS modules or renamed relations.
+        try:
+            if "pos_order_ids" in self._fields and self.pos_order_ids:
+                return True
+        except Exception:
+            pass
+        try:
+            origin = (getattr(self, "invoice_origin", False) or getattr(self, "ref", False) or "")
+            return isinstance(origin, str) and (origin.upper().startswith("POS") or "POS/" in origin.upper())
+        except Exception:
+            return False
+
 
     # ---------- HTTP capture ----------
     def _bb_capture_http(self):
@@ -269,15 +305,18 @@ class AccountMove(models.Model):
                 continue
 
             captured, patch = self._bb_capture_http()
-            if cfg["call_if_missing"] and hasattr(move, "certificar_megaprint"):
+            is_pos_invoice = move._bb_is_pos_invoice()
+            should_call = cfg["call_if_missing"] or (is_pos_invoice and cfg["call_if_missing_pos"])
+            if should_call and hasattr(move, "certificar_megaprint"):
                 try:
-                    _logger.info("[FEL_BLOCK_SAFE] Trigger certificar_megaprint (explicit auto-certify enabled) move_id=%s", move.id)
+                    reason = "POS invoice" if is_pos_invoice and not cfg["call_if_missing"] else "explicit auto-certify enabled"
+                    _logger.info("[FEL_BLOCK_SAFE] Trigger certificar_megaprint (%s) move_id=%s", reason, move.id)
                     with patch:
                         move.with_context(bb_fel_block_skip=True).certificar_megaprint()
                 except Exception as e:
                     _logger.warning("[FEL_BLOCK_SAFE] certificar_megaprint() raised: %s", e)
             else:
-                _logger.info("[FEL_BLOCK_SAFE] Waiting FEL fields without calling certificar_megaprint move_id=%s", move.id)
+                _logger.info("[FEL_BLOCK_SAFE] Waiting FEL fields without calling certificar_megaprint move_id=%s is_pos=%s", move.id, is_pos_invoice)
 
             start = time.time()
             while time.time() - start < cfg["wait_timeout"]:
@@ -291,9 +330,9 @@ class AccountMove(models.Model):
             else:
                 snippet_txt = self._bb_render_http_snippet_text(captured) if cfg["include_http_in_popup"] else ""
                 msg = _("FEL certification not received within %s seconds; posting aborted.") % cfg["wait_timeout"]
-                if snippet_txt and cfg["call_if_missing"]:
+                if snippet_txt and should_call:
                     msg += "\n\nLast FEL response:\n%s" % snippet_txt
-                snippet_html = self._bb_render_http_snippet_html(captured) if cfg["call_if_missing"] else ""
+                snippet_html = self._bb_render_http_snippet_html(captured) if should_call else ""
                 self._bb_chatter_timeout(move, cfg["wait_timeout"], snippet_html)
                 raise UserError(msg)
 
