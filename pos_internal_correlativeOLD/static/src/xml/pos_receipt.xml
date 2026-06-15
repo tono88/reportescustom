@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates id="pos_internal_correlative_receipt" xml:space="preserve">
+
+    <!--
+      Patch del bloque de datos del pedido en el recibo.
+      Sustituimos la primera <div> que muestra "Orden XXX" por nuestro correlativo.
+    -->
+    <t t-name="pos_internal_correlative.ReceiptOrderDataPatch" owl="1">
+        <xpath expr="//div[hasclass('pos-receipt-order-data')]/div[1]" position="replace">
+            <div t-if="props.order?.export_for_printing()?.internal_correlative">
+                Correlativo interno&nbsp;
+                <t t-esc="props.order.export_for_printing().internal_correlative"/>
+            </div>
+            <div t-else="">
+                <!-- Fallback: si por alguna razón no está, mostramos el nombre de la orden -->
+                Orden&nbsp;<t t-esc="props.order.name"/>
+            </div>
+        </xpath>
+    </t>
+
+</templates>

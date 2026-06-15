@@ -1,0 +1,11 @@
+<templates id="tmpl" xml:space="preserve">
+    <t t-inherit="point_of_sale.Receipt" t-inherit-mode="extension">
+        <xpath expr="//*[@class='pos-receipt-contact']" position="after">
+            <div class="pos-receipt-extra">
+                <t t-if="order.internal_correlative">
+                    <div><strong>Correlativo interno:</strong> <t t-esc="order.internal_correlative"/></div>
+                </t>
+            </div>
+        </xpath>
+    </t>
+</templates>

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- LIST: añadir columna "Correlativo interno" en la lista de facturas -->
+    <record id="view_move_list_inherit_pos_correlative" model="ir.ui.view">
+        <field name="name">account.move.list.pos.correlative</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_tree"/>
+        <field name="arch" type="xml">
+            <!-- Insertar la columna dentro del <list> -->
+            <xpath expr="//list" position="inside">
+                <field name="internal_correlative" string="Correlativo interno"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- FORM: mostrar el correlativo en el formulario de la factura (en account.move, no en move.line) -->
+    <record id="view_move_form_inherit_pos_correlative" model="ir.ui.view">
+        <field name="name">account.move.form.pos.correlative</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="arch" type="xml">
+            <!-- Lo añadimos justo después de invoice_date para asegurar que estamos en account.move -->
+            <xpath expr="//sheet//field[@name='invoice_date']" position="after">
+                <field name="internal_correlative" string="Correlativo interno" readonly="1"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- SEARCH: permitir buscar por el correlativo -->
+    <record id="view_move_search_inherit_pos_correlative" model="ir.ui.view">
+        <field name="name">account.move.search.pos.correlative</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_account_move_filter"/>
+        <field name="arch" type="xml">
+            <xpath expr="//search" position="inside">
+                <field name="internal_correlative" string="Correlativo interno"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
+

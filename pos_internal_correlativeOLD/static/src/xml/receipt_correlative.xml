@@ -1,0 +1,16 @@
+<t t-name="pos_internal_correlative_fixed.ReceiptCorrelative" owl="1">
+  <templates id="template" xml:space="preserve">
+    <t t-inherit="point_of_sale.ReceiptScreenTicket" t-inherit-mode="extension">
+      <xpath expr="//div[@class='pos-receipt-footer']" position="inside">
+        <div t-if="props.receipt">
+          <t t-if="props.receipt.pos_internal_correlative">
+            Correlativo interno <t t-esc="props.receipt.pos_internal_correlative"/>
+          </t>
+          <t t-else="">
+            Orden <t t-esc="props.receipt.order_name"/>
+          </t>
+        </div>
+      </xpath>
+    </t>
+  </templates>
+</t>
