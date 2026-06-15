@@ -1,6 +1,7 @@
 # pos_internal_correlative/models/pos_config.py
 from odoo import api, fields, models
 
+
 class PosConfig(models.Model):
     _inherit = "pos.config"
 
@@ -34,12 +35,22 @@ class PosConfig(models.Model):
         help="Secuencia usada para generar el correlativo interno cuando la orden POS NO se factura.",
     )
 
-    # Crea (si faltan) las secuencias propias de ESTE POS con los prefijos indicados
     def _ensure_internal_sequence(self):
-        for config in self:
+        """Crea/ajusta las secuencias propias del POS.
+
+        Esta función puede ejecutarse durante la venta desde el usuario cajero.
+        Por eso las operaciones sobre ir.sequence y los campos técnicos del
+        pos.config se hacen con sudo(). El cajero NO debe tener permisos de
+        Administración/Ajustes solo para vender.
+        """
+        Sequence = self.env["ir.sequence"].sudo()
+
+        for config in self.sudo():
+            updates = {}
+
             # FACTURADAS
             if not config.pos_internal_sequence_id:
-                seq = self.env["ir.sequence"].create({
+                seq = Sequence.create({
                     "name": f"POS {config.display_name} Internal Seq (Facturadas)",
                     "implementation": "standard",
                     "prefix": (config.pos_series_prefix or "A-"),
@@ -47,41 +58,55 @@ class PosConfig(models.Model):
                     "code": f"pos.internal.correlative.config_{config.id}",
                     "company_id": config.company_id.id,
                 })
-                config.pos_internal_sequence_id = seq.id
+                updates["pos_internal_sequence_id"] = seq.id
 
             # SIN FACTURA
             if not config.pos_internal_sequence_no_invoice_id:
-                seq2 = self.env["ir.sequence"].create({
+                seq2 = Sequence.create({
                     "name": f"POS {config.display_name} Internal Seq (Sin Factura)",
                     "implementation": "standard",
                     "prefix": (
                         config.pos_series_prefix_no_invoice
                         or config.pos_series_prefix
-                        or "A-"
+                        or "D-"
                     ),
                     "padding": 5,
                     "code": f"pos.internal.correlative.noinv.config_{config.id}",
                     "company_id": config.company_id.id,
                 })
-                config.pos_internal_sequence_no_invoice_id = seq2.id
+                updates["pos_internal_sequence_no_invoice_id"] = seq2.id
+
+            if updates:
+                config.with_context(skip_pos_internal_sequence_sync=True).write(updates)
+
+            # IMPORTANTE: no cambiamos automáticamente implementation de secuencias
+            # existentes. Cambiar implementation puede alterar el número interno
+            # si no se sincroniza antes con number_next_actual. Las secuencias
+            # nuevas se crean en standard para evitar bloqueos concurrentes en POS.
 
     def write(self, vals):
         res = super().write(vals)
-        # Si cambiaron el prefijo FACTURADAS, reflejarlo en la secuencia
+
+        if self.env.context.get("skip_pos_internal_sequence_sync"):
+            return res
+
+        # Si cambiaron el prefijo FACTURADAS, reflejarlo en la secuencia.
         if "pos_series_prefix" in vals:
             for cfg in self:
                 if cfg.pos_internal_sequence_id:
-                    cfg.pos_internal_sequence_id.prefix = vals["pos_series_prefix"] or "A-"
+                    cfg.pos_internal_sequence_id.sudo().write({
+                        "prefix": vals["pos_series_prefix"] or "A-"
+                    })
 
-        # Si cambiaron el prefijo SIN FACTURA, reflejarlo en la secuencia
+        # Si cambiaron el prefijo SIN FACTURA, reflejarlo en la secuencia.
         if "pos_series_prefix_no_invoice" in vals:
             for cfg in self:
                 if cfg.pos_internal_sequence_no_invoice_id:
-                    cfg.pos_internal_sequence_no_invoice_id.prefix = (
-                        vals["pos_series_prefix_no_invoice"] or "D-"
-                    )
+                    cfg.pos_internal_sequence_no_invoice_id.sudo().write({
+                        "prefix": vals["pos_series_prefix_no_invoice"] or "D-"
+                    })
 
-        # Asegura que existan las dos secuencias
+        # Asegura que existan las dos secuencias.
         self._ensure_internal_sequence()
         return res
 
@@ -96,6 +121,7 @@ class PosConfig(models.Model):
             # Default para SIN FACTURA si no se indicó nada
             if not vals.get("pos_series_prefix_no_invoice"):
                 vals["pos_series_prefix_no_invoice"] = "D-"
+
         records = super().create(vals_list)
         records._ensure_internal_sequence()
         return records
