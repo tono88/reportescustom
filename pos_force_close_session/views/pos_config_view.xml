@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+  <record id="view_pos_config_form_force_close" model="ir.ui.view">
+    <field name="name">pos.config.form.force.close</field>
+    <field name="model">pos.config</field>
+    <field name="inherit_id" ref="point_of_sale.pos_config_view_form"/>
+    <field name="arch" type="xml">
+      <!-- Insertamos un grupo nuevo dentro del sheet, que siempre existe -->
+      <xpath expr="//sheet" position="inside">
+        <group name="force_close_group" string="Cierre forzado">
+          <field name="allow_force_close"/>
+          <label for="allow_force_close"
+                 string="Permite usar un asistente para cerrar la sesión aunque existan facturas en borrador/canceladas."/>
+        </group>
+      </xpath>
+    </field>
+  </record>
+</odoo>

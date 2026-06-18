@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+  <record id="view_pos_session_form_force_close" model="ir.ui.view">
+    <field name="name">pos.session.form.force.close</field>
+    <field name="model">pos.session</field>
+    <field name="inherit_id" ref="point_of_sale.view_pos_session_form"/>
+    <field name="arch" type="xml">
+      <xpath expr="//button[@id='validate_closing_control']" position="after">
+        <button name="action_force_close_session"
+                string="Forzar cierre"
+                type="object"
+                class="btn btn-danger"
+                invisible="0"/>
+      </xpath>
+    </field>
+  </record>
+</odoo>

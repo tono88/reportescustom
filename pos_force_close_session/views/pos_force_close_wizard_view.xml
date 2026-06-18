@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+  <record id="view_pos_force_close_wizard" model="ir.ui.view">
+    <field name="name">pos.force.close.wizard.form</field>
+    <field name="model">pos.force.close.wizard</field>
+    <field name="arch" type="xml">
+      <form string="Forzar cierre de sesión">
+        <group>
+          <field name="cleanup_done" invisible="1"/>
+          <field name="session_id" readonly="1"/>
+
+          <div class="alert alert-success" role="alert" invisible="not cleanup_done">
+            Las facturas canceladas/borrador ya fueron desvinculadas y guardadas.
+            Presione “Continuar cierre” para abrir el cierre estándar de Odoo.
+          </div>
+
+          <group invisible="cleanup_done">
+            <separator string="Facturas detectadas"/>
+            <group>
+              <field name="count_draft" readonly="1"/>
+              <field name="count_cancel" readonly="1"/>
+            </group>
+
+            <separator string="Acción a ejecutar"/>
+            <field name="action_mode"/>
+            <label for="action_mode"
+                   string="• Publicar: publica las facturas en borrador.&#10;• Anular y desvincular: cancela borradores y quita los vínculos POS que bloquean el cierre."/>
+          </group>
+        </group>
+        <footer>
+          <button string="Aplicar limpieza"
+                  type="object"
+                  name="action_apply"
+                  class="btn-primary"
+                  invisible="cleanup_done"/>
+          <button string="Continuar cierre"
+                  type="object"
+                  name="action_continue_close"
+                  class="btn-primary"
+                  invisible="not cleanup_done"/>
+          <button string="Cancelar" special="cancel" class="btn-secondary"/>
+        </footer>
+      </form>
+    </field>
+  </record>
+</odoo>
