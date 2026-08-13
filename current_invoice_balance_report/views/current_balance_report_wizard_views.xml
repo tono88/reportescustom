@@ -4,30 +4,41 @@
         <field name="name">current.balance.report.wizard.form</field>
         <field name="model">current.balance.report.wizard</field>
         <field name="arch" type="xml">
-            <form string="Saldos por fecha de factura - estado actual">
+            <form string="Saldos de clientes/proveedores - estado actual">
                 <group>
                     <group>
                         <field name="report_type"/>
                         <field name="company_id" options="{'no_create': True}"/>
+                        <field name="invoice_filter" invisible="report_type != 'customer'"/>
                     </group>
                     <group>
-                        <field name="date_from"/>
+                        <field name="use_oldest_date"/>
+                        <field name="date_from" readonly="use_oldest_date"/>
                         <field name="date_to"/>
+                        <field name="include_paid"/>
                     </group>
                 </group>
                 <group>
                     <field name="partner_ids" widget="many2many_tags" options="{'no_create': True}"/>
-                    <field name="include_paid"/>
                 </group>
                 <div class="alert alert-info" role="alert">
-                    <strong>Importante:</strong>
-                    las fechas determinan qué facturas o facturas de proveedor entran al reporte,
-                    pero el saldo y el estado de pago se toman al momento de generar el informe.
-                    Por ejemplo, una factura de junio pagada en agosto aparecerá como pagada y con saldo cero.
+                    <strong>Fecha inicial automática:</strong>
+                    al activar “Usar fecha más antigua automáticamente”, Odoo calcula la fecha inicial más antigua
+                    disponible según compañía, tipo de reporte, facturación, terceros y fecha final. Solo debe elegir
+                    manualmente la fecha final.<br/>
+                    <strong>Facturados:</strong>
+                    la fecha corresponde a la factura y el saldo considera todos los pagos conciliados hasta hoy,
+                    aunque hayan sido registrados después del período.<br/>
+                    <strong>No facturados:</strong>
+                    se toman de pedidos de Punto de Venta sin factura, usando la fecha del pedido POS.
                 </div>
                 <footer>
-                    <button name="action_print_pdf" type="object" string="Imprimir PDF" class="btn-primary"/>
-                    <button name="action_open_invoices" type="object" string="Ver documentos" class="btn-secondary"/>
+                    <button name="action_export_xlsx" type="object" string="Descargar Excel" class="btn-primary"/>
+                    <button name="action_print_pdf" type="object" string="Imprimir PDF" class="btn-secondary"/>
+                    <button name="action_open_invoices" type="object" string="Ver facturas" class="btn-secondary"
+                            invisible="report_type == 'customer' and invoice_filter == 'not_invoiced'"/>
+                    <button name="action_open_pos_orders" type="object" string="Ver pedidos POS" class="btn-secondary"
+                            invisible="report_type != 'customer' or invoice_filter == 'invoiced'"/>
                     <button string="Cancelar" special="cancel" class="btn-secondary"/>
                 </footer>
             </form>
@@ -40,7 +51,7 @@
         <field name="view_mode">form</field>
         <field name="view_id" ref="view_current_balance_report_wizard_form"/>
         <field name="target">new</field>
-        <field name="context">{'default_report_type': 'customer'}</field>
+        <field name="context">{'default_report_type': 'customer', 'default_invoice_filter': 'invoiced'}</field>
     </record>
 
     <record id="action_current_balance_report_vendor" model="ir.actions.act_window">
@@ -49,7 +60,7 @@
         <field name="view_mode">form</field>
         <field name="view_id" ref="view_current_balance_report_wizard_form"/>
         <field name="target">new</field>
-        <field name="context">{'default_report_type': 'vendor'}</field>
+        <field name="context">{'default_report_type': 'vendor', 'default_invoice_filter': 'invoiced'}</field>
     </record>
 
     <menuitem id="menu_current_balance_report_customer"

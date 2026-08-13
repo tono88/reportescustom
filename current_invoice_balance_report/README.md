@@ -1,39 +1,49 @@
-# Saldos por Fecha de Factura - Estado Actual (Odoo 18 Community)
+# Saldos por Fecha - Estado Actual (Odoo 18 Community)
 
-## Objetivo
-Permite seleccionar un rango de **fecha de factura** y mostrar el **saldo actual** de esos documentos.
+Reporte de saldos para clientes y proveedores.
 
-Ejemplo: una factura emitida en junio y pagada/conciliada en agosto aparecerá en el reporte de junio con:
-- Estado: Pagado
-- Saldo actual: 0
-- Pagado actual: total de la factura
+## Clientes
 
-Esto es deliberadamente distinto de un Aged Receivable/Payable histórico al 30 de junio.
+Permite seleccionar:
+- Solo facturados: usa `account.move.invoice_date` para el periodo y el residual actual de la factura.
+- Solo no facturados: usa pedidos `pos.order` sin factura y la fecha del pedido POS.
+- Facturados y no facturados: combina ambos orígenes.
 
-## Menús
-Facturación / Contabilidad -> Informes -> Informes de terceros:
-- Saldos actuales de clientes
-- Saldos actuales de proveedores
+El reporte conserva la lógica solicitada: una factura de junio pagada/conciliada en agosto aparece con saldo actual cero.
 
-## Filtros
-- Compañía
-- Fecha de factura desde/hasta
-- Clientes/proveedores opcionales
-- Incluir documentos ya pagados (activo por defecto)
+Para los pedidos POS no facturados se reutiliza la lógica del reporte `pos_multi_warehouse_sales_report`: se excluyen pedidos de reembolso y sus órdenes origen reembolsadas.
 
-## Salida
-- PDF agrupado por tercero
-- Botón "Ver documentos" para abrir las facturas/facturas de proveedor incluidas
+## Columnas PDF/XLSX
+
+1. Fecha factura
+2. Cliente / Proveedor
+3. Orden POS
+4. DTE FEL
+5. Total factura
+6. Total pagado
+7. Saldo pendiente
+
+El correlativo POS usa `internal_correlative` cuando el módulo `pos_internal_correlative` está instalado; si no, usa el nombre estándar del pedido.
+El DTE FEL usa `numero_fel` cuando existe y tiene fallbacks para otros nombres habituales.
+
+## Proveedores
+
+Solo usa facturas de proveedor. El saldo se calcula con el residual actual, incluyendo pagos posteriores al periodo.
 
 ## Dependencias
-Solo `account` de Odoo 18 Community.
 
-## Instalación en Windows 11
-1. Descomprimir/copiar la carpeta `current_invoice_balance_report` dentro de una ruta incluida en `addons_path`.
-2. Reiniciar el servicio/servidor Odoo.
-3. Activar modo desarrollador.
-4. Apps -> Actualizar lista de aplicaciones.
-5. Buscar "Saldos por Fecha de Factura - Estado Actual" e instalar.
+- account
+- point_of_sale
 
-## Nota contable
-El saldo cambia únicamente cuando los pagos/notas de crédito están correctamente **conciliados** contra la factura. Un pago registrado pero no conciliado no reduce el `amount_residual` de la factura.
+
+## Versión 18.0.1.2.0 - fecha inicial automática
+
+Se agregó el check **Usar fecha más antigua automáticamente**.
+
+- Al activarlo, `Fecha desde` se calcula automáticamente y queda de solo lectura.
+- El usuario únicamente necesita elegir `Fecha hasta`.
+- La fecha mínima se recalcula al cambiar compañía, tipo de reporte, modo Facturados/No facturados, terceros, inclusión de pagados o fecha final.
+- En **Solo facturados** toma la factura/nota de crédito fiscal más antigua que cumpla los filtros.
+- En **Solo no facturados** toma el pedido POS no facturado más antiguo válido, excluyendo reembolsos y órdenes origen reembolsadas.
+- En **Facturados y no facturados** toma la menor fecha entre ambos orígenes.
+- Para proveedores aplica sobre las facturas de proveedor.

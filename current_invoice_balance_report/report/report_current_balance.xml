@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <record id="action_report_current_balance" model="ir.actions.report">
-        <field name="name">Saldos por fecha de factura - estado actual</field>
+        <field name="name">Saldos de clientes/proveedores - estado actual</field>
         <field name="model">current.balance.report.wizard</field>
         <field name="report_type">qweb-pdf</field>
         <field name="report_name">current_invoice_balance_report.report_current_balance_document</field>
@@ -23,39 +23,36 @@
                         </h2>
                         <p>
                             <strong>Compañía:</strong> <span t-field="wizard.company_id.name"/><br/>
-                            <strong>Fecha de factura:</strong>
-                            <span t-field="wizard.date_from"/> a <span t-field="wizard.date_to"/><br/>
-                            <strong>Criterio:</strong>
-                            documentos del periodo con pagos y conciliaciones aplicados hasta el momento de generar este reporte.
+                            <strong>Periodo:</strong> <span t-field="wizard.date_from"/> a <span t-field="wizard.date_to"/><br/>
+                            <t t-if="wizard.report_type == 'customer'">
+                                <strong>Facturación:</strong>
+                                <span t-esc="dict(wizard._fields['invoice_filter']._description_selection(wizard.env)).get(wizard.invoice_filter, wizard.invoice_filter)"/>
+                            </t>
                         </p>
 
-                        <t t-if="not data['groups']">
-                            <div class="alert alert-warning">No se encontraron documentos con los filtros seleccionados.</div>
+                        <t t-if="not data['rows']">
+                            <div class="alert alert-warning">No se encontraron registros con los filtros seleccionados.</div>
                         </t>
 
-                        <t t-foreach="data['groups']" t-as="group">
-                            <h4 class="mt-3">
-                                <span t-esc="group['partner'].display_name if group['partner'] else 'Sin tercero'"/>
-                            </h4>
-                            <table class="table table-sm table-bordered" style="font-size: 10px;">
+                        <t t-if="data['rows']">
+                            <table class="table table-sm table-bordered" style="font-size: 9px;">
                                 <thead>
                                     <tr>
-                                        <th>Documento</th>
-                                        <th>Referencia</th>
                                         <th>Fecha factura</th>
-                                        <th>Vencimiento</th>
-                                        <th class="text-end">Total</th>
-                                        <th class="text-end">Pagado actual</th>
-                                        <th class="text-end">Saldo actual</th>
-                                        <th>Estado</th>
+                                        <th><t t-if="wizard.report_type == 'customer'">Cliente</t><t t-else="">Proveedor</t></th>
+                                        <th>Orden POS</th>
+                                        <th>DTE FEL</th>
+                                        <th class="text-end">Total factura</th>
+                                        <th class="text-end">Total pagado</th>
+                                        <th class="text-end">Saldo pendiente</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr t-foreach="group['lines']" t-as="line">
-                                        <td><span t-esc="line['number']"/></td>
-                                        <td><span t-esc="line['reference']"/></td>
-                                        <td><span t-field="line['move'].invoice_date"/></td>
-                                        <td><span t-field="line['move'].invoice_date_due"/></td>
+                                    <tr t-foreach="data['rows']" t-as="line">
+                                        <td><span t-esc="line['date']"/></td>
+                                        <td><span t-esc="line['partner_name']"/></td>
+                                        <td><span t-esc="line['pos_order']"/></td>
+                                        <td><span t-esc="line['dte_fel']"/></td>
                                         <td class="text-end">
                                             <span t-out="line['total']" t-options='{"widget": "monetary", "display_currency": company.currency_id}'/>
                                         </td>
@@ -65,40 +62,16 @@
                                         <td class="text-end">
                                             <span t-out="line['residual']" t-options='{"widget": "monetary", "display_currency": company.currency_id}'/>
                                         </td>
-                                        <td><span t-esc="line['payment_state']"/></td>
                                     </tr>
                                     <tr class="fw-bold">
-                                        <td colspan="4">Subtotal</td>
+                                        <td colspan="4" class="text-end">TOTAL</td>
                                         <td class="text-end">
-                                            <span t-out="group['total']" t-options='{"widget": "monetary", "display_currency": company.currency_id}'/>
-                                        </td>
-                                        <td class="text-end">
-                                            <span t-out="group['paid']" t-options='{"widget": "monetary", "display_currency": company.currency_id}'/>
-                                        </td>
-                                        <td class="text-end">
-                                            <span t-out="group['residual']" t-options='{"widget": "monetary", "display_currency": company.currency_id}'/>
-                                        </td>
-                                        <td/>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </t>
-
-                        <t t-if="data['groups']">
-                            <table class="table table-sm mt-4" style="font-size: 11px;">
-                                <tbody>
-                                    <tr class="fw-bold">
-                                        <td>TOTAL GENERAL (<span t-esc="data['move_count']"/> documentos)</td>
-                                        <td class="text-end">
-                                            Total:
                                             <span t-out="data['grand_total']" t-options='{"widget": "monetary", "display_currency": company.currency_id}'/>
                                         </td>
                                         <td class="text-end">
-                                            Pagado:
                                             <span t-out="data['grand_paid']" t-options='{"widget": "monetary", "display_currency": company.currency_id}'/>
                                         </td>
                                         <td class="text-end">
-                                            Saldo:
                                             <span t-out="data['grand_residual']" t-options='{"widget": "monetary", "display_currency": company.currency_id}'/>
                                         </td>
                                     </tr>
