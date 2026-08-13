@@ -311,30 +311,70 @@ class CurrentBalanceReportWizard(models.TransientModel):
             return True
         return False
 
-    def _pos_actual_paid(self, order):
-        """Importe realmente cobrado en POS, sin contar "Cuenta de cliente/Pay Later" como pago.
+    def _is_cash_pos_method(self, method):
+        """Mismo criterio del reporte pos_sales_summary_report entregado por el cliente.
 
-        Odoo incluye el método pay_later dentro de amount_paid para poder validar
-        la orden POS. Para un reporte de saldos eso no significa dinero cobrado:
-        ese importe sigue siendo una cuenta por cobrar del cliente.
+        Ese reporte considera Contado únicamente los métodos de efectivo. Todo
+        método que no sea efectivo se presenta como Crédito. Es importante no
+        usar simplemente pos.order.amount_paid porque Odoo considera la orden
+        totalmente pagada aun cuando una parte se haya registrado con el método
+        utilizado por el negocio para crédito.
+        """
+        if not method:
+            return False
+        if "is_cash_count" in method._fields and method.is_cash_count:
+            return True
+        journal = method.journal_id if "journal_id" in method._fields else False
+        if journal and "is_cash_count" in journal._fields and journal.is_cash_count:
+            return True
+        method_type = method.type if "type" in method._fields else False
+        return isinstance(method_type, str) and method_type.lower() == "cash"
+
+    def _split_pos_payments(self, order):
+        """Devuelve (contado, credito) individual por pedido POS.
+
+        Replica la lógica de pos_sales_summary_report:
+        - efectivo => Contado / pagado
+        - cualquier otro método => Crédito / saldo pendiente
+        - pagos <= 0 no se consideran
         """
         if not order or not order.exists():
-            return 0.0
+            return 0.0, 0.0
+
         if "payment_ids" not in order._fields:
-            return order.amount_paid or 0.0
-        paid = 0.0
+            total = order.amount_total or 0.0
+            paid = max(order.amount_paid or 0.0, 0.0)
+            return paid, max(total - paid, 0.0)
+
+        contado = 0.0
+        credito = 0.0
         for payment in order.payment_ids:
-            method = payment.payment_method_id
-            method_type = method.type if method and "type" in method._fields else False
-            if method_type == "pay_later":
+            amount = payment.amount or 0.0
+            if amount <= 0:
                 continue
-            paid += payment.amount or 0.0
-        return paid
+            method = payment.payment_method_id
+            if self._is_cash_pos_method(method):
+                contado += amount
+            else:
+                credito += amount
+        return contado, credito
+
+    def _pos_actual_paid(self, order):
+        """Monto de contado del pedido POS según el reporte individual existente."""
+        contado, _credito = self._split_pos_payments(order)
+        return contado
 
     def _pos_current_residual(self, order):
+        """Saldo de crédito individual del pedido POS no facturado.
+
+        Se usa directamente el monto clasificado como Crédito por los métodos de
+        pago, igual que pos_sales_summary_report. Con esto una orden validada por
+        Odoo deja de aparecer artificialmente con saldo cero solo porque
+        amount_paid == amount_total.
+        """
         currency = order.currency_id or order.company_id.currency_id
-        residual = (order.amount_total or 0.0) - self._pos_actual_paid(order)
-        return 0.0 if currency.is_zero(residual) else residual
+        _contado, credito = self._split_pos_payments(order)
+        return 0.0 if currency.is_zero(credito) else credito
 
     def _get_uninvoiced_pos_orders(self):
         """Pedidos POS no facturados, usando fecha POS y reglas del reporte anterior."""

@@ -30,7 +30,9 @@
                     la fecha corresponde a la factura y el saldo considera todos los pagos conciliados hasta hoy,
                     aunque hayan sido registrados después del período.<br/>
                     <strong>No facturados:</strong>
-                    se toman de pedidos de Punto de Venta sin factura, usando la fecha del pedido POS.
+                    se toman de pedidos de Punto de Venta sin factura, usando la fecha del pedido POS. El saldo se
+                    calcula individualmente con el mismo criterio del reporte POS existente: efectivo = pagado y
+                    otros métodos de pago = crédito/saldo pendiente.
                 </div>
                 <footer>
                     <button name="action_export_xlsx" type="object" string="Descargar Excel" class="btn-primary"/>

@@ -47,3 +47,9 @@ Se agregó el check **Usar fecha más antigua automáticamente**.
 - En **Solo no facturados** toma el pedido POS no facturado más antiguo válido, excluyendo reembolsos y órdenes origen reembolsadas.
 - En **Facturados y no facturados** toma la menor fecha entre ambos orígenes.
 - Para proveedores aplica sobre las facturas de proveedor.
+
+
+## 18.0.1.3.0
+- Corrige el saldo de pedidos POS no facturados.
+- Replica el criterio individual de `pos_sales_summary_report`: efectivo se considera pagado/contado y cualquier otro método se considera crédito/saldo pendiente.
+- Ya no depende de `pos.order.amount_paid` para calcular el saldo de no facturados, porque Odoo puede marcar como pagado el total técnico del pedido aunque exista una parte registrada como crédito.
