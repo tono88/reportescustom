@@ -148,33 +148,48 @@ class ReportPosSalesSummary(models.AbstractModel):
         if partner_ids:
             domain.append(("partner_id", "in", partner_ids))
         orders = self.env["pos.order"].search(domain, order="partner_id, date_order, name")
-        # --- EXCLUIR ORDENES ORIGEN QUE TENGAN UN REEMBOLSO EN EL RANGO ---
-        # Detectar reembolsos por nombre "REEMBOLSO DE …" y excluir su orden original
+        # --- EXCLUIR ÓRDENES ORIGEN QUE TENGAN REEMBOLSO ---
+        # Los reembolsos se buscan sin limitar su fecha, porque una venta del
+        # periodo reportado puede haberse reembolsado posteriormente.
         refund_domain = [
             ("state", "in", ["paid", "done", "invoiced"]),
-            ("date_order", ">=", start_utc),
-            ("date_order", "<=", end_utc),
-            ("amount_total", "<", 0),  # reembolsos suelen tener total negativo
+            ("amount_total", "<", 0),
         ]
-        
-        # 👇 nuevo también para reembolsos
-        if pos_config_id:
-            refund_domain += ["|", ("config_id", "=", pos_config_id), ("session_id.config_id", "=", pos_config_id)]
 
-        refund_orders = self.env["pos.order"].search(refund_domain)
+        # Respetar el punto de venta seleccionado
+        if pos_config_id:
+            refund_domain += [
+                "|",
+                ("config_id", "=", pos_config_id),
+                ("session_id.config_id", "=", pos_config_id),
+            ]
+
+        # El filtro debe agregarse ANTES de ejecutar search()
         if partner_ids:
             refund_domain.append(("partner_id", "in", partner_ids))
-        # Extraer nombres originales desde "REEMBOLSO DE <NOMBRE-ORIGINAL>"
-        orig_names = []
-        for r in refund_orders:
-            n = (r.name or "").strip()
-            if n.upper().startswith("REEMBOLSO DE "):
-                orig_names.append(n.split("REEMBOLSO DE ", 1)[1].strip())
 
-        # Filtrar fuera esas órdenes originales del conjunto a reportar
+        refund_orders = self.env["pos.order"].search(refund_domain)
+
+        # Obtener el nombre de la orden original desde:
+        # "REEMBOLSO DE <nombre de orden>"
+        refund_prefix = "REEMBOLSO DE "
+        orig_names = set()
+
+        for refund in refund_orders:
+            refund_name = (refund.name or "").strip()
+
+            if refund_name.upper().startswith(refund_prefix):
+                original_name = refund_name[len(refund_prefix):].strip()
+                if original_name:
+                    orig_names.add(original_name)
+
+        # Excluir del reporte las órdenes que posteriormente fueron reembolsadas
         if orig_names:
-            orders = orders.filtered(lambda o: o.name not in orig_names)
-        # --- FIN EXCLUSION ---
+            orders = orders.filtered(
+                lambda order: (order.name or "").strip() not in orig_names
+            )
+
+        # --- FIN EXCLUSIÓN ---
 
         # --- Normalizar según el estado real de la factura asociada ---
         # Consideramos "factura válida" únicamente cuando el move está en estado 'posted'.
