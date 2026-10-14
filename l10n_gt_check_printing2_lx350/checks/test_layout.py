@@ -39,8 +39,9 @@ class CheckGeometryTest(unittest.TestCase):
         records = {record.attrib["id"]: record for record in reports.findall("record")}
         for bank in ("personal", "gyt"):
             paper = records[f"paperformat_{bank}"]
-            self.assertEqual(float(paper.find("field[@name='page_width']").text), 165.1)
-            self.assertEqual(float(paper.find("field[@name='page_height']").text), 69.85)
+            # Match Odoo's Integer conversion; float() hid the original bug.
+            self.assertEqual(int(paper.find("field[@name='page_width']").text), layout.PAPER_WIDTH)
+            self.assertEqual(int(paper.find("field[@name='page_height']").text), layout.PAPER_HEIGHT)
             report = records[f"action_check_{bank}"]
             self.assertEqual(report.find("field[@name='paperformat_id']").attrib["ref"], f"paperformat_{bank}")
         form = ET.parse(root / "views/account_payment_views.xml").getroot()

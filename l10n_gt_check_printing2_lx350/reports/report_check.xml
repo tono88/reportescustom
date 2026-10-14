@@ -4,8 +4,9 @@
         <field name="name">Banrural Personal LX-350</field>
         <field name="default" eval="False"/>
         <field name="format">custom</field>
-        <field name="page_width">165.1</field>
-        <field name="page_height">69.85</field>
+        <field name="page_width">165</field>
+        <field name="page_height">70</field>
+        <field name="disable_shrinking" eval="True"/>
         <field name="orientation">Portrait</field>
         <field name="margin_top">0</field>
         <field name="margin_bottom">0</field>
@@ -43,8 +44,9 @@
         <field name="name">G&amp;T Personal LX-350</field>
         <field name="default" eval="False"/>
         <field name="format">custom</field>
-        <field name="page_width">165.1</field>
-        <field name="page_height">69.85</field>
+        <field name="page_width">165</field>
+        <field name="page_height">70</field>
+        <field name="disable_shrinking" eval="True"/>
         <field name="orientation">Portrait</field>
         <field name="margin_top">0</field>
         <field name="margin_bottom">0</field>

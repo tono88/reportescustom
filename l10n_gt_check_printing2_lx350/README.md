@@ -4,6 +4,16 @@ Extensión de `l10n_gt_check_printing2`. Agrega diseños propios para cheques
 preimpresos Banrural y G&T Continental, posiciones por diario y envío del PDF a una impresora USB
 local mediante QZ Tray. Puede coexistir con `l10n_gt_check_printing2_voucher`.
 
+**Instalación desde los addons del servidor. Este ZIP NO se instala mediante
+Aplicaciones → Importar módulo:** esa pantalla importa datos y archivos estáticos,
+pero no carga los modelos y métodos Python de esta extensión. Hay que copiar a
+`addons_path` e instalar como módulo de servidor. La instalación recarga el registro;
+los cambios en Python ya cargado requieren además recargar los procesos. La necesidad
+de reiniciar el servicio en una primera instalación depende del despliegue: no se
+garantiza una instalación en caliente en producción. «Forzar inicio» del importador
+no elimina la limitación. Programar la instalación completa en una ventana de mantenimiento.
+Para la vía XML sin reiniciar, usar el paquete separado `l10n_gt_check_printing2_pdf_live`.
+
 ## Instalación en Windows
 
 1. Realizar copia de seguridad de la base y probar primero en una copia.
@@ -38,6 +48,11 @@ personales se toman como punto de partida indicado por el usuario; las fotos no
 certifican una medida física. Las posiciones iniciales de cada banco son
 aproximadas a partir de sus fotografías y requieren calibración física. Los
 reportes GT2 anteriores permanecen disponibles.
+
+El cuerpo físico nominal sigue siendo 165.10 × 69.85 mm. El PDF y la configuración
+QZ usan un lienzo de **165 × 70 mm**, porque los campos nativos `page_width` y
+`page_height` de Odoo 18 solo admiten enteros. La diferencia de 0.10/0.15 mm se
+resuelve mediante calibración y no escalando el contenido.
 
 La LX-350 especifica un mínimo de **100 × 100 mm para hojas sueltas estándar**.
 El cheque desprendido, de 69.85 mm de alto, queda fuera de ese rango. Configurar
@@ -131,7 +146,8 @@ opciones de diseño de voucher aparezcan en la lista de empresa.
 
 ## Verificación
 
-Comprobaciones locales sin Odoo:
+Comprobaciones locales sin Odoo, desde el clon del repositorio (las pruebas del
+paquete importable requieren también la carpeta hermana `l10n_gt_check_printing2_pdf_live`):
 
 ```text
 python -m unittest discover -s l10n_gt_check_printing2_lx350/checks -p "test_*.py"

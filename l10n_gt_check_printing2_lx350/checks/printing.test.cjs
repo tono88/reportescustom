@@ -47,7 +47,7 @@ function fixture({ printers = ["EPSON LX-350"], saved = "EPSON LX-350", pdf = tr
     const action = {
         report_name: "l10n_gt_check_printing2_lx350.check_personal",
         context: { active_ids: [42] },
-        lx350: { direct: true, company_id: 1, width: 165.1, height: 69.85, bank_label: "Banrural" },
+        lx350: { direct: true, company_id: 1, width: 165, height: 70, bank_label: "Banrural" },
     };
     return { calls, env, action, run: context.run, finish: () => finish() };
 }
@@ -60,7 +60,7 @@ test("USB sends one PDF at actual size to exact saved printer", async () => {
     assert.equal(config.printer, "EPSON LX-350");
     assert.equal(config.options.scaleContent, false);
     assert.equal(config.options.copies, 1);
-    assert.equal(config.options.size.width, 165.1);
+    assert.equal(config.options.size.width, 165);
     assert.equal(data[0].flavor, "base64");
     assert.equal(Buffer.from(data[0].data, "base64").toString(), "%PDF-1.4 test");
     assert.equal(f.calls.fetch[0][1].credentials, "same-origin");
@@ -136,6 +136,6 @@ test("G&T personal report uses its own report and job name at personal size", as
     assert.match(f.calls.fetch[0][0], /check_gyt\/42/);
     const [config] = f.calls.print[0];
     assert.equal(config.options.jobName, "Cheque G&T Continental");
-    assert.equal(config.options.size.width, 165.1);
-    assert.equal(config.options.size.height, 69.85);
+    assert.equal(config.options.size.width, 165);
+    assert.equal(config.options.size.height, 70);
 });

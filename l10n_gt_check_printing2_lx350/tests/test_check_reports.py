@@ -20,7 +20,7 @@ class TestCheckReports(AccountTestInvoicingCommon):
         html, _ = report._render_qweb_html(report.report_name, self.journal.ids)
         self.assertIn(b"BENEFICIARIO DE PRUEBA", html)
         self.assertIn(b"PRUEBA SIN VALOR", html)
-        self.assertIn(b"165.1mm", html)
+        self.assertIn(b"165mm", html)
         self.assertEqual(self.journal.check_sequence_id.number_next_actual, sequence_before)
         self.assertEqual(self.env["account.payment"].search_count([]), payment_count)
 
@@ -35,7 +35,7 @@ class TestCheckReports(AccountTestInvoicingCommon):
             model._get_report_values(self.journal.ids)
         gyt = self.env["report.l10n_gt_check_printing2_lx350.calibration_gyt"]
         values = gyt._get_report_values(self.journal.ids)
-        self.assertEqual(values["width"], 165.1)
+        self.assertEqual(values["width"], 165)
         self.assertEqual(values["bank_label"], "G&T Continental")
 
     def test_load_initial_positions_only_updates_selected_journal(self):
@@ -44,6 +44,13 @@ class TestCheckReports(AccountTestInvoicingCommon):
         other.action_lx350_load_initial_positions()
         self.assertEqual(other.lx350_words_y, 41)
         self.assertEqual(self.journal.lx350_words_y, 38)
+
+    def test_paperformat_uses_integer_fields(self):
+        for suffix in ("personal", "gyt"):
+            paper = self.env.ref("l10n_gt_check_printing2_lx350.paperformat_" + suffix)
+            self.assertEqual(paper.page_width, 165)
+            self.assertEqual(paper.page_height, 70)
+            self.assertTrue(paper.disable_shrinking)
 
     def test_position_over_magnetic_band_is_rejected(self):
         self.journal.lx350_offset_y = 20

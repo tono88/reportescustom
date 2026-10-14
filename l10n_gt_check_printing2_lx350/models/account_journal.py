@@ -1,7 +1,7 @@
 from odoo import _, fields, models
 from odoo.exceptions import UserError
 
-from ..layout import BANK_LABELS, GYT, HEIGHT, INITIAL_POSITIONS, LAYOUTS, MODULE, validate_geometry
+from ..layout import BANK_LABELS, GYT, INITIAL_POSITIONS, LAYOUTS, MODULE, PAPER_HEIGHT, PAPER_WIDTH, validate_geometry
 
 
 class AccountJournal(models.Model):
@@ -77,8 +77,8 @@ class AccountJournal(models.Model):
         action["lx350"] = {
             "direct": bool(self.env.context.get("lx350_direct")),
             "company_id": self.company_id.id,
-            "width": LAYOUTS[layout],
-            "height": HEIGHT,
+            "width": PAPER_WIDTH,
+            "height": PAPER_HEIGHT,
             "calibration": True,
             "bank_label": BANK_LABELS[layout],
         }

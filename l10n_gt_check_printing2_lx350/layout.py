@@ -16,6 +16,10 @@ INITIAL_POSITIONS = {
     GYT: {"date": (24, 25, 100), "amount": (139, 25, 23), "payee": (24, 33, 138), "words": (24, 41, 138)},
 }
 HEIGHT = 69.85
+# Odoo 18 report.paperformat uses Integer page dimensions. Keep the nominal
+# cheque geometry separate from the native PDF canvas.
+PAPER_WIDTH = 165
+PAPER_HEIGHT = 70
 MICR_HEIGHT = 16.0
 
 

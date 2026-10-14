@@ -3,7 +3,7 @@ from num2words import num2words
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 
-from ..layout import BANK_LABELS, GYT, HEIGHT, PERSONAL, amount_parts, fit_font
+from ..layout import BANK_LABELS, GYT, PAPER_HEIGHT, PAPER_WIDTH, PERSONAL, amount_parts, fit_font
 
 
 class ReportCheckPersonal(models.AbstractModel):
@@ -66,8 +66,8 @@ class ReportCheckPersonal(models.AbstractModel):
             "doc_model": model,
             "docs": docs,
             "rows": rows,
-            "width": self._check_width,
-            "height": HEIGHT,
+            "width": PAPER_WIDTH,
+            "height": PAPER_HEIGHT,
             "calibration": self._calibration,
             "bank_label": BANK_LABELS[self._check_layout],
         }

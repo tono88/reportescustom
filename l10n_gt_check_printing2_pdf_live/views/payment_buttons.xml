@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_payment_pdf_live" model="ir.ui.view">
+        <field name="name">account.payment.personal.check.pdf.live</field>
+        <field name="model">account.payment</field>
+        <field name="inherit_id" ref="account_check_printing.view_account_payment_form_inherited"/>
+        <field name="arch" type="xml">
+            <xpath expr="//button[@name='print_checks']" position="after">
+                <button name="%(action_banrural)d" string="PDF Banrural personal" type="action"
+                    groups="account.group_account_invoice"
+                    confirm="Confirma que el diario y la cuenta de este pago corresponden a Banrural. Se generará un PDF con el número ya asignado, sin cambiar la numeración."
+                    invisible="payment_method_code != 'check_printing' or not check_number or payment_type != 'outbound' or state not in ('in_process', 'paid')"/>
+                <button name="%(action_gyt)d" string="PDF G&amp;T personal" type="action"
+                    groups="account.group_account_invoice"
+                    confirm="Confirma que el diario y la cuenta de este pago corresponden a G&amp;T Continental. Se generará un PDF con el número ya asignado, sin cambiar la numeración."
+                    invisible="payment_method_code != 'check_printing' or not check_number or payment_type != 'outbound' or state not in ('in_process', 'paid')"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,7 +1,7 @@
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 
-from ..layout import BANKS, BANK_LABELS, HEIGHT, LAYOUTS, require_bank
+from ..layout import BANKS, BANK_LABELS, LAYOUTS, PAPER_HEIGHT, PAPER_WIDTH, require_bank
 
 
 class AccountPayment(models.Model):
@@ -69,8 +69,8 @@ class AccountPayment(models.Model):
         action["lx350"] = {
             "direct": direct,
             "company_id": self.company_id.id,
-            "width": LAYOUTS[layout],
-            "height": HEIGHT,
+            "width": PAPER_WIDTH,
+            "height": PAPER_HEIGHT,
             "bank_label": BANK_LABELS[layout],
         }
         return action
