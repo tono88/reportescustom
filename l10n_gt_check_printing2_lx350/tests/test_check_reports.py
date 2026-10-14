@@ -51,6 +51,7 @@ class TestCheckReports(AccountTestInvoicingCommon):
             self.assertEqual(paper.page_width, 165)
             self.assertEqual(paper.page_height, 70)
             self.assertTrue(paper.disable_shrinking)
+            self.assertEqual(paper.dpi, 96)
 
     def test_position_over_magnetic_band_is_rejected(self):
         self.journal.lx350_offset_y = 20

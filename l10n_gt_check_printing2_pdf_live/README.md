@@ -9,10 +9,16 @@ completa desde esa pantalla.
 
 ## Instalación
 
-1. Usar exclusivamente `l10n_gt_check_printing2_pdf_live-18.0.1.0.0.zip`.
+1. Usar exclusivamente `l10n_gt_check_printing2_pdf_live-18.0.1.0.1.zip`.
 2. En **Importar módulo**, seleccionar ese ZIP. Dejar **Forzar inicio** y
    **Cargar datos de prueba** desmarcados. Instalar.
 3. Recargar el navegador y abrir un pago saliente mediante cheque.
+
+Para actualizar la versión importada anterior, importar este ZIP con el mismo
+nombre técnico, sin desinstalar y con **Forzar inicio** desmarcado. Cerrar el PDF
+anterior y descargar uno nuevo desde el pago. El importador actualiza los reportes
+y vistas de este módulo; conservar antes una copia de las posiciones si se habían
+editado manualmente en QWeb.
 
 No requiere reiniciar el servicio porque solo agrega reportes y vistas a los
 modelos existentes. Tampoco cambia los reportes ni el voucher actuales, los
@@ -48,6 +54,14 @@ enteros; el lienzo PDF es **165 × 70 mm**. Esto evita el error al cargar los
 decimales del ZIP anterior. Las coordenadas iniciales se estimaron de las fotos
 y deben calibrarse en papel común antes de usar originales.
 
+Desde 18.0.1.0.1 se utiliza **96 DPI**, con `data-report-dpi="96"` en el HTML para
+evitar el factor adicional `96 / dpi` del generador de Odoo. La posición relativa,
+el tamaño y la fuente van directamente en cada `.article`, porque Odoo extrae
+esos bloques a su layout mínimo y no conserva el estilo del encabezado original.
+El monto termina a 160 mm en sus coordenadas de diseño, dejando 5 mm de margen.
+Se usa Courier New con tamaños de letra enteros para mantener espaciado legible
+en el generador PDF y una tipografía apropiada para impresión matricial.
+
 La Epson LX-350 especifica un mínimo de 100 × 100 mm para hojas sueltas estándar;
 debe validarse la alimentación compatible para un cheque suelto de 69.85 mm.
 El tamaño del PDF no soluciona la limitación mecánica. Si el soporte/formulario
@@ -73,7 +87,9 @@ empresa, utilizar la versión completa cuando se pueda reiniciar.
 
 Se verifican estructura XML, tamaños enteros, referencias internas, ausencia de
 Python ejecutable en el paquete y evaluación de las expresiones del reporte con
-datos simulados. No se ha verificado importación en Odoo ni render con wkhtmltopdf.
+datos simulados. Se reprodujo el recorte con wkhtmltopdf 0.12.6 a 90 DPI y el zoom
+de Odoo, y se comprobó el PDF corregido a 96 DPI para ambos bancos. La importación
+real y la envoltura completa de la instalación Odoo del cliente no se han ejecutado aquí.
 Las imágenes con datos bancarios y firmas no se incluyen en el paquete.
 
 Fuentes:

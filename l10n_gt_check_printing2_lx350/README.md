@@ -54,6 +54,14 @@ QZ usan un lienzo de **165 × 70 mm**, porque los campos nativos `page_width` y
 `page_height` de Odoo 18 solo admiten enteros. La diferencia de 0.10/0.15 mm se
 resuelve mediante calibración y no escalando el contenido.
 
+El generador se configura a **96 DPI** y el HTML repite ese valor como
+`data-report-dpi`, evitando ampliación adicional. La posición relativa y la fuente
+se incluyen dentro del `.article` para sobrevivir a la extracción del layout de
+Odoo. Las posiciones iniciales nuevas dejan el borde derecho del monto en 160 mm.
+La fuente es Courier New, con tamaños en puntos enteros para evitar variaciones
+de espaciado del generador. Los diarios ya calibrados conservan sus posiciones;
+los nuevos valores se aplican al cargar explícitamente las posiciones iniciales.
+
 La LX-350 especifica un mínimo de **100 × 100 mm para hojas sueltas estándar**.
 El cheque desprendido, de 69.85 mm de alto, queda fuera de ese rango. Configurar
 un PDF pequeño no resuelve esa limitación mecánica: antes de imprimir originales
@@ -156,8 +164,10 @@ node --test l10n_gt_check_printing2_lx350/checks/printing.test.cjs
 
 Las pruebas de integración se incluyen en `tests/` para ejecutarlas con Odoo 18
 y una base de pruebas (`--test-tags /l10n_gt_check_printing2_lx350`). En este
-entorno no hay servidor Odoo, PostgreSQL ni wkhtmltopdf: instalación, render PDF
-y funcionamiento físico quedan pendientes de esa validación. El módulo se
+entorno no hay servidor Odoo ni PostgreSQL. Se verificó el render del paquete PDF
+importable con wkhtmltopdf 0.12.6 en una reproducción del bloque extraído; la
+instalación y envoltura completa de Odoo y el funcionamiento físico quedan
+pendientes de esa validación. El módulo se
 entrega para probar y calibrar, no como una impresora ya configurada a distancia.
 
 ## Fuentes y terceros

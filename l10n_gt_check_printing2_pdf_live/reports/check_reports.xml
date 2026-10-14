@@ -15,7 +15,7 @@
         <field name="header_line" eval="False"/>
         <field name="header_spacing">0</field>
         <field name="disable_shrinking" eval="True"/>
-        <field name="dpi">90</field>
+        <field name="dpi">96</field>
     </record>
     <record id="action_banrural" model="ir.actions.report">
         <field name="name">PDF Banrural — Cheque personal asignado</field>
@@ -46,12 +46,12 @@
         <t t-call="l10n_gt_check_printing2_pdf_live.check_document"/>
     </template>
     <template id="check_document">
-        <html>
+        <html data-report-dpi="96">
             <head>
                 <meta charset="utf-8"/>
                 <style>
                     html, body, main { margin:0; padding:0; }
-                    body { font-family:Arial,sans-serif; color:#000; }
+                    body { font-family:'Courier New',monospace; color:#000; }
                     .check-page { position:relative; width:165mm; height:69.5mm; box-sizing:border-box; page-break-after:always; page-break-inside:avoid; }
                     .check-page:last-child { page-break-after:auto; }
                 </style>
@@ -63,8 +63,8 @@
                              Negative offset_x moves left; positive offset_y moves down.
                              Edit the chosen bank's dictionary in this QWeb view. -->
                         <t t-set="profile" t-value="{
-                            'banrural': {'date': (18,24,110), 'amount': (139,24,23), 'payee': (18,31,144), 'words': (18,38,144), 'offset_x': 0, 'offset_y': 0, 'city': 'PALÍN'},
-                            'gyt': {'date': (24,25,100), 'amount': (139,25,23), 'payee': (24,33,138), 'words': (24,41,138), 'offset_x': 0, 'offset_y': 0, 'city': 'PALÍN'}
+                            'banrural': {'date': (18,24,110), 'amount': (137,24,23), 'payee': (18,31,144), 'words': (18,38,144), 'offset_x': 0, 'offset_y': 0, 'city': 'PALÍN'},
+                            'gyt': {'date': (24,25,100), 'amount': (137,25,23), 'payee': (24,33,138), 'words': (24,41,138), 'offset_x': 0, 'offset_y': 0, 'city': 'PALÍN'}
                         }[bank_key]"/>
                         <t t-set="total_cents" t-value="int(round(p.currency_id.round(p.amount) * 100))"/>
                         <t t-set="integer" t-value="total_cents // 100"/>
@@ -83,7 +83,10 @@
                             and p.check_number and p.date and payee and p.currency_id.name == 'GTQ' and total_cents &gt; 0
                             and len(payee) * 7 * 0.27 &lt;= profile['payee'][2]
                             and len(words) * 7 * 0.27 &lt;= profile['words'][2] and positions_ok"/>
-                        <div class="article check-page">
+                        <!-- Odoo extracts each .article into web.minimal_layout.
+                             Head styles are not carried across: anchor and size
+                             must be inline to survive that extraction. -->
+                        <div class="article check-page" style="position:relative;width:165mm;height:69.5mm;margin:0;padding:0;box-sizing:border-box;font-family:'Courier New',monospace;color:#000;page-break-inside:avoid;">
                             <t t-if="valid">
                                 <t t-set="texts" t-value="{
                                     'date': profile['city'] + ', ' + p.date.strftime('%d/%m/%Y'),
@@ -93,7 +96,7 @@
                                 }"/>
                                 <t t-foreach="('date', 'amount', 'payee', 'words')" t-as="key">
                                     <t t-set="box" t-value="profile[key]"/>
-                                    <t t-set="font" t-value="min(9, box[2] / max(len(texts[key]), 1) / 0.27)"/>
+                                    <t t-set="font" t-value="int(min(9, box[2] / max(len(texts[key]), 1) / 0.27))"/>
                                     <div t-attf-style="position:absolute;left:{{ box[0] + profile['offset_x'] }}mm;top:{{ box[1] + profile['offset_y'] }}mm;width:{{ box[2] }}mm;font-size:{{ font }}pt;line-height:1;white-space:nowrap;text-align:{{ 'right' if key == 'amount' else 'left' }};">
                                         <t t-out="texts[key]"/>
                                     </div>

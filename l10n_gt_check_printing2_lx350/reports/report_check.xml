@@ -14,7 +14,7 @@
         <field name="margin_right">0</field>
         <field name="header_line" eval="False"/>
         <field name="header_spacing">0</field>
-        <field name="dpi">90</field>
+        <field name="dpi">96</field>
     </record>
     <record id="action_check_personal" model="ir.actions.report">
         <field name="name">Cheque Banrural Personal LX-350</field>
@@ -54,7 +54,7 @@
         <field name="margin_right">0</field>
         <field name="header_line" eval="False"/>
         <field name="header_spacing">0</field>
-        <field name="dpi">90</field>
+        <field name="dpi">96</field>
     </record>
     <record id="action_check_gyt" model="ir.actions.report">
         <field name="name">Cheque G&amp;T Continental Personal LX-350</field>
@@ -81,12 +81,12 @@
         <t t-call="l10n_gt_check_printing2_lx350.check_document"/>
     </template>
     <template id="check_document">
-        <html>
+        <html data-report-dpi="96">
             <head>
                 <meta charset="utf-8"/>
                 <style>
                     html, body, main { margin:0; padding:0; }
-                    body { font-family:Arial,sans-serif; color:#000; }
+                    body { font-family:'Courier New',monospace; color:#000; }
                     .check-page { position:relative; box-sizing:border-box; page-break-after:always; page-break-inside:avoid; }
                     .check-page:last-child { page-break-after:auto; }
                 </style>
@@ -95,7 +95,7 @@
                 <main>
                     <t t-foreach="rows" t-as="row">
                         <!-- Slightly less than the paper height prevents rounding from adding a blank page. -->
-                        <div class="article check-page" t-attf-style="width:{{ width }}mm;height:{{ height - 0.5 }}mm;">
+                        <div class="article check-page" t-attf-style="position:relative;width:{{ width }}mm;height:{{ height - 0.5 }}mm;margin:0;padding:0;box-sizing:border-box;font-family:'Courier New',monospace;color:#000;page-break-inside:avoid;">
                             <t t-foreach="row['lines']" t-as="line">
                                 <div t-att-style="line['style']"><t t-out="line['text']"/></div>
                             </t>

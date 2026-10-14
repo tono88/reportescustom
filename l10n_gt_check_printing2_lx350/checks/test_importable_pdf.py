@@ -56,6 +56,21 @@ class ImportablePdfTest(unittest.TestCase):
         for name, value in [("page_width", 165), ("page_height", 70)]:
             self.assertEqual(int(paper.find(f"field[@name='{name}']").text), value)
 
+    def test_native_pdf_scale_and_anchor_survive_odoo_article_extraction(self):
+        paper = self.xml.find("record[@model='report.paperformat']")
+        dpi = int(paper.find("field[@name='dpi']").text)
+        self.assertEqual(96 / dpi, 1)
+        html = self.template.find("html")
+        self.assertEqual(html.attrib["data-report-dpi"], "96")
+        article = self.template.find(".//div[@class='article check-page']")
+        style = article.attrib["style"]
+        for required in ("position:relative", "width:165mm", "margin:0", "font-family:'Courier New'"):
+            self.assertIn(required, style)
+        for bank in ("banrural", "gyt"):
+            profile = self.values(bank)["profile"]
+            x, y, width = profile["amount"]
+            self.assertLessEqual(x + width, 160)
+
     def test_both_banks_use_their_own_positions_without_changing_payment(self):
         banrural = self.values()
         gyt = self.values("gyt")

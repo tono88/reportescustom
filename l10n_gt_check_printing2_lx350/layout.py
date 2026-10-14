@@ -12,8 +12,8 @@ BANK_LABELS = {PERSONAL: "Banrural", GYT: "G&T Continental"}
 # Starting positions estimated from the supplied photographs. Each journal
 # retains its own calibration; loading a profile is an explicit user action.
 INITIAL_POSITIONS = {
-    PERSONAL: {"date": (18, 24, 110), "amount": (139, 24, 23), "payee": (18, 31, 144), "words": (18, 38, 144)},
-    GYT: {"date": (24, 25, 100), "amount": (139, 25, 23), "payee": (24, 33, 138), "words": (24, 41, 138)},
+    PERSONAL: {"date": (18, 24, 110), "amount": (137, 24, 23), "payee": (18, 31, 144), "words": (18, 38, 144)},
+    GYT: {"date": (24, 25, 100), "amount": (137, 25, 23), "payee": (24, 33, 138), "words": (24, 41, 138)},
 }
 HEIGHT = 69.85
 # Odoo 18 report.paperformat uses Integer page dimensions. Keep the nominal
@@ -42,7 +42,7 @@ def fit_font(text, width, preferred):
     size = min(preferred, width / max(len(text), 1) / 0.27)
     if size < 7:
         raise ValueError("El texto es demasiado largo. Amplía su campo o revisa el beneficiario.")
-    return round(size, 2)
+    return int(size)
 
 
 def validate_geometry(width, positions, font_size):

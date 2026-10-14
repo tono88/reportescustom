@@ -14,7 +14,7 @@ class AccountJournal(models.Model):
     lx350_date_x = fields.Float(string="Fecha: izquierda (mm)", default=18)
     lx350_date_y = fields.Float(string="Fecha: arriba (mm)", default=24)
     lx350_date_width = fields.Float(string="Fecha: ancho (mm)", default=110)
-    lx350_amount_x = fields.Float(string="Monto: izquierda (mm)", default=139)
+    lx350_amount_x = fields.Float(string="Monto: izquierda (mm)", default=137)
     lx350_amount_y = fields.Float(string="Monto: arriba (mm)", default=24)
     lx350_amount_width = fields.Float(string="Monto: ancho (mm)", default=23)
     lx350_payee_x = fields.Float(string="Beneficiario: izquierda (mm)", default=18)
