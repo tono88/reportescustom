@@ -9,7 +9,7 @@ completa desde esa pantalla.
 
 ## Instalación
 
-1. Usar exclusivamente `l10n_gt_check_printing2_pdf_live-18.0.1.0.5.zip`.
+1. Usar exclusivamente `l10n_gt_check_printing2_pdf_live-18.0.1.0.6.zip`.
 2. En **Importar módulo**, seleccionar ese ZIP. Dejar **Forzar inicio** y
    **Cargar datos de prueba** desmarcados. Instalar.
 3. Recargar el navegador y abrir un pago saliente mediante cheque.
@@ -30,7 +30,7 @@ No se han ejecutado la importación ni las pruebas en tu base de producción.
 1. Usar el flujo habitual de **Imprimir cheque** para confirmar el pago y asignar
    el número preimpreso. Si genera el PDF anterior, no imprimir esa copia.
 2. Al volver al pago con número asignado y estado En proceso o Pagado aparecerán
-   dos botones: **PDF Banrural personal v1.0.5** y **PDF G&T personal v1.0.5**.
+   dos botones: **PDF Banrural personal v1.0.6** y **PDF G&T personal v1.0.6**.
 3. Elegir el botón del banco al que realmente corresponde el diario/cuenta del
    pago. Ambos botones están disponibles: esta versión no tiene los campos ni
    métodos Python de la versión completa para seleccionar el banco automáticamente.
@@ -92,9 +92,19 @@ ya no depende de la cantidad de dígitos.
 Desde 18.0.1.0.3, fecha, beneficiario y monto usan hasta **12 pt**, y el importe
 en letras hasta **11 pt**. Desde 18.0.1.0.5 se cambia Courier New por
 **Arial negrita**, con alternativa Liberation Sans y tamaños enteros. El cálculo
-de ancho distingue dígitos, signos, letras estrechas y letras anchas. Los textos
+de ancho desde 18.0.1.0.6 usa avances de caracteres de la familia sans-serif
+negrita en milésimas de em, con una reserva del 4 % y el espaciado explícito.
+Sustituye la estimación por categorías de 18.0.1.0.5. Los textos
 largos se reducen hasta 9 pt; si no caben se genera el aviso de revisión en lugar de truncarlos. En QWeb,
 `font_sizes` contiene los tamaños de cada campo y `min_font` el mínimo permitido.
+
+La versión 18.0.1.0.5 podía rechazar el mismo pago solo en G&T: el texto
+«OCHENTA Y UN MIL SEISCIENTOS OCHENTA Y NUEVE QUETZALES CON 69/100» se estimaba
+en 141.27 mm a 9 pt, mayor que los 138 mm de G&T pero menor que los 144 mm de
+Banrural. El cálculo corregido estima 135.50 mm incluyendo la reserva y el
+espaciado; cabe en ambos perfiles sin cambiar posiciones, anchos ni mínimo de
+letra. Se agrega esa regresión a las pruebas. Los avisos ahora distinguen datos
+del pago, posiciones y cada campo que no cabe, con su ancho necesario y disponible.
 
 ## Impresión matricial y comprobación pendiente
 
@@ -119,7 +129,7 @@ exacto descargado del servidor para distinguir generación, sustitución de fuen
 y transformación al imprimir. No se añade una compensación arbitraria de 40 mm
 al PDF: podría sacar el monto del cheque al corregir el controlador. La posición
 física continúa pendiente de verificación. Los botones y nombres de descarga
-incluyen v1.0.5 para identificar inequívocamente la nueva versión.
+incluyen v1.0.6 para identificar inequívocamente la nueva versión.
 
 La Epson LX-350 especifica un mínimo de 100 × 100 mm para hojas sueltas estándar;
 debe validarse la alimentación compatible para un cheque suelto de 69.85 mm.

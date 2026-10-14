@@ -41,7 +41,7 @@ class ImportablePdfTest(unittest.TestCase):
         for key, value in changes.items():
             setattr(payment, key, value)
         scope = {"p": payment, "bank_key": bank}
-        for key in ("profile", "total_cents", "integer", "cents", "payee", "words", "texts", "unit_widths", "positions_ok", "valid"):
+        for key in ("profile", "total_cents", "integer", "cents", "payee", "words", "texts", "advances", "unit_widths", "positions_ok", "payment_ok", "overflow_keys", "valid"):
             # Match QWeb's expression scope; these are our own source expressions.
             scope[key] = eval(self.expressions[key], {**scope}, scope)
         return scope
@@ -132,6 +132,22 @@ class ImportablePdfTest(unittest.TestCase):
         for changes in cases:
             with self.subTest(changes=changes):
                 self.assertFalse(self.values(**changes)["valid"])
+
+    def test_plural_quetzales_fits_gyt_without_suppressing_real_overflow(self):
+        class ActualCurrency(Currency):
+            def amount_to_text(self, value):
+                return 'OCHENTA Y UN MIL SEISCIENTOS OCHENTA Y NUEVE QUETZALES'
+
+        for bank in ('banrural', 'gyt'):
+            values = self.values(bank, amount=81689.69, currency_id=ActualCurrency())
+            self.assertTrue(values['valid'])
+            self.assertEqual(values['overflow_keys'], [])
+            estimate = values['unit_widths']['words'] * 9 + len(values['texts']['words']) * 0.12
+            self.assertLessEqual(estimate, 138)
+        overflow = self.values('gyt', partner_id=SimpleNamespace(name='W' * 60))
+        self.assertTrue(overflow['payment_ok'])
+        self.assertFalse(overflow['valid'])
+        self.assertEqual(overflow['overflow_keys'], ['payee'])
 
     def test_buttons_use_report_actions_and_existing_fields(self):
         form = ET.parse(ROOT / "views/payment_buttons.xml").getroot()
