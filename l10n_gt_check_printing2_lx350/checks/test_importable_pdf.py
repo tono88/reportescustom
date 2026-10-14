@@ -121,7 +121,7 @@ class ImportablePdfTest(unittest.TestCase):
         self.assertEqual(banrural["p"].check_number, "000031797")
         self.assertEqual(banrural["p"].state, "in_process")
 
-    def test_only_amount_moves_40mm_without_changing_font_or_box_width(self):
+    def test_only_amount_moves_20mm_without_changing_font_or_box_width(self):
         for bank in ('banrural', 'gyt'):
             values = self.values(bank, amount=81689.69)
             profile = values['profile']
@@ -131,7 +131,7 @@ class ImportablePdfTest(unittest.TestCase):
                 scope = {**values, 'key': key, 'box': box}
                 x = eval(self.expressions['print_x'], {**scope}, scope)
                 base = box[0] + profile['offset_x']
-                self.assertEqual(x - base, 40 if key == 'amount' else 0)
+                self.assertEqual(x - base, 20 if key == 'amount' else 0)
                 self.assertLessEqual(x + box[2], 202)
                 if key == 'amount':
                     self.assertEqual(box[2], 25)
