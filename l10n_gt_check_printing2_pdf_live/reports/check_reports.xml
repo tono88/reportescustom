@@ -23,7 +23,7 @@
         <field name="report_type">qweb-pdf</field>
         <field name="report_name">l10n_gt_check_printing2_pdf_live.check_banrural</field>
         <field name="paperformat_id" ref="paperformat_personal"/>
-        <field name="print_report_name">'Cheque Banrural personal v1.0.8 - %s' % object.display_name</field>
+        <field name="print_report_name">'Cheque Banrural personal v1.0.9 - %s' % object.display_name</field>
         <field name="groups_id" eval="[(4, ref('account.group_account_invoice'))]"/>
     </record>
     <template id="check_banrural">
@@ -37,7 +37,7 @@
         <field name="report_type">qweb-pdf</field>
         <field name="report_name">l10n_gt_check_printing2_pdf_live.check_gyt</field>
         <field name="paperformat_id" ref="paperformat_personal"/>
-        <field name="print_report_name">'Cheque G&amp;T personal v1.0.8 - %s' % object.display_name</field>
+        <field name="print_report_name">'Cheque G&amp;T personal v1.0.9 - %s' % object.display_name</field>
         <field name="groups_id" eval="[(4, ref('account.group_account_invoice'))]"/>
     </record>
     <template id="check_gyt">
@@ -75,8 +75,8 @@
                                 'offset_x': 0, 'offset_y': 0, 'city': 'PALÍN'
                             },
                             'gyt': {
-                                'date': (24,25,100), 'amount': (137,25,25),
-                                'payee': (24,33,138), 'words': (24,41,138),
+                                'date': (24,25,100), 'amount': (135,27,25),
+                                'payee': (22,35,138), 'words': (22,43,138),
                                 'font_sizes': {'date': 12, 'amount': 12, 'payee': 12, 'words': 11},
                                 'min_font': 9, 'amount_align': 'left',
                                 'amount_shift_x': 20,

@@ -9,7 +9,7 @@ completa desde esa pantalla.
 
 ## Instalación
 
-1. Usar exclusivamente `l10n_gt_check_printing2_pdf_live-18.0.1.0.8.zip`.
+1. Usar exclusivamente `l10n_gt_check_printing2_pdf_live-18.0.1.0.9.zip`.
 2. En **Importar módulo**, seleccionar ese ZIP. Dejar **Forzar inicio** y
    **Cargar datos de prueba** desmarcados. Instalar.
 3. Recargar el navegador y abrir un pago saliente mediante cheque.
@@ -30,7 +30,7 @@ No se han ejecutado la importación ni las pruebas en tu base de producción.
 1. Usar el flujo habitual de **Imprimir cheque** para confirmar el pago y asignar
    el número preimpreso. Si genera el PDF anterior, no imprimir esa copia.
 2. Al volver al pago con número asignado y estado En proceso o Pagado aparecerán
-   dos botones: **PDF Banrural personal v1.0.8** y **PDF G&T personal v1.0.8**.
+   dos botones: **PDF Banrural personal v1.0.9** y **PDF G&T personal v1.0.9**.
 3. Elegir el botón del banco al que realmente corresponde el diario/cuenta del
    pago. Ambos botones están disponibles: esta versión no tiene los campos ni
    métodos Python de la versión completa para seleccionar el banco automáticamente.
@@ -68,9 +68,9 @@ Las posiciones efectivas de la plantilla son:
 | Campo | Banrural: izquierda / arriba / ancho (mm) | G&T: izquierda / arriba / ancho (mm) |
 |---|---|---|
 | Fecha | 18 / 24 / 110 | 24 / 25 / 100 |
-| Monto, con compensación | 157 / 24 / 25 | 157 / 25 / 25 |
-| Beneficiario | 18 / 31 / 144 | 24 / 33 / 138 |
-| Letras | 18 / 38 / 144 | 24 / 41 / 138 |
+| Monto, con compensación | 157 / 24 / 25 | 155 / 27 / 25 |
+| Beneficiario | 18 / 31 / 144 | 22 / 35 / 138 |
+| Letras | 18 / 38 / 144 | 22 / 43 / 138 |
 
 Estas coordenadas se estimaron de las fotos y deben verificarse con una prueba.
 Los parámetros `offset_x` y `offset_y` siguen disponibles en QWeb para compensar
@@ -80,7 +80,16 @@ Desde 18.0.1.0.1 se utiliza **96 DPI**, con `data-report-dpi="96"` en el HTML pa
 evitar el factor adicional `96 / dpi` del generador de Odoo. La posición relativa,
 el tamaño y la fuente van directamente en cada `.article`, porque Odoo extrae
 esos bloques a su layout mínimo y no conserva el estilo del encabezado original.
-## Ajuste intermedio del monto en 18.0.1.0.8
+## Ajuste fino G&T en 18.0.1.0.9
+
+Según la nueva prueba G&T, monto en números, beneficiario e importe en letras
+se desplazan **2 mm a la izquierda y 2 mm hacia abajo** respecto de 1.0.8.
+La fecha, los tamaños de letra, anchos, contenido y perfil Banrural se conservan.
+En G&T, el monto usa base 135 mm + compensación 20 mm = 155 mm de plantilla;
+Banrural conserva base 137 mm + 20 mm = 157 mm. Este ajuste se estima a partir
+de la petición y fotografía; no se indicó una distancia física exacta.
+
+## Antecedente: ajuste intermedio del monto en 18.0.1.0.8
 
 Se midieron los archivos descargados del servidor que el usuario comparó:
 
@@ -123,7 +132,7 @@ nominal del cheque a 216 mm. Antes de usar originales:
    quedar separados horizontalmente por 40 mm (sus filas son distintas).
 3. Si las medidas no coinciden, hay escala posterior en el visor/controlador:
    no se garantiza que 40 mm del PDF sean 40 mm sobre el papel.
-4. Descargar un PDF nuevo v1.0.8. El monto debe verse unos 20 mm a la izquierda de v1.0.7.
+4. Descargar un PDF nuevo v1.0.9. En G&T, los tres campos deben verse 2 mm a la izquierda y 2 mm más abajo respecto de 1.0.8.
    Probar en papel común antes de comprobarlo con el cheque.
 5. Conservar colocación del papel y configuración. Si se corrige posteriormente
    el origen o la escala de la impresora, recalibrar o quitar `amount_shift_x`.
@@ -166,7 +175,7 @@ en negrita busca mejorar el trazo, pero no certifica ni repara cinta o cabezal.
 La posición física continúa pendiente de verificación. La revisión 1.0.8
 reduce a la mitad la compensación de 1.0.7, sin atribuir el problema
 a un cambio de tamaño que todavía no se ha demostrado. Los botones y nombres
-de descarga incluyen v1.0.8 para identificar la actualización.
+de descarga incluyen v1.0.9 para identificar la actualización.
 
 La Epson LX-350 especifica un mínimo de 100 × 100 mm para hojas sueltas estándar;
 debe validarse la alimentación compatible para un cheque suelto de 69.85 mm.

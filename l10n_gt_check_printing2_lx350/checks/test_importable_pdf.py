@@ -115,7 +115,7 @@ class ImportablePdfTest(unittest.TestCase):
         self.assertTrue(banrural["valid"])
         self.assertTrue(gyt["valid"])
         self.assertEqual(banrural["profile"]["words"][1], 38)
-        self.assertEqual(gyt["profile"]["words"][1], 41)
+        self.assertEqual(gyt["profile"]["words"][1], 43)
         self.assertEqual(banrural["texts"]["amount"], "1,234.56")
         self.assertTrue(banrural["texts"]["words"].endswith("CON 56/100"))
         self.assertEqual(banrural["p"].check_number, "000031797")
