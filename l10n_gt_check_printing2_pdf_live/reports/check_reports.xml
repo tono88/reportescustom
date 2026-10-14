@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- This addon is data-only: the existing Odoo models provide every field. -->
+    <record id="paperformat_personal" model="report.paperformat">
+        <field name="name">Cheques personales — Carta, guía izquierda</field>
+        <field name="default" eval="False"/>
+        <field name="format">Letter</field>
+        <field name="page_width">0</field>
+        <field name="page_height">0</field>
+        <field name="orientation">Portrait</field>
+        <field name="margin_top">0</field>
+        <field name="margin_bottom">0</field>
+        <field name="margin_left">0</field>
+        <field name="margin_right">0</field>
+        <field name="header_line" eval="False"/>
+        <field name="header_spacing">0</field>
+        <field name="disable_shrinking" eval="True"/>
+        <field name="dpi">96</field>
+    </record>
+    <record id="action_banrural" model="ir.actions.report">
+        <field name="name">PDF Banrural — Cheque personal asignado</field>
+        <field name="model">account.payment</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">l10n_gt_check_printing2_pdf_live.check_banrural</field>
+        <field name="paperformat_id" ref="paperformat_personal"/>
+        <field name="print_report_name">'Cheque Banrural personal v1.0.9 - %s' % object.display_name</field>
+        <field name="groups_id" eval="[(4, ref('account.group_account_invoice'))]"/>
+    </record>
+    <template id="check_banrural">
+        <t t-set="bank_label">Banrural</t>
+        <t t-set="bank_key" t-value="'banrural'"/>
+        <t t-call="l10n_gt_check_printing2_pdf_live.check_document"/>
+    </template>
+    <record id="action_gyt" model="ir.actions.report">
+        <field name="name">PDF G&amp;T Continental — Cheque personal asignado</field>
+        <field name="model">account.payment</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">l10n_gt_check_printing2_pdf_live.check_gyt</field>
+        <field name="paperformat_id" ref="paperformat_personal"/>
+        <field name="print_report_name">'Cheque G&amp;T personal v1.0.9 - %s' % object.display_name</field>
+        <field name="groups_id" eval="[(4, ref('account.group_account_invoice'))]"/>
+    </record>
+    <template id="check_gyt">
+        <t t-set="bank_label">G&amp;T Continental</t>
+        <t t-set="bank_key" t-value="'gyt'"/>
+        <t t-call="l10n_gt_check_printing2_pdf_live.check_document"/>
+    </template>
+    <template id="check_document">
+        <html data-report-dpi="96">
+            <head>
+                <meta charset="utf-8"/>
+                <style>
+                    html, body, main { margin:0; padding:0; }
+                    body { font-family:Arial,'Liberation Sans',sans-serif; font-weight:bold; color:#000; }
+                    .check-page { position:relative; width:215.9mm; height:279mm; box-sizing:border-box; page-break-after:always; page-break-inside:avoid; }
+                    .check-page:last-child { page-break-after:auto; }
+                </style>
+            </head>
+            <body>
+                <main>
+                    <t t-foreach="docs" t-as="p">
+                        <!-- Letter printer canvas. Base x/y describe the cheque;
+                             amount_shift_x adds a printer compensation ONLY to
+                             the numeric amount. This deliberately uses Letter
+                             space beyond the nominal 165.1 mm cheque body.
+                             Prove the displacement on plain paper first; retain
+                             the same paper placement and driver configuration. -->
+                        <t t-set="profile" t-value="{
+                            'banrural': {
+                                'date': (18,24,110), 'amount': (137,24,25),
+                                'payee': (18,31,144), 'words': (18,38,144),
+                                'font_sizes': {'date': 12, 'amount': 12, 'payee': 12, 'words': 11},
+                                'min_font': 9, 'amount_align': 'left',
+                                'amount_shift_x': 20,
+                                'offset_x': 0, 'offset_y': 0, 'city': 'PALÍN'
+                            },
+                            'gyt': {
+                                'date': (24,25,100), 'amount': (135,27,25),
+                                'payee': (22,35,138), 'words': (22,43,138),
+                                'font_sizes': {'date': 12, 'amount': 12, 'payee': 12, 'words': 11},
+                                'min_font': 9, 'amount_align': 'left',
+                                'amount_shift_x': 20,
+                                'offset_x': 0, 'offset_y': 0, 'city': 'PALÍN'
+                            }
+                        }[bank_key]"/>
+                        <t t-set="total_cents" t-value="int(round(p.currency_id.round(p.amount) * 100))"/>
+                        <t t-set="integer" t-value="total_cents // 100"/>
+                        <t t-set="cents" t-value="total_cents % 100"/>
+                        <t t-set="payee" t-value="(p.partner_id.name or '').upper()"/>
+                        <t t-set="words" t-value="p.currency_id.with_context(lang='es_GT').amount_to_text(integer).upper() + ' CON %02d/100' % cents"/>
+                        <t t-set="texts" t-value="{
+                            'date': profile['city'] + ', ' + p.date.strftime('%d/%m/%Y') if p.date else '',
+                            'amount': '{:,.2f}'.format(total_cents / 100),
+                            'payee': payee,
+                            'words': words
+                        }"/>
+                        <!-- Bold sans-serif advance widths in thousandths of em.
+                             Arial/Liberation Sans use these Latin advances.
+                             Keep 4% allowance plus explicit letter spacing;
+                             unknown glyphs get a conservative full-em width. -->
+                        <t t-set="advances" t-value="{
+                            'A':722, 'B':722, 'C':722, 'D':722, 'E':667, 'F':611, 'G':778,
+                            'H':722, 'I':278, 'J':556, 'K':722, 'L':611, 'M':833, 'N':722,
+                            'O':778, 'P':667, 'Q':778, 'R':722, 'S':667, 'T':611, 'U':722,
+                            'V':667, 'W':944, 'X':667, 'Y':667, 'Z':611,
+                            '0':556, '1':556, '2':556, '3':556, '4':556,
+                            '5':556, '6':556, '7':556, '8':556, '9':556,
+                            ' ':278, '.':278, ',':278, ':':333, ';':333, '/':278,
+                            '!':333, '|':280, '-':333, '&amp;':722, '(':333, ')':333,
+                            'Á':722, 'É':667, 'Í':278, 'Ó':778, 'Ú':722, 'Ü':722, 'Ñ':722,
+                            'À':722, 'È':667, 'Ì':278, 'Ò':778, 'Ù':722, 'Â':722, 'Ê':667,
+                            'Î':278, 'Ô':778, 'Û':722, 'Ä':722, 'Ë':667, 'Ï':278, 'Ö':778,
+                            'Ç':722, 'Æ':1000, 'Œ':1000, '@':975, '%':889
+                        }"/>
+                        <t t-set="unit_widths" t-value="{
+                            key: sum(advances.get(char, 1000) for char in text) * 25.4 / 72000 * 1.04
+                            for key, text in texts.items()
+                        }"/>
+                        <t t-set="positions_ok" t-value="all(
+                            profile[key][0] + profile['offset_x'] &gt;= 3
+                            and profile[key][0] + profile['offset_x'] + profile[key][2] &lt;= 162
+                            and profile[key][1] + profile['offset_y'] &gt;= 4.2
+                            and profile[key][1] + profile['offset_y'] + profile['font_sizes'][key] * 25.4 / 72 &lt;= 53.85
+                            and profile[key][2] &gt; 0
+                            for key in ('date', 'amount', 'payee', 'words'))
+                            and profile['amount'][0] + profile['offset_x'] + profile['amount_shift_x'] &gt;= 3
+                            and profile['amount'][0] + profile['offset_x'] + profile['amount_shift_x'] + profile['amount'][2] &lt;= 202"/>
+                        <t t-set="payment_ok" t-value="p.state in ('in_process', 'paid')
+                            and p.payment_type == 'outbound' and p.payment_method_code == 'check_printing'
+                            and p.check_number and p.date and payee and p.currency_id.name == 'GTQ' and total_cents &gt; 0"/>
+                        <t t-set="overflow_keys" t-value="[
+                            key for key in ('date', 'amount', 'payee', 'words')
+                            if unit_widths[key] * profile['min_font'] + len(texts[key]) * 0.12 &gt; profile[key][2]
+                        ]"/>
+                        <t t-set="valid" t-value="payment_ok and not overflow_keys and positions_ok"/>
+                        <!-- Odoo extracts each .article into web.minimal_layout.
+                             Head styles are not carried across: anchor and size
+                             must be inline to survive that extraction. -->
+                        <div class="article check-page" style="position:relative;left:0;top:0;width:215.9mm;height:279mm;margin:0;padding:0;box-sizing:border-box;font-family:Arial,'Liberation Sans',sans-serif;font-weight:bold;color:#000;page-break-inside:avoid;">
+                            <t t-if="valid">
+                                <t t-foreach="('date', 'amount', 'payee', 'words')" t-as="key">
+                                    <t t-set="box" t-value="profile[key]"/>
+                                    <t t-set="font" t-value="int(min(profile['font_sizes'][key], (box[2] - len(texts[key]) * 0.12) / max(unit_widths[key], 0.12)))"/>
+                                    <t t-set="print_x" t-value="box[0] + profile['offset_x'] + (profile['amount_shift_x'] if key == 'amount' else 0)"/>
+                                    <div t-attf-style="position:absolute;left:{{ print_x }}mm;top:{{ box[1] + profile['offset_y'] }}mm;width:{{ box[2] }}mm;font-size:{{ font }}pt;letter-spacing:0.12mm;line-height:1;white-space:nowrap;text-align:{{ profile['amount_align'] if key == 'amount' else 'left' }};">
+                                        <t t-out="texts[key]"/>
+                                    </div>
+                                </t>
+                            </t>
+                            <t t-else="">
+                                <div style="position:absolute;left:10mm;top:12mm;width:145mm;font-size:10pt;">
+                                    <strong>NO ES UN CHEQUE VÁLIDO PARA IMPRIMIR</strong>
+                                    <p t-if="not payment_ok">Revisa: pago confirmado en proceso o pagado, método Cheque, número ya asignado,
+                                    beneficiario, moneda GTQ e importe positivo. Asigna el número con el flujo habitual de Imprimir cheque.</p>
+                                    <p t-if="not positions_ok">Las posiciones configuradas salen del área disponible del cheque. Revisa el diseño seleccionado.</p>
+                                    <p t-foreach="overflow_keys" t-as="overflow_key">
+                                        El campo <strong t-out="{'date':'fecha', 'amount':'monto en números', 'payee':'beneficiario', 'words':'importe en letras'}[overflow_key]"/>
+                                        necesita aproximadamente <t t-out="'%.1f' % (unit_widths[overflow_key] * profile['min_font'] + len(texts[overflow_key]) * 0.12)"/> mm
+                                        y dispone de <t t-out="profile[overflow_key][2]"/> mm a <t t-out="profile['min_font']"/> pt. Revisa el diseño o la longitud del texto.
+                                    </p>
+                                    <p>Este reporte PDF no modifica pagos ni numeración.</p>
+                                </div>
+                            </t>
+                        </div>
+                    </t>
+                </main>
+            </body>
+        </html>
+    </template>
+</odoo>
