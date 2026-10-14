@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+    <t t-name="l10n_gt_check_printing2_lx350.PrinterDialog">
+        <Dialog title="'Impresora USB para cheques'">
+            <p>Selecciona la Epson de esta computadora. Se recordará por navegador, usuario y empresa.</p>
+            <label for="lx350-printer">Impresora instalada en Windows</label>
+            <select id="lx350-printer" class="form-select" t-model="state.selected">
+                <option t-foreach="props.printers" t-as="printer" t-key="printer" t-att-value="printer"><t t-out="printer"/></option>
+            </select>
+            <p class="mt-3 text-muted">QZ Tray debe estar abierto. Autoriza sus avisos de conexión e impresión. La impresión sin avisos requiere configurar una firma de confianza por separado.</p>
+            <t t-set-slot="footer">
+                <button class="btn btn-primary" t-on-click="save" t-att-disabled="!state.selected">Guardar selección</button>
+                <button class="btn btn-secondary" t-on-click="props.close">Cancelar</button>
+            </t>
+        </Dialog>
+    </t>
+</templates>

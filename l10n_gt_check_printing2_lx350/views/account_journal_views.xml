@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_journal_lx350" model="ir.ui.view">
+        <field name="name">account.journal.lx350</field>
+        <field name="model">account.journal</field>
+        <field name="inherit_id" ref="account_check_printing.view_account_journal_form_inherited"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='bank_check_printing_layout']" position="after">
+                <group string="Calibración Banrural / Epson LX-350" colspan="2">
+                    <div class="alert alert-info" colspan="2">
+                        Valores iniciales aproximados para Banrural. Selecciona el diseño Personal o Comercial arriba.
+                        Cada campo se mide desde el borde superior izquierdo del cheque.
+                        La prueba usa datos ficticios y no modifica pagos ni numeración.
+                        El cheque suelto de 69.85 mm de alto queda fuera del mínimo de 100 mm especificado para hojas sueltas de la LX-350: valida la alimentación compatible.
+                    </div>
+                    <field name="lx350_city"/>
+                    <field name="lx350_font_size"/>
+                    <field name="lx350_offset_x"/>
+                    <field name="lx350_offset_y"/>
+                    <group string="Fecha">
+                        <field name="lx350_date_x"/>
+                        <field name="lx350_date_y"/>
+                        <field name="lx350_date_width"/>
+                    </group>
+                    <group string="Monto numérico">
+                        <field name="lx350_amount_x"/>
+                        <field name="lx350_amount_y"/>
+                        <field name="lx350_amount_width"/>
+                    </group>
+                    <group string="Beneficiario">
+                        <field name="lx350_payee_x"/>
+                        <field name="lx350_payee_y"/>
+                        <field name="lx350_payee_width"/>
+                    </group>
+                    <group string="Monto en letras">
+                        <field name="lx350_words_x"/>
+                        <field name="lx350_words_y"/>
+                        <field name="lx350_words_width"/>
+                    </group>
+                    <div colspan="2" class="d-flex gap-2 flex-wrap">
+                        <button name="action_lx350_calibration" string="PDF de prueba" type="object" class="btn-secondary"/>
+                        <button name="action_lx350_configure_printer" string="Configurar Epson USB" type="object" class="btn-secondary"/>
+                        <button name="action_lx350_calibration_usb" string="Prueba en Epson USB" type="object" class="btn-primary"/>
+                    </div>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>
