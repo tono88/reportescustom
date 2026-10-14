@@ -65,8 +65,20 @@
                              Negative offset_x moves left; positive offset_y moves down.
                              Edit the chosen bank's dictionary in this QWeb view. -->
                         <t t-set="profile" t-value="{
-                            'banrural': {'date': (18,24,110), 'amount': (137,24,23), 'payee': (18,31,144), 'words': (18,38,144), 'offset_x': 0, 'offset_y': 0, 'city': 'PALÍN'},
-                            'gyt': {'date': (24,25,100), 'amount': (137,25,23), 'payee': (24,33,138), 'words': (24,41,138), 'offset_x': 0, 'offset_y': 0, 'city': 'PALÍN'}
+                            'banrural': {
+                                'date': (18,24,110), 'amount': (135,24,27),
+                                'payee': (18,31,144), 'words': (18,38,144),
+                                'font_sizes': {'date': 12, 'amount': 12, 'payee': 12, 'words': 11},
+                                'min_font': 9, 'amount_align': 'left',
+                                'offset_x': 0, 'offset_y': 0, 'city': 'PALÍN'
+                            },
+                            'gyt': {
+                                'date': (24,25,100), 'amount': (137,25,23),
+                                'payee': (24,33,138), 'words': (24,41,138),
+                                'font_sizes': {'date': 12, 'amount': 12, 'payee': 12, 'words': 11},
+                                'min_font': 9, 'amount_align': 'right',
+                                'offset_x': 0, 'offset_y': 0, 'city': 'PALÍN'
+                            }
                         }[bank_key]"/>
                         <t t-set="total_cents" t-value="int(round(p.currency_id.round(p.amount) * 100))"/>
                         <t t-set="integer" t-value="total_cents // 100"/>
@@ -77,14 +89,16 @@
                             profile[key][0] + profile['offset_x'] &gt;= 3
                             and profile[key][0] + profile['offset_x'] + profile[key][2] &lt;= 162
                             and profile[key][1] + profile['offset_y'] &gt;= 4.2
-                            and profile[key][1] + profile['offset_y'] + 9 * 25.4 / 72 &lt;= 53.85
+                            and profile[key][1] + profile['offset_y'] + profile['font_sizes'][key] * 25.4 / 72 &lt;= 53.85
                             and profile[key][2] &gt; 0
                             for key in ('date', 'amount', 'payee', 'words'))"/>
                         <t t-set="valid" t-value="p.state in ('in_process', 'paid')
                             and p.payment_type == 'outbound' and p.payment_method_code == 'check_printing'
                             and p.check_number and p.date and payee and p.currency_id.name == 'GTQ' and total_cents &gt; 0
-                            and len(payee) * 7 * 0.27 &lt;= profile['payee'][2]
-                            and len(words) * 7 * 0.27 &lt;= profile['words'][2] and positions_ok"/>
+                            and len(payee) * profile['min_font'] * 0.22 &lt;= profile['payee'][2]
+                            and len(words) * profile['min_font'] * 0.22 &lt;= profile['words'][2]
+                            and len('{:,.2f}'.format(total_cents / 100)) * profile['min_font'] * 0.22 &lt;= profile['amount'][2]
+                            and positions_ok"/>
                         <!-- Odoo extracts each .article into web.minimal_layout.
                              Head styles are not carried across: anchor and size
                              must be inline to survive that extraction. -->
@@ -98,8 +112,8 @@
                                 }"/>
                                 <t t-foreach="('date', 'amount', 'payee', 'words')" t-as="key">
                                     <t t-set="box" t-value="profile[key]"/>
-                                    <t t-set="font" t-value="int(min(9, box[2] / max(len(texts[key]), 1) / 0.27))"/>
-                                    <div t-attf-style="position:absolute;left:{{ box[0] + profile['offset_x'] }}mm;top:{{ box[1] + profile['offset_y'] }}mm;width:{{ box[2] }}mm;font-size:{{ font }}pt;line-height:1;white-space:nowrap;text-align:{{ 'right' if key == 'amount' else 'left' }};">
+                                    <t t-set="font" t-value="int(min(profile['font_sizes'][key], box[2] / max(len(texts[key]), 1) / 0.22))"/>
+                                    <div t-attf-style="position:absolute;left:{{ box[0] + profile['offset_x'] }}mm;top:{{ box[1] + profile['offset_y'] }}mm;width:{{ box[2] }}mm;font-size:{{ font }}pt;line-height:1;white-space:nowrap;text-align:{{ profile['amount_align'] if key == 'amount' else 'left' }};">
                                         <t t-out="texts[key]"/>
                                     </div>
                                 </t>

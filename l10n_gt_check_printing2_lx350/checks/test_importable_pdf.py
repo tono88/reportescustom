@@ -71,7 +71,7 @@ class ImportablePdfTest(unittest.TestCase):
         for bank in ("banrural", "gyt"):
             profile = self.values(bank)["profile"]
             x, y, width = profile["amount"]
-            self.assertLessEqual(x + width, 160)
+            self.assertLessEqual(x + width, 162)
 
     def test_letter_left_origin_avoids_small_page_centering_offset(self):
         # A 165.1 mm PDF centered on 215.9 mm Letter adds 25.4 mm. The new
@@ -87,7 +87,22 @@ class ImportablePdfTest(unittest.TestCase):
                 x, y, width = values["profile"][key]
                 self.assertGreaterEqual(x, 3)
                 self.assertLessEqual(x + width, 162)
-                self.assertLess(y + 9*25.4/72, 53.85)
+                self.assertLess(y + values['profile']['font_sizes'][key]*25.4/72, 53.85)
+
+    def test_larger_fonts_and_banrural_amount_start_after_currency_symbol(self):
+        values = self.values(amount=81689.69)
+        profile = values['profile']
+        self.assertEqual(profile['amount'], (135, 24, 27))
+        self.assertEqual(profile['amount_align'], 'left')
+        font_expression = self.expressions['font']
+        for key in ('date', 'amount', 'payee', 'words'):
+            scope = {**values, 'key': key, 'box': profile[key]}
+            font = eval(font_expression, {**scope}, scope)
+            self.assertGreaterEqual(font, 9)
+            self.assertLessEqual(font, profile['font_sizes'][key])
+            if key in ('date', 'payee', 'amount'):
+                self.assertEqual(font, 12)
+        self.assertEqual(self.values('gyt')['profile']['amount_align'], 'right')
 
     def test_both_banks_use_their_own_positions_without_changing_payment(self):
         banrural = self.values()
@@ -106,6 +121,7 @@ class ImportablePdfTest(unittest.TestCase):
             {"check_number": False}, {"state": "draft"}, {"state": "canceled"},
             {"currency_id": SimpleNamespace(name="USD", round=round, with_context=lambda **kw: Currency())},
             {"payment_type": "inbound"}, {"amount": 0},
+            {"amount": 12345678901234.56},
             {"partner_id": SimpleNamespace(name="A" * 200)},
         ]
         for changes in cases:

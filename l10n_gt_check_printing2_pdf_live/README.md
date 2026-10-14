@@ -9,7 +9,7 @@ completa desde esa pantalla.
 
 ## Instalación
 
-1. Usar exclusivamente `l10n_gt_check_printing2_pdf_live-18.0.1.0.2.zip`.
+1. Usar exclusivamente `l10n_gt_check_printing2_pdf_live-18.0.1.0.3.zip`.
 2. En **Importar módulo**, seleccionar ese ZIP. Dejar **Forzar inicio** y
    **Cargar datos de prueba** desmarcados. Instalar.
 3. Recargar el navegador y abrir un pago saliente mediante cheque.
@@ -66,7 +66,7 @@ de los campos respecto a ese origen son:
 | Campo | Banrural: izquierda / arriba / ancho (mm) | G&T: izquierda / arriba / ancho (mm) |
 |---|---|---|
 | Fecha | 18 / 24 / 110 | 24 / 25 / 100 |
-| Monto | 137 / 24 / 23 | 137 / 25 / 23 |
+| Monto | 135 / 24 / 27 | 137 / 25 / 23 |
 | Beneficiario | 18 / 31 / 144 | 24 / 33 / 138 |
 | Letras | 18 / 38 / 144 | 24 / 41 / 138 |
 
@@ -78,9 +78,17 @@ Desde 18.0.1.0.1 se utiliza **96 DPI**, con `data-report-dpi="96"` en el HTML pa
 evitar el factor adicional `96 / dpi` del generador de Odoo. La posición relativa,
 el tamaño y la fuente van directamente en cada `.article`, porque Odoo extrae
 esos bloques a su layout mínimo y no conserva el estilo del encabezado original.
-El monto termina a 160 mm en sus coordenadas de diseño, dejando 5 mm de margen.
-Se usa Courier New con tamaños de letra enteros para mantener espaciado legible
-en el generador PDF y una tipografía apropiada para impresión matricial.
+En Banrural el monto empieza en **135 mm**, alineado a la izquierda dentro del
+espacio que sigue al «Q.» preimpreso, y tiene 27 mm disponibles (hasta 162 mm).
+La ubicación es inicial según la fotografía: el desplazamiento específico de la
+impresora se termina de ajustar en una prueba. G&T conserva su posición numérica
+y alineación a la derecha.
+
+Desde 18.0.1.0.3, fecha, beneficiario y monto usan hasta **12 pt**, y el importe
+en letras hasta **11 pt**. Se usa Courier New con tamaños enteros y un cálculo
+de ancho apropiado para fuente monoespaciada. Los textos largos se reducen hasta
+9 pt; si no caben se genera el aviso de revisión en lugar de truncarlos. En QWeb,
+`font_sizes` contiene los tamaños de cada campo y `min_font` el mínimo permitido.
 
 La Epson LX-350 especifica un mínimo de 100 × 100 mm para hojas sueltas estándar;
 debe validarse la alimentación compatible para un cheque suelto de 69.85 mm.
