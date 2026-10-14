@@ -66,7 +66,7 @@
                              Edit the chosen bank's dictionary in this QWeb view. -->
                         <t t-set="profile" t-value="{
                             'banrural': {
-                                'date': (18,24,110), 'amount': (135,24,27),
+                                'date': (18,24,110), 'amount': (137,24,25),
                                 'payee': (18,31,144), 'words': (18,38,144),
                                 'font_sizes': {'date': 12, 'amount': 12, 'payee': 12, 'words': 11},
                                 'min_font': 9, 'amount_align': 'left',

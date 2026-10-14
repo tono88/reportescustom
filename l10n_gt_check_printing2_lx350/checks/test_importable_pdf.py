@@ -92,7 +92,7 @@ class ImportablePdfTest(unittest.TestCase):
     def test_larger_fonts_and_banrural_amount_start_after_currency_symbol(self):
         values = self.values(amount=81689.69)
         profile = values['profile']
-        self.assertEqual(profile['amount'], (135, 24, 27))
+        self.assertEqual(profile['amount'], (137, 24, 25))
         self.assertEqual(profile['amount_align'], 'left')
         font_expression = self.expressions['font']
         for key in ('date', 'amount', 'payee', 'words'):
