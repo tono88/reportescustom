@@ -9,7 +9,7 @@ completa desde esa pantalla.
 
 ## Instalación
 
-1. Usar exclusivamente `l10n_gt_check_printing2_pdf_live-18.0.1.0.6.zip`.
+1. Usar exclusivamente `l10n_gt_check_printing2_pdf_live-18.0.1.0.7.zip`.
 2. En **Importar módulo**, seleccionar ese ZIP. Dejar **Forzar inicio** y
    **Cargar datos de prueba** desmarcados. Instalar.
 3. Recargar el navegador y abrir un pago saliente mediante cheque.
@@ -30,15 +30,16 @@ No se han ejecutado la importación ni las pruebas en tu base de producción.
 1. Usar el flujo habitual de **Imprimir cheque** para confirmar el pago y asignar
    el número preimpreso. Si genera el PDF anterior, no imprimir esa copia.
 2. Al volver al pago con número asignado y estado En proceso o Pagado aparecerán
-   dos botones: **PDF Banrural personal v1.0.6** y **PDF G&T personal v1.0.6**.
+   dos botones: **PDF Banrural personal v1.0.7** y **PDF G&T personal v1.0.7**.
 3. Elegir el botón del banco al que realmente corresponde el diario/cuenta del
    pago. Ambos botones están disponibles: esta versión no tiene los campos ni
    métodos Python de la versión completa para seleccionar el banco automáticamente.
 4. Revisar el PDF antes de imprimir. Si muestra **NO ES UN CHEQUE VÁLIDO PARA
    IMPRIMIR**, revisar el pago y no imprimir esa página sobre un cheque.
 5. En el visor y el controlador Epson seleccionar **Carta / Letter**, orientación
-   vertical y **100 % / tamaño real**, sin «ajustar a página». El cheque se coloca
-   contra la guía izquierda en 0; las coordenadas parten de esa referencia.
+   vertical y **100 % / tamaño real**, sin «ajustar a página». Esta versión
+   compensa 40 mm solo en el monto: conservar la misma colocación y configuración
+   de la impresión anterior y comprobar primero en papel común.
    Mantener el voucher como reporte independiente.
 
 Estos botones solo generan PDF de un pago ya numerado. No ejecutan otra vez el
@@ -52,21 +53,22 @@ ventana de mantenimiento.
 
 Ambos cuerpos de cheque se consideran personales, nominalmente
 **165.10 × 69.85 mm**. Desde 18.0.1.0.2 se utiliza un **lienzo PDF Carta**
-(215.9 × 279.4 mm) y todos los datos quedan en el área del cheque, arriba a la
-izquierda. El PDF se verá como una hoja Carta con el resto en blanco: es intencional.
+(215.9 × 279.4 mm). Desde 18.0.1.0.7, el monto usa una compensación de impresora
+y ocupa parte del lienzo Carta fuera del cuerpo nominal de 165.1 mm. La hoja
+Carta representa las coordenadas de impresión, no el tamaño físico del cheque.
 Al imprimir un PDF pequeño de 165.1 mm sobre Carta, un visor puede agregar
 25.4 mm a cada lado para centrarlo; con PDF y controlador ambos en Carta se
 elimina esa diferencia de tamaño. Esto presupone que Carta es el formato elegido
 en Windows: si se usa otro tamaño, debe coincidir con el PDF.
 
-No se estima un corrimiento adicional a partir del video. Se fija el origen en
-la izquierda en lugar de adivinar una compensación. Las posiciones iniciales
-de los campos respecto a ese origen son:
+Las posiciones base describen el cheque. `amount_shift_x = 40` se suma
+exclusivamente al monto; `offset_x` y `offset_y` siguen siendo ajustes generales.
+Las posiciones efectivas de la plantilla son:
 
 | Campo | Banrural: izquierda / arriba / ancho (mm) | G&T: izquierda / arriba / ancho (mm) |
 |---|---|---|
 | Fecha | 18 / 24 / 110 | 24 / 25 / 100 |
-| Monto | 137 / 24 / 25 | 137 / 25 / 25 |
+| Monto, con compensación | 177 / 24 / 25 | 177 / 25 / 25 |
 | Beneficiario | 18 / 31 / 144 | 24 / 33 / 138 |
 | Letras | 18 / 38 / 144 | 24 / 41 / 138 |
 
@@ -78,16 +80,51 @@ Desde 18.0.1.0.1 se utiliza **96 DPI**, con `data-report-dpi="96"` en el HTML pa
 evitar el factor adicional `96 / dpi` del generador de Odoo. La posición relativa,
 el tamaño y la fuente van directamente en cada `.article`, porque Odoo extrae
 esos bloques a su layout mínimo y no conserva el estilo del encabezado original.
-Desde 18.0.1.0.4, en Banrural el monto empieza en **137 mm**, alineado a la
-izquierda dentro del espacio que sigue al «Q.» preimpreso, y tiene 25 mm
-disponibles (hasta 162 mm). En la fotografía, el inicio del monto impreso se
-estima a 97 mm del borde izquierdo: la posición objetivo equivale a unos
-40 mm a la derecha respecto a esa impresión. La versión 18.0.1.0.3 ya usaba
-135 mm, por lo que este cambio de plantilla agrega 2 mm; no se suman 40 mm
-a la coordenada anterior. La estimación depende de la perspectiva de la foto
-y se confirma con una prueba a tamaño real. Desde 18.0.1.0.5, G&T también usa
-inicio fijo en 137 mm y alineación izquierda en un campo de 25 mm; el inicio
-ya no depende de la cantidad de dígitos.
+## Corrimiento real del monto en 18.0.1.0.7
+
+Se midieron los archivos descargados del servidor que el usuario comparó:
+
+| PDF | Inicio / final del monto desde la izquierda de la página (mm) |
+|---|---|
+| Banrural de la primera captura, copia `-2` | 139.17 / 162.00 |
+| Banrural anterior, copia `-3` y `-4` | 141.02 / 163.85 |
+| Banrural personal v1.0.5 | 141.02 / 159.82 |
+
+Entre las dos capturas (`-2` y v1.0.5), el movimiento fue de solo 1.85 mm.
+Entre las copias `-3`/`-4` y v1.0.5, el inicio no cambió: el nuevo tipo de letra
+solo redujo el ancho. La configuración
+base de 137 mm no representaba un corrimiento adicional respecto a esa impresión.
+Ambos archivos son Carta, 215.9 × 279.4 mm. La envoltura del servidor agrega unos
+4 mm al origen horizontal de la plantilla; la reproducción local anterior no los
+incluía. La causa exacta de la diferencia entre el PDF y la foto impresa no puede
+certificarse sin medir una salida física de referencia. El usuario confirma
+Carta en el controlador y 100 % en el visor.
+
+Esta revisión agrega **40 mm reales en las coordenadas del PDF**: la posición
+base del monto sigue en 137 mm, pero su posición efectiva pasa a **177 mm**.
+Con la envoltura observada en el servidor se espera un inicio cercano a
+**181 mm**, frente a los 141 mm anteriores. No se cambia el ancho de 25 mm,
+la fuente, el tamaño de letra ni los otros campos para conseguir el corrimiento.
+La reproducción con el origen observado del servidor midió **141.02 → 180.97 mm**:
+un traslado de **39.95 mm**, con ancho y tamaño de fuente idénticos, sin recorte.
+Se valida el área nominal por separado y el monto compensado contra el lienzo
+Carta (hasta 202 mm de plantilla). Ya no se limita el monto desplazado a 162 mm.
+
+**Esta es una compensación para la salida que el cliente está observando**, no
+una medida certificada del campo impreso del cheque. No se cambia el tamaño
+nominal del cheque a 216 mm. Antes de usar originales:
+
+1. Imprimir `Prueba_corrimiento_monto_40mm_Carta.pdf` en papel común, Carta / 100 %.
+2. La barra de referencia debe medir 100 mm. Los inicios de ambos importes deben
+   quedar separados horizontalmente por 40 mm (sus filas son distintas).
+3. Si las medidas no coinciden, hay escala posterior en el visor/controlador:
+   no se garantiza que 40 mm del PDF sean 40 mm sobre el papel.
+4. Descargar un PDF nuevo v1.0.7. El monto debe verse claramente más a la derecha.
+   Probar en papel común antes de comprobarlo con el cheque.
+5. Conservar colocación del papel y configuración. Si se corrige posteriormente
+   el origen o la escala de la impresora, recalibrar o quitar `amount_shift_x`.
+
+El PDF de prueba se entrega aparte del módulo y utiliza datos ficticios.
 
 Desde 18.0.1.0.3, fecha, beneficiario y monto usan hasta **12 pt**, y el importe
 en letras hasta **11 pt**. Desde 18.0.1.0.5 se cambia Courier New por
@@ -122,14 +159,10 @@ Estas opciones se basan en el manual oficial Epson; pueden variar con la versió
 del controlador. No se cambian automáticamente al importar este módulo. La letra
 en negrita busca mejorar el trazo, pero no certifica ni repara cinta o cabezal.
 
-La nueva fotografía G&T muestra el monto aproximadamente a 98 mm del borde
-izquierdo, mientras el PDF reproducido localmente lo sitúa cerca de 137 mm.
-El usuario confirma que usó el botón G&T 1.0.4 y 100 %. Falta examinar el PDF
-exacto descargado del servidor para distinguir generación, sustitución de fuente
-y transformación al imprimir. No se añade una compensación arbitraria de 40 mm
-al PDF: podría sacar el monto del cheque al corregir el controlador. La posición
-física continúa pendiente de verificación. Los botones y nombres de descarga
-incluyen v1.0.6 para identificar inequívocamente la nueva versión.
+La posición física continúa pendiente de verificación. La revisión 1.0.7
+agrega una compensación explícita y una prueba medible, sin atribuir el problema
+a un cambio de tamaño que todavía no se ha demostrado. Los botones y nombres
+de descarga incluyen v1.0.7 para identificar la actualización.
 
 La Epson LX-350 especifica un mínimo de 100 × 100 mm para hojas sueltas estándar;
 debe validarse la alimentación compatible para un cheque suelto de 69.85 mm.
@@ -143,6 +176,8 @@ En su diccionario `profile` hay un bloque `banrural` y otro `gyt`:
 
 - `offset_x`: negativo mueve a la izquierda; positivo a la derecha.
 - `offset_y`: positivo mueve hacia abajo; negativo hacia arriba.
+- `amount_shift_x`: compensación horizontal solo del monto; 40 mm en 1.0.7.
+  Usar 0 para volver a la posición de 1.0.6; no escalar la fuente para moverlo.
 - `date`, `amount`, `payee`, `words`: tuplas `(izquierda, arriba, ancho)` en mm.
 - `city`: lugar de emisión, PALÍN inicialmente.
 
@@ -158,7 +193,9 @@ Se verifican estructura XML, tamaños enteros, referencias internas, ausencia de
 Python ejecutable en el paquete y evaluación de las expresiones del reporte con
 datos simulados. Se reprodujo el recorte con wkhtmltopdf 0.12.6 a 90 DPI y el zoom
 de Odoo, y se comprobó el PDF corregido a 96 DPI para ambos bancos. La importación
-real y la envoltura completa de la instalación Odoo del cliente no se han ejecutado aquí.
+real no se ha ejecutado aquí. Se midieron los PDF reales descargados del servidor
+y se reproduce también un padding horizontal de 16 px para verificar el delta
+de 40 mm con la envoltura observada. No sustituye una prueba física.
 Las imágenes con datos bancarios y firmas no se incluyen en el paquete.
 
 Fuentes:

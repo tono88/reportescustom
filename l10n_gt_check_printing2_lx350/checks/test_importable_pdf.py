@@ -121,6 +121,22 @@ class ImportablePdfTest(unittest.TestCase):
         self.assertEqual(banrural["p"].check_number, "000031797")
         self.assertEqual(banrural["p"].state, "in_process")
 
+    def test_only_amount_moves_40mm_without_changing_font_or_box_width(self):
+        for bank in ('banrural', 'gyt'):
+            values = self.values(bank, amount=81689.69)
+            profile = values['profile']
+            self.assertTrue(values['valid'])
+            for key in ('date', 'amount', 'payee', 'words'):
+                box = profile[key]
+                scope = {**values, 'key': key, 'box': box}
+                x = eval(self.expressions['print_x'], {**scope}, scope)
+                base = box[0] + profile['offset_x']
+                self.assertEqual(x - base, 40 if key == 'amount' else 0)
+                self.assertLessEqual(x + box[2], 202)
+                if key == 'amount':
+                    self.assertEqual(box[2], 25)
+                    self.assertEqual(eval(self.expressions['font'], {**scope}, scope), 12)
+
     def test_unassigned_draft_or_wrong_currency_has_no_valid_check(self):
         cases = [
             {"check_number": False}, {"state": "draft"}, {"state": "canceled"}, {"date": False},
