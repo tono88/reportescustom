@@ -149,7 +149,7 @@ export async function printReport(action, options, env) {
             copies: 1,
             duplex: false,
             colorType: "blackwhite",
-            jobName: action.lx350.calibration ? "PRUEBA SIN VALOR Banrural" : "Cheque Banrural",
+            jobName: `${action.lx350.calibration ? "PRUEBA SIN VALOR" : "Cheque"} ${action.lx350.bank_label}`,
         });
         // Once dispatched, a rejection may still mean the spooler accepted it.
         // Never retry automatically or print a fallback copy after this point.

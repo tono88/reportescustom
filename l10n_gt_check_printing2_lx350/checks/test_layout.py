@@ -20,8 +20,34 @@ class CheckGeometryTest(unittest.TestCase):
 
     def test_real_size_and_initial_geometry(self):
         self.assertEqual(layout.LAYOUTS[layout.PERSONAL], 165.10)
+        self.assertEqual(layout.LAYOUTS[layout.GYT], 165.10)
         self.assertEqual(layout.HEIGHT, 69.85)
-        layout.validate_geometry(165.1, {"date": (18, 24, 110), "amount": (139, 24, 23), "words": (18, 38, 144)}, 9)
+        for positions in layout.INITIAL_POSITIONS.values():
+            layout.validate_geometry(165.1, positions, 9)
+
+    def test_bank_buttons_cannot_select_the_other_bank(self):
+        layout.require_bank(layout.PERSONAL, "banrural")
+        layout.require_bank(layout.GYT, "gyt")
+        for report, bank in [(layout.PERSONAL, "gyt"), (layout.GYT, "banrural"), ("unknown", "gyt")]:
+            with self.subTest(report=report, bank=bank), self.assertRaises(ValueError):
+                layout.require_bank(report, bank)
+
+    def test_two_bank_actions_reference_personal_paper_and_separate_buttons(self):
+        import xml.etree.ElementTree as ET
+        root = Path(__file__).parents[1]
+        reports = ET.parse(root / "reports/report_check.xml").getroot()
+        records = {record.attrib["id"]: record for record in reports.findall("record")}
+        for bank in ("personal", "gyt"):
+            paper = records[f"paperformat_{bank}"]
+            self.assertEqual(float(paper.find("field[@name='page_width']").text), 165.1)
+            self.assertEqual(float(paper.find("field[@name='page_height']").text), 69.85)
+            report = records[f"action_check_{bank}"]
+            self.assertEqual(report.find("field[@name='paperformat_id']").attrib["ref"], f"paperformat_{bank}")
+        form = ET.parse(root / "views/account_payment_views.xml").getroot()
+        for bank in ("banrural", "gyt"):
+            button = form.find(f".//button[@name='action_lx350_print_{bank}_usb']")
+            self.assertIsNotNone(button)
+            self.assertIn(f"lx350_bank != '{bank}'", button.attrib["invisible"])
 
     def test_outside_paper_or_micr_is_refused(self):
         for box in [(2, 24, 100), (18, 3, 100), (139, 24, 30), (18, 53, 100), (float("nan"), 24, 100)]:

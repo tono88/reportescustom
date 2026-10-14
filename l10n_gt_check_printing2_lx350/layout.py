@@ -5,10 +5,23 @@ import math
 
 MODULE = "l10n_gt_check_printing2_lx350"
 PERSONAL = MODULE + ".action_check_personal"
-COMMERCIAL = MODULE + ".action_check_commercial"
-LAYOUTS = {PERSONAL: 165.10, COMMERCIAL: 190.50}
+GYT = MODULE + ".action_check_gyt"
+LAYOUTS = {PERSONAL: 165.10, GYT: 165.10}
+BANKS = {PERSONAL: "banrural", GYT: "gyt"}
+BANK_LABELS = {PERSONAL: "Banrural", GYT: "G&T Continental"}
+# Starting positions estimated from the supplied photographs. Each journal
+# retains its own calibration; loading a profile is an explicit user action.
+INITIAL_POSITIONS = {
+    PERSONAL: {"date": (18, 24, 110), "amount": (139, 24, 23), "payee": (18, 31, 144), "words": (18, 38, 144)},
+    GYT: {"date": (24, 25, 100), "amount": (139, 25, 23), "payee": (24, 33, 138), "words": (24, 41, 138)},
+}
 HEIGHT = 69.85
 MICR_HEIGHT = 16.0
+
+
+def require_bank(layout, bank):
+    if BANKS.get(layout) != bank:
+        raise ValueError("El botón no corresponde al banco configurado en el diario del pago.")
 
 
 def amount_parts(amount):

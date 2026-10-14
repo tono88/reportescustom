@@ -1,7 +1,7 @@
-# Cheques Banrural y Epson LX-350 — Odoo 18 Community
+# Cheques personales Banrural y G&T / Epson LX-350 — Odoo 18 Community
 
 Extensión de `l10n_gt_check_printing2`. Agrega diseños propios para cheques
-preimpresos Banrural, posiciones por diario y envío del PDF a una impresora USB
+preimpresos Banrural y G&T Continental, posiciones por diario y envío del PDF a una impresora USB
 local mediante QZ Tray. Puede coexistir con `l10n_gt_check_printing2_voucher`.
 
 ## Instalación en Windows
@@ -10,15 +10,17 @@ local mediante QZ Tray. Puede coexistir con `l10n_gt_check_printing2_voucher`.
 2. Copiar la carpeta `l10n_gt_check_printing2_lx350` a una ruta incluida en
    `addons_path`. No reemplazar los módulos existentes.
 3. Reiniciar el servicio Odoo, actualizar la lista de aplicaciones, quitar el
-   filtro Aplicaciones e instalar **Guatemala - Cheques Banrural / Epson LX-350**.
+   filtro Aplicaciones e instalar **Guatemala - Cheques personales Banrural y G&T / Epson LX-350**.
    El Python del servicio debe tener `num2words`, usado también por Odoo.
 4. Instalar el controlador oficial Epson LX-350 en la computadora conectada por
    USB. Comprobar primero la impresión desde Windows.
 5. Instalar y abrir [QZ Tray](https://qz.io/download/) 2.3.x en esa computadora.
    La biblioteca JavaScript 2.3.0 está incluida localmente; no utiliza un CDN.
-6. En Contabilidad / Configuración / Diarios, abrir el diario **Banrural** de la
-   empresa correcta. En pagos salientes, habilitar Cheques y seleccionar
-   **Banrural / LX-350 — Personal 165.10 × 69.85 mm** como diseño del diario.
+6. En Contabilidad / Configuración / Diarios, abrir cada diario de la empresa
+   correcta. En pagos salientes, habilitar Cheques y seleccionar el diseño del
+   banco correspondiente:
+   - Diario Banrural: **Banrural / LX-350 — Personal 165.10 × 69.85 mm**.
+   - Diario G&T: **G&T Continental / LX-350 — Personal 165.10 × 69.85 mm**.
    Si la opción de impresión no aparece, activar Cheques en los ajustes contables.
 7. Para cheques ya numerados por el banco, dejar desmarcada la opción de
    numeración manual (la ayuda de Odoo indica que se usa para papel sin número).
@@ -30,11 +32,12 @@ empresa, diario, pago, cuenta bancaria ni numeración al instalar.
 
 ## Tamaño y alimentación
 
-Se incluyen **Personal 165.10 × 69.85 mm** y **Comercial 190.50 × 69.85 mm**.
-El formato de la nueva fotografía es Banrural. El tamaño personal se toma como
-punto de partida indicado por el usuario; la foto no certifica una medida física.
-Los valores iniciales X/Y son aproximados para la fotografía, no una calibración
-validada en la impresora. El diseño anterior de G&T no se modifica.
+Se incluyen **dos formatos personales de 165.10 × 69.85 mm**, uno para Banrural
+y otro para G&T Continental, con acciones y botones separados. Ambos tamaños
+personales se toman como punto de partida indicado por el usuario; las fotos no
+certifican una medida física. Las posiciones iniciales de cada banco son
+aproximadas a partir de sus fotografías y requieren calibración física. Los
+reportes GT2 anteriores permanecen disponibles.
 
 La LX-350 especifica un mínimo de **100 × 100 mm para hojas sueltas estándar**.
 El cheque desprendido, de 69.85 mm de alto, queda fuera de ese rango. Configurar
@@ -47,7 +50,13 @@ cheques sueltos ni se incluye un soporte físico.
 
 ## Calibración
 
-En el diario, en **Calibración Banrural / Epson LX-350**:
+En cada diario, en **Calibración de cheques personales / Epson LX-350**:
+
+Seleccionar el diseño del banco y pulsar **Cargar posiciones iniciales del banco**.
+Esta acción reemplaza la calibración de ese diario, con confirmación. Cargar el
+perfil al configurar por primera vez; después ajustar los valores y conservarlos.
+Cambiar de banco en el selector no reemplaza automáticamente posiciones ya
+calibradas. Los ajustes de un diario no afectan al del otro banco ni otra empresa.
 
 1. Usar **PDF de prueba** sobre papel común. Incluye datos ficticios y la leyenda
    PRUEBA SIN VALOR. No requiere crear pagos ni asigna números.
@@ -75,9 +84,14 @@ es conservadora y la prueba física sigue siendo necesaria.
 ## Impresión y recuperación
 
 - **Imprimir cheque** conserva el flujo habitual y descarga PDF con el nuevo
-  diseño si el diario tiene seleccionado Banrural / LX-350.
-- **Imprimir Epson USB** conserva el mismo asistente de numeración y envía una
-  copia al destino guardado, con escala automática desactivada.
+  diseño si el diario tiene seleccionado Banrural o G&T / LX-350.
+- **Imprimir Banrural USB** aparece en pagos del diario con diseño Banrural.
+- **Imprimir G&T USB** aparece en pagos del diario con diseño G&T.
+  Son dos botones y acciones distintos. Cada uno conserva el asistente de
+  numeración y envía una copia al destino guardado, sin escala automática.
+  El servidor rechaza usar el botón del otro banco, incluso si se llama por API.
+  Para cambiar de banco, usar el diario/cuenta bancaria correcto del pago; el
+  botón no convierte un pago Banrural en un pago de G&T.
 - **PDF del cheque asignado** descarga el mismo cheque sin cambiar su número.
 - **Reimprimir mismo cheque USB** pide confirmar y reutiliza el número asignado;
   comprobar primero la cola y el papel para evitar duplicados.

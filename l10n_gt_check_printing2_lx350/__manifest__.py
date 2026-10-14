@@ -1,7 +1,7 @@
 {
-    "name": "Guatemala - Cheques Banrural / Epson LX-350",
-    "summary": "Cheque personal calibrable y envío a la impresora USB con QZ Tray",
-    "version": "18.0.1.0.0",
+    "name": "Guatemala - Cheques personales Banrural y G&T / Epson LX-350",
+    "summary": "Dos formatos personales y botones por banco con impresión USB mediante QZ Tray",
+    "version": "18.0.1.1.0",
     "author": "Estuardo Sandoval",
     "website": "https://github.com/tono88/reportescustom",
     "license": "LGPL-3",

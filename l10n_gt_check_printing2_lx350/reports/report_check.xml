@@ -39,11 +39,11 @@
     <template id="calibration_personal">
         <t t-call="l10n_gt_check_printing2_lx350.check_document"/>
     </template>
-    <record id="paperformat_commercial" model="report.paperformat">
-        <field name="name">Banrural Comercial LX-350</field>
+    <record id="paperformat_gyt" model="report.paperformat">
+        <field name="name">G&amp;T Personal LX-350</field>
         <field name="default" eval="False"/>
         <field name="format">custom</field>
-        <field name="page_width">190.5</field>
+        <field name="page_width">165.1</field>
         <field name="page_height">69.85</field>
         <field name="orientation">Portrait</field>
         <field name="margin_top">0</field>
@@ -54,28 +54,28 @@
         <field name="header_spacing">0</field>
         <field name="dpi">90</field>
     </record>
-    <record id="action_check_commercial" model="ir.actions.report">
-        <field name="name">Cheque Banrural Comercial LX-350</field>
+    <record id="action_check_gyt" model="ir.actions.report">
+        <field name="name">Cheque G&amp;T Continental Personal LX-350</field>
         <field name="model">account.payment</field>
         <field name="report_type">qweb-pdf</field>
-        <field name="report_name">l10n_gt_check_printing2_lx350.check_commercial</field>
-        <field name="paperformat_id" ref="paperformat_commercial"/>
-        <field name="print_report_name">'Cheque Banrural - %s' % object.display_name</field>
+        <field name="report_name">l10n_gt_check_printing2_lx350.check_gyt</field>
+        <field name="paperformat_id" ref="paperformat_gyt"/>
+        <field name="print_report_name">'Cheque G&amp;T - %s' % object.display_name</field>
         <field name="groups_id" eval="[(4, ref('account.group_account_invoice'))]"/>
     </record>
-    <template id="check_commercial">
+    <template id="check_gyt">
         <t t-call="l10n_gt_check_printing2_lx350.check_document"/>
     </template>
-    <record id="action_calibration_commercial" model="ir.actions.report">
-        <field name="name">PRUEBA SIN VALOR Banrural Comercial LX-350</field>
+    <record id="action_calibration_gyt" model="ir.actions.report">
+        <field name="name">PRUEBA SIN VALOR G&amp;T Personal LX-350</field>
         <field name="model">account.journal</field>
         <field name="report_type">qweb-pdf</field>
-        <field name="report_name">l10n_gt_check_printing2_lx350.calibration_commercial</field>
-        <field name="paperformat_id" ref="paperformat_commercial"/>
-        <field name="print_report_name">'PRUEBA SIN VALOR Banrural - %s' % object.display_name</field>
+        <field name="report_name">l10n_gt_check_printing2_lx350.calibration_gyt</field>
+        <field name="paperformat_id" ref="paperformat_gyt"/>
+        <field name="print_report_name">'PRUEBA SIN VALOR G&amp;T - %s' % object.display_name</field>
         <field name="groups_id" eval="[(4, ref('account.group_account_invoice'))]"/>
     </record>
-    <template id="calibration_commercial">
+    <template id="calibration_gyt">
         <t t-call="l10n_gt_check_printing2_lx350.check_document"/>
     </template>
     <template id="check_document">
@@ -99,7 +99,7 @@
                             </t>
                             <t t-if="calibration">
                                 <div t-attf-style="position:absolute;left:3mm;top:4.2mm;width:{{ width - 6 }}mm;height:49.65mm;border:0.15mm dashed #555;box-sizing:border-box;"/>
-                                <div style="position:absolute;left:20mm;top:46mm;font-size:8pt;">PRUEBA SIN VALOR — IMPRIMIR EN PAPEL COMÚN</div>
+                                <div style="position:absolute;left:20mm;top:46mm;font-size:8pt;">PRUEBA SIN VALOR — <t t-out="bank_label"/> — PAPEL COMÚN</div>
                             </t>
                         </div>
                     </t>

@@ -2,7 +2,7 @@ from odoo.addons.account.tests.common import AccountTestInvoicingCommon
 from odoo.exceptions import UserError
 from odoo.tests import tagged
 
-from ..layout import COMMERCIAL, PERSONAL
+from ..layout import GYT, PERSONAL
 
 
 @tagged("post_install", "-at_install")
@@ -28,13 +28,22 @@ class TestCheckReports(AccountTestInvoicingCommon):
         self.journal.company_id.account_check_printing_layout = "l10n_gt_check_printing2.check_top"
         self.assertEqual(self.journal._lx350_layout(), PERSONAL)
 
-    def test_calibration_rejects_wrong_report_size(self):
-        self.journal.bank_check_printing_layout = COMMERCIAL
+    def test_calibration_rejects_wrong_bank_with_same_personal_size(self):
+        self.journal.bank_check_printing_layout = GYT
         model = self.env["report.l10n_gt_check_printing2_lx350.calibration_personal"]
         with self.assertRaises(UserError):
             model._get_report_values(self.journal.ids)
-        commercial = self.env["report.l10n_gt_check_printing2_lx350.calibration_commercial"]
-        self.assertEqual(commercial._get_report_values(self.journal.ids)["width"], 190.5)
+        gyt = self.env["report.l10n_gt_check_printing2_lx350.calibration_gyt"]
+        values = gyt._get_report_values(self.journal.ids)
+        self.assertEqual(values["width"], 165.1)
+        self.assertEqual(values["bank_label"], "G&T Continental")
+
+    def test_load_initial_positions_only_updates_selected_journal(self):
+        other = self.journal.copy({"name": "G&T", "code": "GYT"})
+        other.bank_check_printing_layout = GYT
+        other.action_lx350_load_initial_positions()
+        self.assertEqual(other.lx350_words_y, 41)
+        self.assertEqual(self.journal.lx350_words_y, 38)
 
     def test_position_over_magnetic_band_is_rejected(self):
         self.journal.lx350_offset_y = 20

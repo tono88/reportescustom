@@ -3,13 +3,14 @@ from num2words import num2words
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 
-from ..layout import HEIGHT, LAYOUTS, amount_parts, fit_font
+from ..layout import BANK_LABELS, GYT, HEIGHT, PERSONAL, amount_parts, fit_font
 
 
 class ReportCheckPersonal(models.AbstractModel):
     _name = "report.l10n_gt_check_printing2_lx350.check_personal"
     _description = "Cheque Banrural personal"
     _check_width = 165.10
+    _check_layout = PERSONAL
     _calibration = False
 
     def _line(self, key, text, positions, journal):
@@ -41,8 +42,8 @@ class ReportCheckPersonal(models.AbstractModel):
         rows = []
         for doc in docs:
             journal = doc if self._calibration else doc.journal_id
-            if LAYOUTS.get(journal._lx350_layout()) != self._check_width:
-                raise UserError(_("El tamaño del reporte no coincide con el diseño seleccionado en el diario."))
+            if journal._lx350_layout() != self._check_layout:
+                raise UserError(_("El banco del reporte no coincide con el diseño seleccionado en el diario."))
             positions = journal._lx350_geometry(self._check_width)
             date = fields.Date.context_today(journal) if self._calibration else doc.date
             amount = 1234.56 if self._calibration else doc.currency_id.round(doc.amount)
@@ -68,14 +69,15 @@ class ReportCheckPersonal(models.AbstractModel):
             "width": self._check_width,
             "height": HEIGHT,
             "calibration": self._calibration,
+            "bank_label": BANK_LABELS[self._check_layout],
         }
 
 
-class ReportCheckCommercial(models.AbstractModel):
-    _name = "report.l10n_gt_check_printing2_lx350.check_commercial"
+class ReportCheckGyt(models.AbstractModel):
+    _name = "report.l10n_gt_check_printing2_lx350.check_gyt"
     _inherit = "report.l10n_gt_check_printing2_lx350.check_personal"
-    _description = "Cheque Banrural comercial"
-    _check_width = 190.50
+    _description = "Cheque G&T Continental personal"
+    _check_layout = GYT
 
 
 class ReportCalibrationPersonal(models.AbstractModel):
@@ -85,8 +87,8 @@ class ReportCalibrationPersonal(models.AbstractModel):
     _calibration = True
 
 
-class ReportCalibrationCommercial(models.AbstractModel):
-    _name = "report.l10n_gt_check_printing2_lx350.calibration_commercial"
-    _inherit = "report.l10n_gt_check_printing2_lx350.check_commercial"
-    _description = "Calibración cheque comercial con datos ficticios"
+class ReportCalibrationGyt(models.AbstractModel):
+    _name = "report.l10n_gt_check_printing2_lx350.calibration_gyt"
+    _inherit = "report.l10n_gt_check_printing2_lx350.check_gyt"
+    _description = "Calibración cheque G&T personal con datos ficticios"
     _calibration = True

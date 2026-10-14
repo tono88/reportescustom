@@ -1,25 +1,30 @@
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 
-from ..layout import HEIGHT, LAYOUTS
+from ..layout import BANKS, BANK_LABELS, HEIGHT, LAYOUTS, require_bank
 
 
 class AccountPayment(models.Model):
     _inherit = "account.payment"
 
     lx350_layout_active = fields.Boolean(compute="_compute_lx350_layout_active")
+    lx350_bank = fields.Selection(
+        [("banrural", "Banrural"), ("gyt", "G&T Continental")],
+        compute="_compute_lx350_layout_active",
+    )
 
     @api.depends("journal_id.bank_check_printing_layout", "company_id.account_check_printing_layout")
     def _compute_lx350_layout_active(self):
         for payment in self:
             payment.lx350_layout_active = payment.journal_id._lx350_layout() in LAYOUTS if payment.journal_id else False
+            payment.lx350_bank = BANKS.get(payment.journal_id._lx350_layout(), False) if payment.journal_id else False
 
     def _lx350_check_payments(self):
         self.check_access("read")
         if not self or len(self.journal_id) != 1 or len(self.company_id) != 1:
             raise UserError(_("Imprime cheques de una sola empresa y diario a la vez."))
         if self.journal_id._lx350_layout() not in LAYOUTS:
-            raise UserError(_("Selecciona el diseño Banrural / LX-350 en el diario bancario."))
+            raise UserError(_("Selecciona el diseño personal Banrural o G&T / LX-350 en el diario bancario."))
         for payment in self:
             if payment.payment_method_code != "check_printing" or payment.payment_type != "outbound":
                 raise UserError(_("Este formato es para pagos salientes mediante cheque."))
@@ -37,10 +42,20 @@ class AccountPayment(models.Model):
             action["context"] = dict(action.get("context", {}), lx350_direct=True)
         return action
 
-    def action_lx350_print_usb(self):
+    def _lx350_print_for_bank(self, bank):
         self.ensure_one()
-        self._lx350_check_payments()
+        layout = self._lx350_check_payments()
+        try:
+            require_bank(layout, bank)
+        except ValueError as exc:
+            raise UserError(str(exc)) from exc
         return self.with_context(lx350_direct=True).print_checks()
+
+    def action_lx350_print_banrural_usb(self):
+        return self._lx350_print_for_bank("banrural")
+
+    def action_lx350_print_gyt_usb(self):
+        return self._lx350_print_for_bank("gyt")
 
     def _lx350_report_action(self, direct=False):
         layout = self._lx350_check_payments()
@@ -56,6 +71,7 @@ class AccountPayment(models.Model):
             "company_id": self.company_id.id,
             "width": LAYOUTS[layout],
             "height": HEIGHT,
+            "bank_label": BANK_LABELS[layout],
         }
         return action
 

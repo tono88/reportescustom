@@ -7,8 +7,11 @@
         <field name="arch" type="xml">
             <xpath expr="//button[@name='print_checks']" position="after">
                 <field name="lx350_layout_active" invisible="1"/>
-                <button name="action_lx350_print_usb" string="Imprimir Epson USB" type="object"
-                    invisible="not lx350_layout_active or payment_method_code != 'check_printing' or is_sent or state in ('canceled', 'rejected')"/>
+                <field name="lx350_bank" invisible="1"/>
+                <button name="action_lx350_print_banrural_usb" string="Imprimir Banrural USB" type="object"
+                    invisible="lx350_bank != 'banrural' or payment_method_code != 'check_printing' or is_sent or state in ('canceled', 'rejected')"/>
+                <button name="action_lx350_print_gyt_usb" string="Imprimir G&amp;T USB" type="object"
+                    invisible="lx350_bank != 'gyt' or payment_method_code != 'check_printing' or is_sent or state in ('canceled', 'rejected')"/>
                 <button name="action_lx350_download_pdf" string="PDF del cheque asignado" type="object"
                     invisible="not lx350_layout_active or not check_number or state in ('draft', 'canceled', 'rejected')"/>
                 <button name="action_lx350_reprint_usb" string="Reimprimir mismo cheque USB" type="object"

@@ -1,7 +1,7 @@
 from odoo import _, fields, models
 from odoo.exceptions import UserError
 
-from ..layout import COMMERCIAL, HEIGHT, LAYOUTS, MODULE, validate_geometry
+from ..layout import BANK_LABELS, GYT, HEIGHT, INITIAL_POSITIONS, LAYOUTS, MODULE, validate_geometry
 
 
 class AccountJournal(models.Model):
@@ -53,14 +53,26 @@ class AccountJournal(models.Model):
             "params": {"company_id": self.company_id.id},
         }
 
+    def action_lx350_load_initial_positions(self):
+        self.ensure_one()
+        layout = self._lx350_layout()
+        if layout not in INITIAL_POSITIONS:
+            raise UserError(_("Selecciona primero el diseño personal Banrural o G&T en este diario."))
+        values = {"lx350_offset_x": 0, "lx350_offset_y": 0}
+        for key, box in INITIAL_POSITIONS[layout].items():
+            for attribute, value in zip(("x", "y", "width"), box):
+                values[f"lx350_{key}_{attribute}"] = value
+        self.write(values)
+        return False
+
     def action_lx350_calibration(self):
         self.ensure_one()
         self.check_access("read")
         layout = self._lx350_layout()
         if layout not in LAYOUTS:
-            raise UserError(_("Selecciona primero un diseño Banrural / LX-350 en este diario."))
+            raise UserError(_("Selecciona primero el diseño personal Banrural o G&T en este diario."))
         self._lx350_geometry(LAYOUTS[layout])
-        suffix = "commercial" if layout == COMMERCIAL else "personal"
+        suffix = "gyt" if layout == GYT else "personal"
         action = self.env.ref(MODULE + ".action_calibration_" + suffix).report_action(self)
         action["lx350"] = {
             "direct": bool(self.env.context.get("lx350_direct")),
@@ -68,6 +80,7 @@ class AccountJournal(models.Model):
             "width": LAYOUTS[layout],
             "height": HEIGHT,
             "calibration": True,
+            "bank_label": BANK_LABELS[layout],
         }
         return action
 
