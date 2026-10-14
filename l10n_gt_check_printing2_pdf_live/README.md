@@ -9,7 +9,7 @@ completa desde esa pantalla.
 
 ## Instalación
 
-1. Usar exclusivamente `l10n_gt_check_printing2_pdf_live-18.0.1.0.4.zip`.
+1. Usar exclusivamente `l10n_gt_check_printing2_pdf_live-18.0.1.0.5.zip`.
 2. En **Importar módulo**, seleccionar ese ZIP. Dejar **Forzar inicio** y
    **Cargar datos de prueba** desmarcados. Instalar.
 3. Recargar el navegador y abrir un pago saliente mediante cheque.
@@ -30,7 +30,7 @@ No se han ejecutado la importación ni las pruebas en tu base de producción.
 1. Usar el flujo habitual de **Imprimir cheque** para confirmar el pago y asignar
    el número preimpreso. Si genera el PDF anterior, no imprimir esa copia.
 2. Al volver al pago con número asignado y estado En proceso o Pagado aparecerán
-   dos botones: **PDF Banrural personal** y **PDF G&T personal**.
+   dos botones: **PDF Banrural personal v1.0.5** y **PDF G&T personal v1.0.5**.
 3. Elegir el botón del banco al que realmente corresponde el diario/cuenta del
    pago. Ambos botones están disponibles: esta versión no tiene los campos ni
    métodos Python de la versión completa para seleccionar el banco automáticamente.
@@ -66,7 +66,7 @@ de los campos respecto a ese origen son:
 | Campo | Banrural: izquierda / arriba / ancho (mm) | G&T: izquierda / arriba / ancho (mm) |
 |---|---|---|
 | Fecha | 18 / 24 / 110 | 24 / 25 / 100 |
-| Monto | 137 / 24 / 25 | 137 / 25 / 23 |
+| Monto | 137 / 24 / 25 | 137 / 25 / 25 |
 | Beneficiario | 18 / 31 / 144 | 24 / 33 / 138 |
 | Letras | 18 / 38 / 144 | 24 / 41 / 138 |
 
@@ -85,14 +85,41 @@ estima a 97 mm del borde izquierdo: la posición objetivo equivale a unos
 40 mm a la derecha respecto a esa impresión. La versión 18.0.1.0.3 ya usaba
 135 mm, por lo que este cambio de plantilla agrega 2 mm; no se suman 40 mm
 a la coordenada anterior. La estimación depende de la perspectiva de la foto
-y se confirma con una prueba a tamaño real. G&T conserva su posición numérica
-y alineación a la derecha.
+y se confirma con una prueba a tamaño real. Desde 18.0.1.0.5, G&T también usa
+inicio fijo en 137 mm y alineación izquierda en un campo de 25 mm; el inicio
+ya no depende de la cantidad de dígitos.
 
 Desde 18.0.1.0.3, fecha, beneficiario y monto usan hasta **12 pt**, y el importe
-en letras hasta **11 pt**. Se usa Courier New con tamaños enteros y un cálculo
-de ancho apropiado para fuente monoespaciada. Los textos largos se reducen hasta
-9 pt; si no caben se genera el aviso de revisión en lugar de truncarlos. En QWeb,
+en letras hasta **11 pt**. Desde 18.0.1.0.5 se cambia Courier New por
+**Arial negrita**, con alternativa Liberation Sans y tamaños enteros. El cálculo
+de ancho distingue dígitos, signos, letras estrechas y letras anchas. Los textos
+largos se reducen hasta 9 pt; si no caben se genera el aviso de revisión en lugar de truncarlos. En QWeb,
 `font_sizes` contiene los tamaños de cada campo y `min_font` el mínimo permitido.
+
+## Impresión matricial y comprobación pendiente
+
+El PDF no envía órdenes ESC/P ni selecciona por sí solo una fuente residente de
+la Epson. El controlador de Windows participa en la conversión del documento.
+Para probar la fidelidad del PDF, en las preferencias del controlador Epson:
+
+- **Printer Font Setting: None (bit image printing)**, si aparece disponible,
+  para evitar sustituir la fuente del PDF por fuentes residentes.
+- **Graphic - Print Quality**: la resolución más alta disponible.
+- **Print Speed: Standard**, si aparece disponible.
+- Carta / Letter, vertical, tamaño real / 100 %, una página por hoja.
+
+Estas opciones se basan en el manual oficial Epson; pueden variar con la versión
+del controlador. No se cambian automáticamente al importar este módulo. La letra
+en negrita busca mejorar el trazo, pero no certifica ni repara cinta o cabezal.
+
+La nueva fotografía G&T muestra el monto aproximadamente a 98 mm del borde
+izquierdo, mientras el PDF reproducido localmente lo sitúa cerca de 137 mm.
+El usuario confirma que usó el botón G&T 1.0.4 y 100 %. Falta examinar el PDF
+exacto descargado del servidor para distinguir generación, sustitución de fuente
+y transformación al imprimir. No se añade una compensación arbitraria de 40 mm
+al PDF: podría sacar el monto del cheque al corregir el controlador. La posición
+física continúa pendiente de verificación. Los botones y nombres de descarga
+incluyen v1.0.5 para identificar inequívocamente la nueva versión.
 
 La Epson LX-350 especifica un mínimo de 100 × 100 mm para hojas sueltas estándar;
 debe validarse la alimentación compatible para un cheque suelto de 69.85 mm.
@@ -128,3 +155,4 @@ Fuentes:
 
 - [Odoo 18: tamaños de papel](https://github.com/odoo/odoo/blob/18.0/odoo/addons/base/models/report_paperformat.py).
 - [Odoo 18: importación de módulos de datos](https://github.com/odoo/odoo/blob/18.0/addons/base_import_module/models/ir_module.py).
+- [Epson LX-350: fuentes residentes, mapa de bits y calidad del controlador](https://files.support.epson.com/htmldocs/lx350_/lx350_ug/html/soft_4.htm).

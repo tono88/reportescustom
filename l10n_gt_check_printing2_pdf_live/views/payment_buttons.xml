@@ -6,12 +6,12 @@
         <field name="inherit_id" ref="account_check_printing.view_account_payment_form_inherited"/>
         <field name="arch" type="xml">
             <xpath expr="//button[@name='print_checks']" position="after">
-                <button name="%(action_banrural)d" string="PDF Banrural personal" type="action"
+                <button name="%(action_banrural)d" string="PDF Banrural personal v1.0.5" type="action"
                     help="Imprime en Carta, tamaño real / 100 %, con el cheque apoyado en la guía izquierda en 0."
                     groups="account.group_account_invoice"
                     confirm="Confirma que el diario y la cuenta de este pago corresponden a Banrural. Se generará un PDF con el número ya asignado, sin cambiar la numeración."
                     invisible="payment_method_code != 'check_printing' or not check_number or payment_type != 'outbound' or state not in ('in_process', 'paid')"/>
-                <button name="%(action_gyt)d" string="PDF G&amp;T personal" type="action"
+                <button name="%(action_gyt)d" string="PDF G&amp;T personal v1.0.5" type="action"
                     help="Imprime en Carta, tamaño real / 100 %, con el cheque apoyado en la guía izquierda en 0."
                     groups="account.group_account_invoice"
                     confirm="Confirma que el diario y la cuenta de este pago corresponden a G&amp;T Continental. Se generará un PDF con el número ya asignado, sin cambiar la numeración."

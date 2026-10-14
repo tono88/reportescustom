@@ -41,7 +41,7 @@ class ImportablePdfTest(unittest.TestCase):
         for key, value in changes.items():
             setattr(payment, key, value)
         scope = {"p": payment, "bank_key": bank}
-        for key in ("profile", "total_cents", "integer", "cents", "payee", "words", "positions_ok", "valid", "texts"):
+        for key in ("profile", "total_cents", "integer", "cents", "payee", "words", "texts", "unit_widths", "positions_ok", "valid"):
             # Match QWeb's expression scope; these are our own source expressions.
             scope[key] = eval(self.expressions[key], {**scope}, scope)
         return scope
@@ -66,7 +66,7 @@ class ImportablePdfTest(unittest.TestCase):
         self.assertEqual(html.attrib["data-report-dpi"], "96")
         article = self.template.find(".//div[@class='article check-page']")
         style = article.attrib["style"]
-        for required in ("position:relative", "left:0", "top:0", "width:215.9mm", "height:279mm", "margin:0", "font-family:'Courier New'"):
+        for required in ("position:relative", "left:0", "top:0", "width:215.9mm", "height:279mm", "margin:0", "font-family:Arial", "font-weight:bold"):
             self.assertIn(required, style)
         for bank in ("banrural", "gyt"):
             profile = self.values(bank)["profile"]
@@ -102,7 +102,12 @@ class ImportablePdfTest(unittest.TestCase):
             self.assertLessEqual(font, profile['font_sizes'][key])
             if key in ('date', 'payee', 'amount'):
                 self.assertEqual(font, 12)
-        self.assertEqual(self.values('gyt')['profile']['amount_align'], 'right')
+        self.assertEqual(self.values('gyt')['profile']['amount_align'], 'left')
+        # The estimate must distinguish wide glyphs after switching to Arial.
+        wide = self.values(partner_id=SimpleNamespace(name='W' * 60))
+        narrow = self.values(partner_id=SimpleNamespace(name='I' * 60))
+        self.assertFalse(wide['valid'])
+        self.assertTrue(narrow['valid'])
 
     def test_both_banks_use_their_own_positions_without_changing_payment(self):
         banrural = self.values()
@@ -118,7 +123,7 @@ class ImportablePdfTest(unittest.TestCase):
 
     def test_unassigned_draft_or_wrong_currency_has_no_valid_check(self):
         cases = [
-            {"check_number": False}, {"state": "draft"}, {"state": "canceled"},
+            {"check_number": False}, {"state": "draft"}, {"state": "canceled"}, {"date": False},
             {"currency_id": SimpleNamespace(name="USD", round=round, with_context=lambda **kw: Currency())},
             {"payment_type": "inbound"}, {"amount": 0},
             {"amount": 12345678901234.56},
