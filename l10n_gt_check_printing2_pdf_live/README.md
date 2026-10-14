@@ -9,7 +9,7 @@ completa desde esa pantalla.
 
 ## Instalación
 
-1. Usar exclusivamente `l10n_gt_check_printing2_pdf_live-18.0.1.0.1.zip`.
+1. Usar exclusivamente `l10n_gt_check_printing2_pdf_live-18.0.1.0.2.zip`.
 2. En **Importar módulo**, seleccionar ese ZIP. Dejar **Forzar inicio** y
    **Cargar datos de prueba** desmarcados. Instalar.
 3. Recargar el navegador y abrir un pago saliente mediante cheque.
@@ -36,8 +36,10 @@ No se han ejecutado la importación ni las pruebas en tu base de producción.
    métodos Python de la versión completa para seleccionar el banco automáticamente.
 4. Revisar el PDF antes de imprimir. Si muestra **NO ES UN CHEQUE VÁLIDO PARA
    IMPRIMIR**, revisar el pago y no imprimir esa página sobre un cheque.
-5. Imprimir manualmente desde el visor de PDF, al 100 % / tamaño real, sin
-   «ajustar a página». Mantener el voucher como reporte independiente.
+5. En el visor y el controlador Epson seleccionar **Carta / Letter**, orientación
+   vertical y **100 % / tamaño real**, sin «ajustar a página». El cheque se coloca
+   contra la guía izquierda en 0; las coordenadas parten de esa referencia.
+   Mantener el voucher como reporte independiente.
 
 Estos botones solo generan PDF de un pago ya numerado. No ejecutan otra vez el
 asistente, no asignan números y no marcan ni desmarcan pagos como enviados. Una
@@ -49,10 +51,28 @@ ventana de mantenimiento.
 ## Tamaño y posiciones
 
 Ambos cuerpos de cheque se consideran personales, nominalmente
-**165.10 × 69.85 mm**. Los campos nativos de Odoo 18 para el tamaño de papel son
-enteros; el lienzo PDF es **165 × 70 mm**. Esto evita el error al cargar los
-decimales del ZIP anterior. Las coordenadas iniciales se estimaron de las fotos
-y deben calibrarse en papel común antes de usar originales.
+**165.10 × 69.85 mm**. Desde 18.0.1.0.2 se utiliza un **lienzo PDF Carta**
+(215.9 × 279.4 mm) y todos los datos quedan en el área del cheque, arriba a la
+izquierda. El PDF se verá como una hoja Carta con el resto en blanco: es intencional.
+Al imprimir un PDF pequeño de 165.1 mm sobre Carta, un visor puede agregar
+25.4 mm a cada lado para centrarlo; con PDF y controlador ambos en Carta se
+elimina esa diferencia de tamaño. Esto presupone que Carta es el formato elegido
+en Windows: si se usa otro tamaño, debe coincidir con el PDF.
+
+No se estima un corrimiento adicional a partir del video. Se fija el origen en
+la izquierda en lugar de adivinar una compensación. Las posiciones iniciales
+de los campos respecto a ese origen son:
+
+| Campo | Banrural: izquierda / arriba / ancho (mm) | G&T: izquierda / arriba / ancho (mm) |
+|---|---|---|
+| Fecha | 18 / 24 / 110 | 24 / 25 / 100 |
+| Monto | 137 / 24 / 23 | 137 / 25 / 23 |
+| Beneficiario | 18 / 31 / 144 | 24 / 33 / 138 |
+| Letras | 18 / 38 / 144 | 24 / 41 / 138 |
+
+Estas coordenadas se estimaron de las fotos y deben verificarse con una prueba.
+Los parámetros `offset_x` y `offset_y` siguen disponibles en QWeb para compensar
+un desplazamiento constante después de fijar el papel, sin cambiar numeración.
 
 Desde 18.0.1.0.1 se utiliza **96 DPI**, con `data-report-dpi="96"` en el HTML para
 evitar el factor adicional `96 / dpi` del generador de Odoo. La posición relativa,

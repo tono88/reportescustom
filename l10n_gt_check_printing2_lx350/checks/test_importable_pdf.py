@@ -46,14 +46,16 @@ class ImportablePdfTest(unittest.TestCase):
             scope[key] = eval(self.expressions[key], {**scope}, scope)
         return scope
 
-    def test_data_only_manifest_and_integer_paper(self):
+    def test_data_only_manifest_and_native_letter_paper(self):
         manifest = ast.literal_eval((ROOT / "__manifest__.py").read_text(encoding="utf-8"))
         self.assertNotIn("assets", manifest)
         self.assertEqual(list(ROOT.rglob("*.py")), [ROOT / "__manifest__.py"])
         for path in manifest["data"]:
             ET.parse(ROOT / path)
         paper = self.xml.find("record[@model='report.paperformat']")
-        for name, value in [("page_width", 165), ("page_height", 70)]:
+        self.assertEqual(paper.find("field[@name='format']").text, "Letter")
+        # Native Letter requires zero custom dimensions; mixing both is invalid.
+        for name, value in [("page_width", 0), ("page_height", 0)]:
             self.assertEqual(int(paper.find(f"field[@name='{name}']").text), value)
 
     def test_native_pdf_scale_and_anchor_survive_odoo_article_extraction(self):
@@ -64,12 +66,28 @@ class ImportablePdfTest(unittest.TestCase):
         self.assertEqual(html.attrib["data-report-dpi"], "96")
         article = self.template.find(".//div[@class='article check-page']")
         style = article.attrib["style"]
-        for required in ("position:relative", "width:165mm", "margin:0", "font-family:'Courier New'"):
+        for required in ("position:relative", "left:0", "top:0", "width:215.9mm", "height:279mm", "margin:0", "font-family:'Courier New'"):
             self.assertIn(required, style)
         for bank in ("banrural", "gyt"):
             profile = self.values(bank)["profile"]
             x, y, width = profile["amount"]
             self.assertLessEqual(x + width, 160)
+
+    def test_letter_left_origin_avoids_small_page_centering_offset(self):
+        # A 165.1 mm PDF centered on 215.9 mm Letter adds 25.4 mm. The new
+        # report uses the same Letter canvas as the print driver: no such shift.
+        self.assertAlmostEqual((215.9 - 165.1) / 2, 25.4)
+        paper = self.xml.find("record[@model='report.paperformat']")
+        self.assertEqual(paper.find("field[@name='format']").text, "Letter")
+        for bank in ("banrural", "gyt"):
+            values = self.values(bank)
+            self.assertEqual(values["profile"]["offset_x"], 0)
+            self.assertEqual(values["profile"]["offset_y"], 0)
+            for key in ("date", "amount", "payee", "words"):
+                x, y, width = values["profile"][key]
+                self.assertGreaterEqual(x, 3)
+                self.assertLessEqual(x + width, 162)
+                self.assertLess(y + 9*25.4/72, 53.85)
 
     def test_both_banks_use_their_own_positions_without_changing_payment(self):
         banrural = self.values()

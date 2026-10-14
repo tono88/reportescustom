@@ -2,11 +2,11 @@
 <odoo>
     <!-- This addon is data-only: the existing Odoo models provide every field. -->
     <record id="paperformat_personal" model="report.paperformat">
-        <field name="name">Cheque personal PDF 165 × 70 mm</field>
+        <field name="name">Cheques personales — Carta, guía izquierda</field>
         <field name="default" eval="False"/>
-        <field name="format">custom</field>
-        <field name="page_width">165</field>
-        <field name="page_height">70</field>
+        <field name="format">Letter</field>
+        <field name="page_width">0</field>
+        <field name="page_height">0</field>
         <field name="orientation">Portrait</field>
         <field name="margin_top">0</field>
         <field name="margin_bottom">0</field>
@@ -52,14 +52,16 @@
                 <style>
                     html, body, main { margin:0; padding:0; }
                     body { font-family:'Courier New',monospace; color:#000; }
-                    .check-page { position:relative; width:165mm; height:69.5mm; box-sizing:border-box; page-break-after:always; page-break-inside:avoid; }
+                    .check-page { position:relative; width:215.9mm; height:279mm; box-sizing:border-box; page-break-after:always; page-break-inside:avoid; }
                     .check-page:last-child { page-break-after:auto; }
                 </style>
             </head>
             <body>
                 <main>
                     <t t-foreach="docs" t-as="p">
-                        <!-- Calibration: x/y are millimetres from the paper's top-left.
+                        <!-- Letter canvas with the cheque at the top-left, NOT centered.
+                             Configure Letter + actual size in the PDF print dialog.
+                             Calibration: x/y are millimetres from the cheque's top-left.
                              Negative offset_x moves left; positive offset_y moves down.
                              Edit the chosen bank's dictionary in this QWeb view. -->
                         <t t-set="profile" t-value="{
@@ -86,7 +88,7 @@
                         <!-- Odoo extracts each .article into web.minimal_layout.
                              Head styles are not carried across: anchor and size
                              must be inline to survive that extraction. -->
-                        <div class="article check-page" style="position:relative;width:165mm;height:69.5mm;margin:0;padding:0;box-sizing:border-box;font-family:'Courier New',monospace;color:#000;page-break-inside:avoid;">
+                        <div class="article check-page" style="position:relative;left:0;top:0;width:215.9mm;height:279mm;margin:0;padding:0;box-sizing:border-box;font-family:'Courier New',monospace;color:#000;page-break-inside:avoid;">
                             <t t-if="valid">
                                 <t t-set="texts" t-value="{
                                     'date': profile['city'] + ', ' + p.date.strftime('%d/%m/%Y'),
