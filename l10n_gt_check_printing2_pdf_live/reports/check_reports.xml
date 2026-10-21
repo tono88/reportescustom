@@ -23,7 +23,7 @@
         <field name="report_type">qweb-pdf</field>
         <field name="report_name">l10n_gt_check_printing2_pdf_live.check_banrural</field>
         <field name="paperformat_id" ref="paperformat_personal"/>
-        <field name="print_report_name">'Cheque Banrural personal v1.0.10 - %s' % object.display_name</field>
+        <field name="print_report_name">'Cheque Banrural personal v1.0.11 - %s' % object.display_name</field>
         <field name="groups_id" eval="[(4, ref('account.group_account_invoice'))]"/>
     </record>
     <template id="check_banrural">
@@ -37,7 +37,7 @@
         <field name="report_type">qweb-pdf</field>
         <field name="report_name">l10n_gt_check_printing2_pdf_live.check_gyt</field>
         <field name="paperformat_id" ref="paperformat_personal"/>
-        <field name="print_report_name">'Cheque G&amp;T personal v1.0.10 - %s' % object.display_name</field>
+        <field name="print_report_name">'Cheque G&amp;T personal v1.0.11 - %s' % object.display_name</field>
         <field name="groups_id" eval="[(4, ref('account.group_account_invoice'))]"/>
     </record>
     <template id="check_gyt">
@@ -59,19 +59,17 @@
             <body>
                 <main>
                     <t t-foreach="docs" t-as="p">
-                        <!-- Letter printer canvas. Base x/y describe the cheque;
-                             amount_shift_x adds a printer compensation ONLY to
-                             the numeric amount. This deliberately uses Letter
-                             space beyond the nominal 165.1 mm cheque body.
-                             Prove the displacement on plain paper first; retain
-                             the same paper placement and driver configuration. -->
+                        <!-- Letter printer canvas. Default amount_shift_x is zero:
+                             remove the extra 20 mm added while printer scaling
+                             was still being corrected. Preserve base positions,
+                             vertical calibration and raster numeric glyphs. -->
                         <t t-set="profile" t-value="{
                             'banrural': {
                                 'date': (18,24,110), 'amount': (137,24,25),
                                 'payee': (18,31,144), 'words': (18,38,144),
                                 'font_sizes': {'date': 12, 'amount': 12, 'payee': 12, 'words': 11},
                                 'min_font': 9, 'amount_align': 'left',
-                                'amount_shift_x': 20,
+                                'amount_shift_x': 0,
                                 'offset_x': 0, 'offset_y': 0, 'city': 'PALÍN'
                             },
                             'gyt': {
@@ -79,7 +77,7 @@
                                 'payee': (22,35,138), 'words': (22,43,138),
                                 'font_sizes': {'date': 12, 'amount': 12, 'payee': 12, 'words': 11},
                                 'min_font': 9, 'amount_align': 'left',
-                                'amount_shift_x': 20,
+                                'amount_shift_x': 0,
                                 'offset_x': 0, 'offset_y': 0, 'city': 'PALÍN'
                             }
                         }[bank_key]"/>
