@@ -1,6 +1,8 @@
 """Data-only packaging and QWeb-expression regressions without a running Odoo."""
 
 import ast
+import base64
+import struct
 from pathlib import Path
 from types import SimpleNamespace
 import unittest
@@ -174,6 +176,37 @@ class ImportablePdfTest(unittest.TestCase):
             self.assertEqual(button.attrib["type"], "action")
             self.assertIn(button.attrib["name"][2:-2], report_ids)
         self.assertFalse(list(form.iter("field"))[-1].findall(".//field[@name='lx350_bank']"))
+
+    def test_graphic_amount_keeps_every_digit_and_separator_in_its_box(self):
+        glyphs = ast.literal_eval(self.expressions['amount_glyphs'])
+        self.assertEqual(set(glyphs), set('0123456789,.'))
+        self.assertEqual(len(set(glyphs.values())), 12)
+        for char, encoded in glyphs.items():
+            data = base64.b64decode(encoded, validate=True)
+            self.assertEqual(data[:8], b'\x89PNG\r\n\x1a\n')
+            width, height = struct.unpack('>II', data[16:24])
+            self.assertEqual(height, 128)
+            self.assertEqual(width, 71 if char.isdigit() else 36)
+        graphic = self.template.find(".//div[@class='check-amount-graphic']")
+        self.assertIsNotNone(graphic)
+        self.assertFalse(list(graphic.iterfind('.//*[@t-out]')))
+        image = graphic.find('.//img')
+        self.assertEqual(image.get('t-att-alt'), 'amount_char')
+        for amount in (1578.85, 81689.69, 1234567.89):
+            values = self.values('gyt', amount=amount)
+            box = values['profile']['amount']
+            scope = {**values, 'key': 'amount', 'box': box, 'amount_glyphs': glyphs}
+            scope['font'] = eval(self.expressions['font'], dict(scope), scope)
+            previous_end = 0
+            for index, char in enumerate(values['texts']['amount']):
+                scope.update(amount_char=char, amount_char_index=index)
+                x = eval(self.expressions['glyph_x'], dict(scope), scope)
+                scope['glyph_x'] = x
+                src = eval(image.get('t-att-src'), dict(scope), scope)
+                self.assertEqual(src, 'data:image/png;base64,' + glyphs[char])
+                self.assertGreaterEqual(x+1e-9, previous_end)
+                previous_end = x + values['advances'][char]*scope['font']*25.4/72000
+            self.assertLessEqual(previous_end, box[2])
 
 
 if __name__ == "__main__":

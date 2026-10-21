@@ -9,7 +9,7 @@ completa desde esa pantalla.
 
 ## Instalación
 
-1. Usar exclusivamente `l10n_gt_check_printing2_pdf_live-18.0.1.0.9.zip`.
+1. Usar exclusivamente `l10n_gt_check_printing2_pdf_live-18.0.1.0.10.zip`.
 2. En **Importar módulo**, seleccionar ese ZIP. Dejar **Forzar inicio** y
    **Cargar datos de prueba** desmarcados. Instalar.
 3. Recargar el navegador y abrir un pago saliente mediante cheque.
@@ -30,7 +30,7 @@ No se han ejecutado la importación ni las pruebas en tu base de producción.
 1. Usar el flujo habitual de **Imprimir cheque** para confirmar el pago y asignar
    el número preimpreso. Si genera el PDF anterior, no imprimir esa copia.
 2. Al volver al pago con número asignado y estado En proceso o Pagado aparecerán
-   dos botones: **PDF Banrural personal v1.0.9** y **PDF G&T personal v1.0.9**.
+   dos botones: **PDF Banrural personal v1.0.10** y **PDF G&T personal v1.0.10**.
 3. Elegir el botón del banco al que realmente corresponde el diario/cuenta del
    pago. Ambos botones están disponibles: esta versión no tiene los campos ni
    métodos Python de la versión completa para seleccionar el banco automáticamente.
@@ -80,6 +80,38 @@ Desde 18.0.1.0.1 se utiliza **96 DPI**, con `data-report-dpi="96"` en el HTML pa
 evitar el factor adicional `96 / dpi` del generador de Odoo. La posición relativa,
 el tamaño y la fuente van directamente en cada `.article`, porque Odoo extrae
 esos bloques a su layout mínimo y no conserva el estilo del encabezado original.
+## Monto gráfico en 18.0.1.0.10
+
+El cliente confirma que el PDF contiene el importe completo, pero en la Epson
+solo sale el primer dígito, incluso en una hoja Carta completa y sin ajuste
+al ancho. Esa prueba descarta que el borde del cheque sea la única explicación;
+no identifica por sí sola el defecto exacto del visor o controlador.
+
+Esta revisión imprime **solo el monto numérico mediante imágenes PNG** de los
+10 dígitos, la coma y el punto. Cada carácter conserva su avance y posición
+absoluta dentro del mismo campo. El PDF resultante no contiene ese monto como
+texto: el controlador no puede sustituir sus caracteres por fuentes residentes.
+Se mantienen las posiciones de 1.0.9, anchos, tamaño configurado, reducción para
+importes largos y las validaciones del pago. Fecha, beneficiario y letras siguen
+siendo texto y no se cambian. La rasterización puede variar ligeramente el trazo.
+
+Las 12 imágenes están embebidas en el XML, sin archivos de fuentes ni dependencias
+nuevas de servidor. `checks/build_amount_glyphs.py` de la extensión LX-350 es una
+herramienta de construcción offline que requiere Pillow y Arial Bold; no forma
+parte del ZIP importable ni se ejecuta dentro de Odoo. La producción sigue usando
+únicamente XML y los modelos ya instalados.
+
+El importe numérico deja de ser seleccionable como texto en el PDF. El valor
+numérico del pago y su representación en letras se conservan. Se verifican los
+separadores y cada cifra en las pruebas de geometría y en el PDF renderizado.
+
+Se entrega aparte `Prueba_monto_grafico_1578_85.pdf`, generado con las expresiones
+XML y datos ficticios, para probar en papel común antes de importar. Usa la misma
+posición G&T y la leyenda PRUEBA SIN VALOR. El render local confirma ocho imágenes
+para 1,578.85 y nueve para 81,689.69, sin recorte y con el resto de campos idénticos.
+Falta validar la nueva salida gráfica en la Epson real y el importador de Odoo.
+La extensión USB completa conserva su implementación independiente.
+
 ## Ajuste fino G&T en 18.0.1.0.9
 
 Según la nueva prueba G&T, monto en números, beneficiario e importe en letras
@@ -132,7 +164,7 @@ nominal del cheque a 216 mm. Antes de usar originales:
    quedar separados horizontalmente por 40 mm (sus filas son distintas).
 3. Si las medidas no coinciden, hay escala posterior en el visor/controlador:
    no se garantiza que 40 mm del PDF sean 40 mm sobre el papel.
-4. Descargar un PDF nuevo v1.0.9. En G&T, los tres campos deben verse 2 mm a la izquierda y 2 mm más abajo respecto de 1.0.8.
+4. Descargar un PDF nuevo v1.0.10. En G&T, los tres campos deben verse 2 mm a la izquierda y 2 mm más abajo respecto de 1.0.8.
    Probar en papel común antes de comprobarlo con el cheque.
 5. Conservar colocación del papel y configuración. Si se corrige posteriormente
    el origen o la escala de la impresora, recalibrar o quitar `amount_shift_x`.
@@ -175,7 +207,7 @@ en negrita busca mejorar el trazo, pero no certifica ni repara cinta o cabezal.
 La posición física continúa pendiente de verificación. La revisión 1.0.8
 reduce a la mitad la compensación de 1.0.7, sin atribuir el problema
 a un cambio de tamaño que todavía no se ha demostrado. Los botones y nombres
-de descarga incluyen v1.0.9 para identificar la actualización.
+de descarga incluyen v1.0.10 para identificar la actualización.
 
 La Epson LX-350 especifica un mínimo de 100 × 100 mm para hojas sueltas estándar;
 debe validarse la alimentación compatible para un cheque suelto de 69.85 mm.
