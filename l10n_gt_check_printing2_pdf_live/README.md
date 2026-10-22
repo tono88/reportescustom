@@ -1,18 +1,19 @@
 # Importación sin reiniciar: solo PDF de cheques personales
 
-Este paquete es una alternativa de **solo datos XML**, para el menú
-**Aplicaciones → Importar módulo** de Odoo 18 Community. No instala modelos,
-métodos Python, campos nuevos, servicios, bibliotecas JavaScript ni conexión USB.
+Este paquete contiene **XML y JavaScript estático de navegador**, importables
+desde **Aplicaciones → Importar módulo** de Odoo 18 Community. No instala modelos,
+métodos Python, campos nuevos, servicios ni conexión USB.
 Requiere que `l10n_gt_check_printing2` y su dependencia `account_check_printing`
 ya estén instalados y funcionando. No importar el ZIP de la extensión LX-350
 completa desde esa pantalla.
 
 ## Instalación
 
-1. Usar exclusivamente `l10n_gt_check_printing2_pdf_live-18.0.1.0.11.zip`.
+1. Usar exclusivamente `l10n_gt_check_printing2_pdf_live-18.0.1.0.12.zip`.
 2. En **Importar módulo**, seleccionar ese ZIP. Dejar **Forzar inicio** y
    **Cargar datos de prueba** desmarcados. Instalar.
-3. Recargar el navegador y abrir un pago saliente mediante cheque.
+3. Recargar el navegador con **Ctrl+F5** para cargar la barra nueva y abrir un
+   pago saliente mediante cheque.
 
 Para actualizar la versión importada anterior, importar este ZIP con el mismo
 nombre técnico, sin desinstalar y con **Forzar inicio** desmarcado. Cerrar el PDF
@@ -20,8 +21,8 @@ anterior y descargar uno nuevo desde el pago. El importador actualiza los report
 y vistas de este módulo; conservar antes una copia de las posiciones si se habían
 editado manualmente en QWeb.
 
-No requiere reiniciar el servicio porque solo agrega reportes y vistas a los
-modelos existentes. Tampoco cambia los reportes ni el voucher actuales, los
+No requiere reiniciar el servicio: usa modelos existentes y activos estáticos
+que el importador de Odoo guarda como adjuntos e incorpora al paquete web. Tampoco cambia los reportes ni el voucher actuales, los
 diarios, el diseño elegido en ajustes, los números o el estado de los pagos.
 No se han ejecutado la importación ni las pruebas en tu base de producción.
 
@@ -30,24 +31,62 @@ No se han ejecutado la importación ni las pruebas en tu base de producción.
 1. Usar el flujo habitual de **Imprimir cheque** para confirmar el pago y asignar
    el número preimpreso. Si genera el PDF anterior, no imprimir esa copia.
 2. Al volver al pago con número asignado y estado En proceso o Pagado aparecerán
-   dos botones: **PDF Banrural personal v1.0.11** y **PDF G&T personal v1.0.11**.
+   dos botones: **PDF Banrural personal v1.0.12** y **PDF G&T personal v1.0.12**.
 3. Elegir el botón del banco al que realmente corresponde el diario/cuenta del
    pago. Ambos botones están disponibles: esta versión no tiene los campos ni
    métodos Python de la versión completa para seleccionar el banco automáticamente.
-4. Revisar el PDF antes de imprimir. Si muestra **NO ES UN CHEQUE VÁLIDO PARA
+4. El botón abre la barra del banco. Elegir el movimiento y pulsar **Generar PDF
+   con este ajuste**. Revisar el PDF nuevo antes de imprimir. Si muestra **NO ES UN CHEQUE VÁLIDO PARA
    IMPRIMIR**, revisar el pago y no imprimir esa página sobre un cheque.
 5. En el visor y el controlador Epson seleccionar **Carta / Letter**, orientación
-   vertical y **100 % / tamaño real**, sin «ajustar a página». Esta versión
-   retira los 20 mm adicionales del monto. Conservar Carta / 100 % y comprobar
-   primero en papel común.
+   vertical y **100 % / tamaño real**, sin «ajustar a página». Cero conserva la
+   posición que funcionó en 1.0.11. Conservar Carta / 100 % y comprobar primero
+   en papel común.
    Mantener el voucher como reporte independiente.
 
 Estos botones solo generan PDF de un pago ya numerado. No ejecutan otra vez el
 asistente, no asignan números y no marcan ni desmarcan pagos como enviados. Una
 segunda descarga puede ser otra copia: comprobar cola y papel antes de imprimir.
-No hay impresión directa QZ, calibración por campos del diario ni botón de prueba
+La barra solo modifica la posición en la descarga; no hay impresión directa QZ,
+calibración por campos del diario ni botón de prueba
 con datos ficticios. Esas funciones requieren la extensión de servidor y una
 ventana de mantenimiento.
+
+## Barra de ajuste en 18.0.1.0.12
+
+Los dos botones PDF ahora abren una ventana antes de descargar. La barra mueve
+**solo el monto numérico horizontalmente**, entre -20 y +20 mm, en pasos de
+0.5 mm. Hay entrada numérica, botones para medio milímetro y **Volver a 0 mm**.
+El cero conserva exactamente la posición de 1.0.11; los valores son ajustes
+absolutos respecto a ese origen, no movimientos acumulados entre descargas.
+La altura, ancho, tamaño de letra y demás campos siguen iguales.
+
+**Generar PDF con este ajuste** descarga el reporte del banco con el movimiento
+elegido y mantiene la ventana abierta para otra prueba. Cada descarga usa el
+pago ya numerado; no confirma, edita o paga registros, ni envía un trabajo a la
+impresora. El operador imprime el PDF desde su visor habitual.
+
+El ajuste se recuerda **al generar correctamente el PDF** en el almacenamiento
+local del navegador, separado por base de datos, usuario, empresa, diario y
+banco. No se comparte con otras computadoras o navegadores y se pierde al borrar
+los datos del sitio. Si el navegador impide guardarlo, la descarga funciona y
+aparece un aviso. Cerrar sin generar no guarda el nuevo valor.
+
+El parámetro `check_amount_shift_x` viaja en el contexto de la descarga. El
+reporte valida tipo numérico, rango y límites del lienzo; una llamada sin ese
+parámetro conserva 0 mm. Los reportes mantienen las validaciones del pago y
+los PNG numéricos de 1.0.10. Mover de nuevo muy a la derecha puede reproducir el
+límite físico anterior: retroceder la barra si faltan cifras.
+
+El paquete incorpora un activo JavaScript en `web.assets_backend`; el importador
+oficial admite estos activos sin instalar Python. La ventana usa Owl y el
+servicio de descarga de reportes de Odoo 18. Requiere Ctrl+F5 después de esta
+actualización. No usa librerías remotas ni almacena importes o beneficiarios.
+
+Validación local: 18 pruebas Python y 8 JavaScript, componente real con Owl de
+Odoo 18 en navegador y servicios simulados (barra, entrada, restablecer, descargar
+y recordar). Comparación PDF de ambos bancos a 0 y ±3.5 mm: solo cambia el monto.
+Faltan importación y prueba de la barra dentro de la base de producción.
 
 ## Tamaño y posiciones
 
@@ -229,7 +268,7 @@ en negrita busca mejorar el trazo, pero no certifica ni repara cinta o cabezal.
 
 La posición física continúa pendiente de verificación. La revisión 1.0.11
 retira la compensación adicional de 20 mm; conserva el tamaño Carta. Los botones
-y nombres de descarga incluyen v1.0.11 para identificar la actualización.
+y nombres de descarga incluyen v1.0.12 para identificar la actualización.
 
 La Epson LX-350 especifica un mínimo de 100 × 100 mm para hojas sueltas estándar;
 debe validarse la alimentación compatible para un cheque suelto de 69.85 mm.
@@ -257,7 +296,7 @@ empresa, utilizar la versión completa cuando se pueda reiniciar.
 ## Validación y alcance
 
 Se verifican estructura XML, tamaños enteros, referencias internas, ausencia de
-Python ejecutable en el paquete y evaluación de las expresiones del reporte con
+Python de servidor en el paquete y evaluación de las expresiones del reporte con
 datos simulados. Se reprodujo el recorte con wkhtmltopdf 0.12.6 a 90 DPI y el zoom
 de Odoo, y se comprobó el PDF corregido a 96 DPI para ambos bancos. La importación
 real no se ha ejecutado aquí. Se midieron los PDF reales descargados del servidor
@@ -268,5 +307,6 @@ Las imágenes con datos bancarios y firmas no se incluyen en el paquete.
 Fuentes:
 
 - [Odoo 18: tamaños de papel](https://github.com/odoo/odoo/blob/18.0/odoo/addons/base/models/report_paperformat.py).
-- [Odoo 18: importación de módulos de datos](https://github.com/odoo/odoo/blob/18.0/addons/base_import_module/models/ir_module.py).
+- [Odoo 18: importación de módulos de datos y activos estáticos](https://github.com/odoo/odoo/blob/18.0/addons/base_import_module/models/ir_module.py).
+- [Odoo 18: descarga de reportes y contexto](https://github.com/odoo/odoo/blob/18.0/addons/web/static/src/webclient/actions/reports/utils.js).
 - [Epson LX-350: fuentes residentes, mapa de bits y calidad del controlador](https://files.support.epson.com/htmldocs/lx350_/lx350_ug/html/soft_4.htm).

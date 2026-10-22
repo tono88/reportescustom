@@ -23,7 +23,7 @@
         <field name="report_type">qweb-pdf</field>
         <field name="report_name">l10n_gt_check_printing2_pdf_live.check_banrural</field>
         <field name="paperformat_id" ref="paperformat_personal"/>
-        <field name="print_report_name">'Cheque Banrural personal v1.0.11 - %s' % object.display_name</field>
+        <field name="print_report_name">'Cheque Banrural personal v1.0.12 - %s' % object.display_name</field>
         <field name="groups_id" eval="[(4, ref('account.group_account_invoice'))]"/>
     </record>
     <template id="check_banrural">
@@ -37,7 +37,7 @@
         <field name="report_type">qweb-pdf</field>
         <field name="report_name">l10n_gt_check_printing2_pdf_live.check_gyt</field>
         <field name="paperformat_id" ref="paperformat_personal"/>
-        <field name="print_report_name">'Cheque G&amp;T personal v1.0.11 - %s' % object.display_name</field>
+        <field name="print_report_name">'Cheque G&amp;T personal v1.0.12 - %s' % object.display_name</field>
         <field name="groups_id" eval="[(4, ref('account.group_account_invoice'))]"/>
     </record>
     <template id="check_gyt">
@@ -81,6 +81,9 @@
                                 'offset_x': 0, 'offset_y': 0, 'city': 'PALÍN'
                             }
                         }[bank_key]"/>
+                        <!-- Transient per-download calibration. No payment writes. -->
+                        <t t-set="amount_adjustment" t-value="p.env.context.get('check_amount_shift_x', 0)"/>
+                        <t t-set="adjustment_ok" t-value="isinstance(amount_adjustment, (int, float)) and -20 &lt;= amount_adjustment &lt;= 20"/>
                         <t t-set="total_cents" t-value="int(round(p.currency_id.round(p.amount) * 100))"/>
                         <t t-set="integer" t-value="total_cents // 100"/>
                         <t t-set="cents" t-value="total_cents % 100"/>
@@ -114,15 +117,15 @@
                             key: sum(advances.get(char, 1000) for char in text) * 25.4 / 72000 * 1.04
                             for key, text in texts.items()
                         }"/>
-                        <t t-set="positions_ok" t-value="all(
+                        <t t-set="positions_ok" t-value="adjustment_ok and all(
                             profile[key][0] + profile['offset_x'] &gt;= 3
                             and profile[key][0] + profile['offset_x'] + profile[key][2] &lt;= 162
                             and profile[key][1] + profile['offset_y'] &gt;= 4.2
                             and profile[key][1] + profile['offset_y'] + profile['font_sizes'][key] * 25.4 / 72 &lt;= 53.85
                             and profile[key][2] &gt; 0
                             for key in ('date', 'amount', 'payee', 'words'))
-                            and profile['amount'][0] + profile['offset_x'] + profile['amount_shift_x'] &gt;= 3
-                            and profile['amount'][0] + profile['offset_x'] + profile['amount_shift_x'] + profile['amount'][2] &lt;= 202"/>
+                            and profile['amount'][0] + profile['offset_x'] + profile['amount_shift_x'] + amount_adjustment &gt;= 3
+                            and profile['amount'][0] + profile['offset_x'] + profile['amount_shift_x'] + amount_adjustment + profile['amount'][2] &lt;= 202"/>
                         <t t-set="payment_ok" t-value="p.state in ('in_process', 'paid')
                             and p.payment_type == 'outbound' and p.payment_method_code == 'check_printing'
                             and p.check_number and p.date and payee and p.currency_id.name == 'GTQ' and total_cents &gt; 0"/>
@@ -142,7 +145,7 @@
                                 <t t-foreach="('date', 'amount', 'payee', 'words')" t-as="key">
                                     <t t-set="box" t-value="profile[key]"/>
                                     <t t-set="font" t-value="int(min(profile['font_sizes'][key], (box[2] - len(texts[key]) * 0.12) / max(unit_widths[key], 0.12)))"/>
-                                    <t t-set="print_x" t-value="box[0] + profile['offset_x'] + (profile['amount_shift_x'] if key == 'amount' else 0)"/>
+                                    <t t-set="print_x" t-value="box[0] + profile['offset_x'] + (profile['amount_shift_x'] + amount_adjustment if key == 'amount' else 0)"/>
                                     <t t-if="key == 'amount'">
                                         <!-- Raster glyphs avoid resident-font substitution in impact drivers.
                                              Each digit has an absolute position; no text layout or wrapping. -->
@@ -165,7 +168,7 @@
                                     <strong>NO ES UN CHEQUE VÁLIDO PARA IMPRIMIR</strong>
                                     <p t-if="not payment_ok">Revisa: pago confirmado en proceso o pagado, método Cheque, número ya asignado,
                                     beneficiario, moneda GTQ e importe positivo. Asigna el número con el flujo habitual de Imprimir cheque.</p>
-                                    <p t-if="not positions_ok">Las posiciones configuradas salen del área disponible del cheque. Revisa el diseño seleccionado.</p>
+                                    <p t-if="not positions_ok">Las posiciones configuradas salen del área disponible del cheque. Revisa el diseño seleccionado y que el ajuste del monto esté entre -20 y +20 mm.</p>
                                     <p t-foreach="overflow_keys" t-as="overflow_key">
                                         El campo <strong t-out="{'date':'fecha', 'amount':'monto en números', 'payee':'beneficiario', 'words':'importe en letras'}[overflow_key]"/>
                                         necesita aproximadamente <t t-out="'%.1f' % (unit_widths[overflow_key] * profile['min_font'] + len(texts[overflow_key]) * 0.12)"/> mm
