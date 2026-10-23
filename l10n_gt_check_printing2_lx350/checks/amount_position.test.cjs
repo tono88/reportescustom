@@ -53,16 +53,16 @@ function fixture({ saved = null, blocked = false, failed = false, success = true
 }
 
 test("restores calibration and rounds/clamps inputs in half millimetres", () => {
-    const f = fixture({ saved: "-3.5" });
+    const f = fixture({ saved: "-87.5" });
     const d = f.dialog();
-    assert.equal(d.state.shift, -3.5);
+    assert.equal(d.state.shift, -87.5);
     d.onInput({ target: { value: "2.7" } });
     assert.equal(d.state.shift, 2.5);
     d.moveRight(); assert.equal(d.state.shift, 3);
     d.moveLeft(); assert.equal(d.state.shift, 2.5);
     d.reset(); assert.equal(d.state.shift, 0);
     assert.equal(f.normalizeShift(999), 20);
-    assert.equal(f.normalizeShift(-999), -20);
+    assert.equal(f.normalizeShift(-999), -100);
     for (const value of [NaN, Infinity, "bad", null, "", true]) assert.equal(f.normalizeShift(value), 0);
     assert.equal(f.calls.reports.length, 0);
     assert.equal(f.calls.saved.length, 0);
@@ -80,17 +80,17 @@ test("downloads existing bank report with the selected shift and record context,
     for (const bank of ["gyt", "banrural"]) {
         const f = fixture();
         const d = f.dialog(bank);
-        d.state.shift = -4.5;
+        d.state.shift = -100;
         await d.generate();
         const [, action, type, context] = f.calls.reports[0];
         assert.equal(action.report_name, `l10n_gt_check_printing2_pdf_live.check_${bank}`);
         assert.equal(type, "pdf");
         assert.equal(action.context, context);
-        assert.equal(context.check_amount_shift_x, -4.5);
+        assert.equal(context.check_amount_shift_x, -100);
         assert.equal(context.active_model, "account.payment");
         assert.deepEqual(Array.from(context.active_ids), [42]);
         assert.deepEqual(Array.from(context.allowed_company_ids), [1, 2]);
-        assert.equal(f.calls.saved[0][1], "-4.5");
+        assert.equal(f.calls.saved[0][1], "-100");
         assert.equal(f.calls.closed, 0); // stay open for another test
         assert.equal(d.state.busy, false);
     }

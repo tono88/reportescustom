@@ -1,7 +1,7 @@
 {
     "name": "Cheques personales PDF Banrural y G&T — Importable",
     "summary": "XML y activos estáticos: cheques personales con barra de ajuste del monto",
-    "version": "18.0.1.0.12",
+    "version": "18.0.1.0.13",
     "author": "Estuardo Sandoval",
     "website": "https://github.com/tono88/reportescustom",
     "license": "LGPL-3",

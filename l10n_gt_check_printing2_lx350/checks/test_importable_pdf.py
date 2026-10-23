@@ -54,6 +54,12 @@ class ImportablePdfTest(unittest.TestCase):
         assets = manifest["assets"]["web.assets_backend"]
         self.assertEqual(assets, ["l10n_gt_check_printing2_pdf_live/static/src/amount_position.js"])
         self.assertIn("web", manifest["depends"])
+        source = (ROOT / "static/src/amount_position.js").read_text(encoding="utf-8")
+        template = ET.fromstring(source.split('static template = xml`', 1)[1].split('`;', 1)[0])
+        for control in template.iter('input'):
+            self.assertEqual(control.get('min'), '-100')
+            self.assertEqual(control.get('max'), '20')
+            self.assertEqual(control.get('step'), '0.5')
         for asset in assets:
             self.assertTrue((ROOT.parent / asset).is_file())
         self.assertEqual(list(ROOT.rglob("*.py")), [ROOT / "__manifest__.py"])
@@ -147,7 +153,7 @@ class ImportablePdfTest(unittest.TestCase):
     def test_slider_adjusts_only_amount_and_rejects_invalid_context(self):
         for bank in ('banrural', 'gyt'):
             baseline = self.values(bank)
-            for shift in (-20, -3.5, 0, 2.5, 20):
+            for shift in (-100, -87.5, -20, -3.5, 0, 2.5, 20):
                 values = self.values(bank, context={'check_amount_shift_x': shift})
                 self.assertTrue(values['valid'])
                 self.assertEqual(values['texts'], baseline['texts'])
@@ -155,7 +161,7 @@ class ImportablePdfTest(unittest.TestCase):
                     scope = {**values, 'key': key, 'box': values['profile'][key]}
                     x = eval(self.expressions['print_x'], dict(scope), scope)
                     self.assertEqual(x - scope['box'][0], shift if key == 'amount' else 0)
-            for shift in (-21, 21, '5', None, float('nan'), float('inf'), {}, []):
+            for shift in (-100.5, 20.5, '5', None, float('nan'), float('inf'), {}, []):
                 with self.subTest(bank=bank, shift=shift):
                     self.assertFalse(self.values(bank, context={'check_amount_shift_x': shift})['valid'])
 
