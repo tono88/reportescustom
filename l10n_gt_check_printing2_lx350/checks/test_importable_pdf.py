@@ -58,7 +58,7 @@ class ImportablePdfTest(unittest.TestCase):
         template = ET.fromstring(source.split('static template = xml`', 1)[1].split('`;', 1)[0])
         for control in template.iter('input'):
             self.assertEqual(control.get('min'), '-100')
-            self.assertEqual(control.get('max'), '20')
+            self.assertEqual(control.get('max'), '100')
             self.assertEqual(control.get('step'), '0.5')
         for asset in assets:
             self.assertTrue((ROOT.parent / asset).is_file())
@@ -161,7 +161,13 @@ class ImportablePdfTest(unittest.TestCase):
                     scope = {**values, 'key': key, 'box': values['profile'][key]}
                     x = eval(self.expressions['print_x'], dict(scope), scope)
                     self.assertEqual(x - scope['box'][0], shift if key == 'amount' else 0)
-            for shift in (-100.5, 20.5, '5', None, float('nan'), float('inf'), {}, []):
+            # The UI range accepts +100, but a Letter page cannot contain
+            # the current amount box at that position. Never silently clip it.
+            outside = self.values(bank, context={'check_amount_shift_x': 100})
+            self.assertTrue(outside['adjustment_ok'])
+            self.assertFalse(outside['positions_ok'])
+            self.assertFalse(outside['valid'])
+            for shift in (-100.5, 100.5, '5', None, float('nan'), float('inf'), {}, []):
                 with self.subTest(bank=bank, shift=shift):
                     self.assertFalse(self.values(bank, context={'check_amount_shift_x': shift})['valid'])
 

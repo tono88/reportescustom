@@ -61,7 +61,8 @@ test("restores calibration and rounds/clamps inputs in half millimetres", () => 
     d.moveRight(); assert.equal(d.state.shift, 3);
     d.moveLeft(); assert.equal(d.state.shift, 2.5);
     d.reset(); assert.equal(d.state.shift, 0);
-    assert.equal(f.normalizeShift(999), 20);
+    assert.equal(f.normalizeShift(999), 100);
+    assert.equal(f.normalizeShift(87.5), 87.5);
     assert.equal(f.normalizeShift(-999), -100);
     for (const value of [NaN, Infinity, "bad", null, "", true]) assert.equal(f.normalizeShift(value), 0);
     assert.equal(f.calls.reports.length, 0);

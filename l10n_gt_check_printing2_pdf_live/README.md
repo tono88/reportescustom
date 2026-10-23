@@ -9,7 +9,7 @@ completa desde esa pantalla.
 
 ## Instalación
 
-1. Usar exclusivamente `l10n_gt_check_printing2_pdf_live-18.0.1.0.13.zip`.
+1. Usar exclusivamente `l10n_gt_check_printing2_pdf_live-18.0.1.0.14.zip`.
 2. En **Importar módulo**, seleccionar ese ZIP. Dejar **Forzar inicio** y
    **Cargar datos de prueba** desmarcados. Instalar.
 3. Recargar el navegador con **Ctrl+F5** para cargar la barra nueva y abrir un
@@ -31,7 +31,7 @@ No se han ejecutado la importación ni las pruebas en tu base de producción.
 1. Usar el flujo habitual de **Imprimir cheque** para confirmar el pago y asignar
    el número preimpreso. Si genera el PDF anterior, no imprimir esa copia.
 2. Al volver al pago con número asignado y estado En proceso o Pagado aparecerán
-   dos botones: **PDF Banrural personal v1.0.13** y **PDF G&T personal v1.0.13**.
+   dos botones: **PDF Banrural personal v1.0.14** y **PDF G&T personal v1.0.14**.
 3. Elegir el botón del banco al que realmente corresponde el diario/cuenta del
    pago. Ambos botones están disponibles: esta versión no tiene los campos ni
    métodos Python de la versión completa para seleccionar el banco automáticamente.
@@ -52,7 +52,19 @@ calibración por campos del diario ni botón de prueba
 con datos ficticios. Esas funciones requieren la extensión de servidor y una
 ventana de mantenimiento.
 
-## Recorrido ampliado en 18.0.1.0.13
+## Recorrido simétrico en 18.0.1.0.14
+
+La barra y la entrada numérica abarcan **-100 a +100 mm**, en pasos de 0.5 mm.
+JavaScript y la validación del parámetro del reporte admiten ese rango.
+Se conservan Carta, el origen de cero y las preferencias guardadas.
+
+El rango de la barra no aumenta el tamaño físico de la página. La validación
+geométrica sigue activa: si el campo completo sale del lienzo disponible, el
+PDF muestra el aviso de posición inválida en vez de imprimir un monto recortado.
+Con las coordenadas actuales, +100 mm queda fuera de Carta. Reducir el movimiento
+hasta que el campo vuelva a caber; no se limita silenciosamente a otra posición.
+
+## Antecedente: recorrido ampliado en 18.0.1.0.13
 
 Se integra el objetivo de `parche_cheques_carta_izquierda(1).zip` en el módulo
 que contiene la barra: mínimo **-100 mm**, máximo **+20 mm** y paso **0.5 mm**.
@@ -73,7 +85,7 @@ horizontal del monto, con las cifras completas y página Carta.
 ## Barra de ajuste (incorporada en 18.0.1.0.12)
 
 Los dos botones PDF ahora abren una ventana antes de descargar. La barra mueve
-**solo el monto numérico horizontalmente**, entre -100 y +20 mm, en pasos de
+**solo el monto numérico horizontalmente**, entre -100 y +100 mm, en pasos de
 0.5 mm. Hay entrada numérica, botones para medio milímetro y **Volver a 0 mm**.
 El cero conserva exactamente la posición de 1.0.11; los valores son ajustes
 absolutos respecto a ese origen, no movimientos acumulados entre descargas.
@@ -286,7 +298,7 @@ en negrita busca mejorar el trazo, pero no certifica ni repara cinta o cabezal.
 
 La posición física continúa pendiente de verificación. La revisión 1.0.11
 retira la compensación adicional de 20 mm; conserva el tamaño Carta. Los botones
-y nombres de descarga incluyen v1.0.13 para identificar la actualización.
+y nombres de descarga incluyen v1.0.14 para identificar la actualización.
 
 La Epson LX-350 especifica un mínimo de 100 × 100 mm para hojas sueltas estándar;
 debe validarse la alimentación compatible para un cheque suelto de 69.85 mm.

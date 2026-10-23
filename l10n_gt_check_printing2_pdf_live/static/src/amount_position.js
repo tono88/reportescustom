@@ -20,7 +20,7 @@ odoo.define("l10n_gt_check_printing2_pdf_live.amount_position", [
     function normalizeShift(value) {
         if (value === null || value === "" || typeof value === "boolean") return 0;
         const number = Number(value);
-        return Number.isFinite(number) ? Math.round(Math.max(-100, Math.min(20, number)) * 2) / 2 : 0;
+        return Number.isFinite(number) ? Math.round(Math.max(-100, Math.min(100, number)) * 2) / 2 : 0;
     }
 
     function storageKey(companyId, journalId, bank) {
@@ -41,16 +41,16 @@ odoo.define("l10n_gt_check_printing2_pdf_live.amount_position", [
                 <p>Mueve solo el monto en números. La altura y los demás campos se conservan.</p>
                 <label class="form-label fw-bold" for="check-amount-shift">Movimiento horizontal (mm)</label>
                 <input id="check-amount-shift" type="range" class="form-range"
-                    min="-100" max="20" step="0.5" t-att-value="state.shift"
+                    min="-100" max="100" step="0.5" t-att-value="state.shift"
                     t-att-disabled="state.busy" t-on-input="onInput"
                     aria-label="Mover el monto en milímetros"/>
                 <div class="d-flex justify-content-between text-muted mb-3">
-                    <span>← Izquierda: −100 mm</span><span>Derecha: +20 mm →</span>
+                    <span>← Izquierda: −100 mm</span><span>Derecha: +100 mm →</span>
                 </div>
                 <div class="d-flex align-items-center justify-content-center gap-2 mb-2">
                     <button class="btn btn-outline-secondary" t-on-click="moveLeft" t-att-disabled="state.busy" aria-label="Medio milímetro a la izquierda">−0.5 mm</button>
                     <input type="number" class="form-control text-center" style="width:110px"
-                        min="-100" max="20" step="0.5" t-att-value="state.shift"
+                        min="-100" max="100" step="0.5" t-att-value="state.shift"
                         t-att-disabled="state.busy" t-on-input="onInput" aria-label="Ajuste horizontal en milímetros"/>
                     <button class="btn btn-outline-secondary" t-on-click="moveRight" t-att-disabled="state.busy" aria-label="Medio milímetro a la derecha">+0.5 mm</button>
                 </div>
