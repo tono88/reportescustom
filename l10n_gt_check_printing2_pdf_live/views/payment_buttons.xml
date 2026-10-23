@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_adjust_banrural" model="ir.actions.client">
+        <field name="name">Ajustar monto - Banrural</field>
+        <field name="tag">l10n_gt_check_printing2_pdf_live.amount_position</field>
+        <field name="params" eval="{'bank': 'banrural'}"/>
+    </record>
+    <record id="action_adjust_gyt" model="ir.actions.client">
+        <field name="name">Ajustar monto - G&amp;T Continental</field>
+        <field name="tag">l10n_gt_check_printing2_pdf_live.amount_position</field>
+        <field name="params" eval="{'bank': 'gyt'}"/>
+    </record>
+
+    <record id="view_payment_pdf_live" model="ir.ui.view">
+        <field name="name">account.payment.personal.check.pdf.live</field>
+        <field name="model">account.payment</field>
+        <field name="inherit_id" ref="account_check_printing.view_account_payment_form_inherited"/>
+        <field name="arch" type="xml">
+            <xpath expr="//button[@name='print_checks']" position="after">
+                <button name="%(action_adjust_banrural)d" string="PDF Banrural personal v1.0.14" type="action"
+                    help="Abre la barra para mover el monto antes de generar el PDF. Cero conserva la posición de v1.0.11. Imprime en Carta / 100 %."
+                    groups="account.group_account_invoice"
+                    confirm="Confirma que el diario y la cuenta de este pago corresponden a Banrural. Se generará un PDF con el número ya asignado, sin cambiar la numeración."
+                    invisible="payment_method_code != 'check_printing' or not check_number or payment_type != 'outbound' or state not in ('in_process', 'paid')"/>
+                <button name="%(action_adjust_gyt)d" string="PDF G&amp;T personal v1.0.14" type="action"
+                    help="Abre la barra para mover el monto antes de generar el PDF. Cero conserva la posición de v1.0.11. Imprime en Carta / 100 %."
+                    groups="account.group_account_invoice"
+                    confirm="Confirma que el diario y la cuenta de este pago corresponden a G&amp;T Continental. Se generará un PDF con el número ya asignado, sin cambiar la numeración."
+                    invisible="payment_method_code != 'check_printing' or not check_number or payment_type != 'outbound' or state not in ('in_process', 'paid')"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>
