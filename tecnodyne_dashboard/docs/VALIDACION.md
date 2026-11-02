@@ -37,3 +37,7 @@ No se ejecutó inferencia contra un modelo real: Ollama debe instalarse/configur
 Ejecutar en una base de pruebas con directorio de datos escribible, el directorio padre del módulo en `addons_path` y parámetros `-i tecnodyne_dashboard --without-demo all --test-enable --test-tags /tecnodyne_dashboard --stop-after-init`. Para una base ya instalada usar `-u`.
 
 Antes de activar indicadores financieros, comprobar sus dominios/estados, fechas y moneda contra informes nativos. Las plantillas son puntos de partida configurables.
+
+## Adaptador LM Studio — 18.0.2.0.1
+
+Resultado de instalación/actualización y pruebas: **31 aprobadas, 0 fallos y 0 errores**. Se añadieron pruebas del formato Chat Completions, JSON Schema, token opcional, normalización de URL, consulta de modelos, rechazo de embeddings y detección de respuestas truncadas. Las respuestas de generación están simuladas. La API local de LM Studio respondió en el puerto 1234; en el momento de la comprobación solo anunciaba el modelo de embeddings, por lo que no se ejecutó generación real con Qwen.

@@ -1,7 +1,7 @@
 {
     'name': 'Tecnodyne Dashboards',
     'summary': 'Configurable company dashboards using the Odoo security model',
-    'version': '18.0.2.0.0',
+    'version': '18.0.2.0.1',
     'author': 'Tecnodyne',
     'license': 'LGPL-3',
     'depends': ['web', 'mail', 'bus'],

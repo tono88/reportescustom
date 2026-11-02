@@ -268,3 +268,52 @@ class TestDashboard(TransactionCase):
         imported = board.item_ids.filtered(lambda i: i.name == item.name)
         self.assertTrue(imported.comparison_item_id)
         self.assertEqual(imported._payload()['value'], 1)
+
+    def test_lmstudio_chat_and_structured_output(self):
+        params = self.env['ir.config_parameter'].sudo()
+        params.set_param('tecnodyne_dashboard.ai_provider', 'lmstudio')
+        params.set_param('tecnodyne_dashboard.ollama_url', 'http://127.0.0.1:1234/v1/')
+        params.set_param('tecnodyne_dashboard.ollama_model', 'qwen3.5-4b')
+        params.set_param('tecnodyne_dashboard.ai_key', 'test-token')
+        response = Mock()
+        response.json.return_value = {'choices': [{'message': {'content': '{"items":[]}'}, 'finish_reason': 'stop'}]}
+        with patch('odoo.addons.tecnodyne_dashboard.models.features.requests.post', return_value=response) as request:
+            result = self.env['tecnodyne.dashboard.ai']._generate('Generate JSON', json_mode=True)
+            self.assertEqual(result, '{"items":[]}')
+            self.assertEqual(request.call_args.args[0], 'http://127.0.0.1:1234/v1/chat/completions')
+            self.assertEqual(request.call_args.kwargs['headers']['Authorization'], 'Bearer test-token')
+            payload = request.call_args.kwargs['json']
+            self.assertEqual(payload['response_format']['type'], 'json_schema')
+            self.assertEqual(payload['messages'][-1]['content'], 'Generate JSON')
+            self.assertNotIn('prompt', payload)
+
+    def test_lmstudio_model_list_and_embedding_rejection(self):
+        from odoo.exceptions import UserError
+        params = self.env['ir.config_parameter'].sudo()
+        params.set_param('tecnodyne_dashboard.ai_provider', 'lmstudio')
+        params.set_param('tecnodyne_dashboard.ollama_url', 'http://127.0.0.1:1234')
+        params.set_param('tecnodyne_dashboard.ollama_model', 'qwen3.5-4b')
+        response = Mock()
+        response.json.return_value = {'data': [{'id': 'qwen3.5-4b'}]}
+        with patch('odoo.addons.tecnodyne_dashboard.models.features.requests.get', return_value=response) as request:
+            self.assertTrue(self.env['tecnodyne.dashboard.ai']._check_connection())
+            self.assertEqual(request.call_args.args[0], 'http://127.0.0.1:1234/v1/models')
+            params.set_param('tecnodyne_dashboard.ollama_model', 'missing-model')
+            with self.assertRaises(UserError):
+                self.env['tecnodyne.dashboard.ai']._check_connection()
+            params.set_param('tecnodyne_dashboard.ollama_model', 'text-embedding-test')
+            response.json.return_value = {'data': [{'id': 'text-embedding-test'}]}
+            with self.assertRaises(UserError):
+                self.env['tecnodyne.dashboard.ai']._check_connection()
+
+    def test_lmstudio_rejects_truncated_generation(self):
+        from odoo.exceptions import UserError
+        params = self.env['ir.config_parameter'].sudo()
+        params.set_param('tecnodyne_dashboard.ai_provider', 'lmstudio')
+        params.set_param('tecnodyne_dashboard.ollama_url', 'http://127.0.0.1:1234')
+        params.set_param('tecnodyne_dashboard.ollama_model', 'qwen3.5-4b')
+        response = Mock()
+        response.json.return_value = {'choices': [{'message': {'content': '{"items":['}, 'finish_reason': 'length'}]}
+        with patch('odoo.addons.tecnodyne_dashboard.models.features.requests.post', return_value=response):
+            with self.assertRaises(UserError):
+                self.env['tecnodyne.dashboard.ai']._generate('Generate JSON', json_mode=True)

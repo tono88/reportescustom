@@ -1,6 +1,6 @@
 # Tecnodyne Dashboards — Odoo 18 Community
 
-Versión **18.0.2.0.0**, implementación original LGPL-3 para crear tableros de negocio sin Enterprise. Usa los módulos estándar `web`, `mail` y `bus`; las exportaciones/importaciones usan `xlsxwriter` y `openpyxl`. No contiene código, imágenes ni estilos del producto usado como referencia funcional.
+Versión **18.0.2.0.1**, implementación original LGPL-3 para crear tableros de negocio sin Enterprise. Usa los módulos estándar `web`, `mail` y `bus`; las exportaciones/importaciones usan `xlsxwriter` y `openpyxl`. No contiene código, imágenes ni estilos del producto usado como referencia funcional.
 
 ## Capacidades
 
@@ -14,7 +14,7 @@ Versión **18.0.2.0.0**, implementación original LGPL-3 para crear tableros de 
 - CSV/XLSX completos respecto al filtro y nivel consultado; PNG de cualquier indicador; PDF con gráfico y tabla. La exportación no se recorta al límite de pantalla.
 - Transferencia JSON de tableros/indicadores, medidas, filtros, metas, tareas y dependencias entre KPI. Los datos de fuentes importadas se incluyen y sus referencias se reasignan en el destino.
 - Fuentes CSV/XLSX con asignación de columnas y reemplazo/sincronización de datos; conversaciones privadas por indicador en Discuss; actualización por eventos y sondeo opcional.
-- IA Ollama opcional para proponer tableros/indicadores por modelo y palabras clave, y explicar resultados. Catálogos iniciales español/inglés y nombres traducibles.
+- IA local con Ollama o LM Studio para proponer tableros/indicadores por modelo y palabras clave, y explicar resultados. Catálogos iniciales español/inglés y nombres traducibles.
 
 La [matriz de cobertura](docs/PARIDAD.md) distingue implementación, evidencia y límites. La [validación](docs/VALIDACION.md) registra las pruebas realizadas.
 
@@ -46,9 +46,11 @@ La transferencia JSON usa esquema 2 y admite configuraciones de esquema 1. Permi
 
 ## IA recomendada
 
+**Si ya usas LM Studio**, no necesitas Ollama: selecciona LM Studio en los ajustes de IA y usa `http://127.0.0.1:1234/v1` con el identificador exacto de tu modelo cargado. Consultar [instrucciones de LM Studio](docs/LM_STUDIO.md). El botón de prueba de conexión comprueba la lista de modelos sin ejecutar inferencia.
+
 Para el equipo revisado (aproximadamente 24 GB RAM y RTX 3050 Ti Laptop de 4 GB), comenzar con **Ollama + `qwen3.5:4b`**. La inferencia puede repartir memoria entre GPU y RAM; medir latencia antes de habilitar uso general. [Modelo oficial](https://ollama.com/library/qwen3.5%3A4b).
 
-Instalar Ollama por separado y descargar el modelo con `ollama pull qwen3.5:4b`. En Ajustes → Tecnodyne AI configurar URL `http://127.0.0.1:11434` y modelo `qwen3.5:4b`. No se instala ni descarga automáticamente. Un servidor en otra máquina requiere su dirección accesible y la configuración de red correspondiente.
+Para usar **Ollama**, instalarlo por separado y descargar el modelo con `ollama pull qwen3.5:4b`. En Ajustes → Tecnodyne AI seleccionar proveedor Ollama, URL `http://127.0.0.1:11434` y modelo `qwen3.5:4b`. No se instala ni descarga automáticamente. Un servidor en otra máquina requiere su dirección accesible y la configuración de red correspondiente.
 
 La generación envía estructura de campos autorizados y la petición, muestra una propuesta y exige aplicarla antes de crear indicadores. Nunca ejecuta código/SQL generado. Las explicaciones envían los resultados visibles al servidor configurado; las respuestas deben distinguir observaciones de hipótesis. El proveedor se puede cambiar mediante URL/modelo compatibles con la [API Ollama](https://docs.ollama.com/api/generate). Las pruebas automáticas usan un servicio simulado; no sustituyen la prueba con un modelo instalado.
 

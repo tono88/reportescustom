@@ -650,34 +650,105 @@ class DatasetRow(models.Model):
 
 class AI(models.AbstractModel):
     _name = 'tecnodyne.dashboard.ai'
-    _description = 'Local Ollama dashboard assistant'
+    _description = 'Local dashboard assistant'
+
+    @api.model
+    def _configuration(self):
+        params = self.env['ir.config_parameter'].sudo()
+        provider = params.get_param('tecnodyne_dashboard.ai_provider', 'ollama')
+        url = params.get_param('tecnodyne_dashboard.ollama_url', '').rstrip('/')
+        model = params.get_param('tecnodyne_dashboard.ollama_model', '')
+        key = params.get_param('tecnodyne_dashboard.ai_key', '')
+        if provider not in ('ollama', 'lmstudio'):
+            raise UserError(_('Choose a supported AI provider.'))
+        if not url or not model:
+            raise UserError(_('Configure the service URL and exact model identifier in Tecnodyne AI settings first.'))
+        if not url.startswith(('http://', 'https://')):
+            raise UserError(_('The service URL must start with http:// or https://.'))
+        if provider == 'lmstudio' and not url.endswith('/v1'):
+            url += '/v1'
+        headers = {'Authorization': 'Bearer '+key} if key else {}
+        return provider, url, model, headers
 
     @api.model
     def _generate(self, prompt, json_mode=False):
         # Only administrators set these parameters. They are not accepted over RPC.
-        params = self.env['ir.config_parameter'].sudo()
-        url = params.get_param('tecnodyne_dashboard.ollama_url', '')
-        model = params.get_param('tecnodyne_dashboard.ollama_model', '')
-        if not url or not model:
-            raise UserError(_('Configure the Ollama URL and model in Tecnodyne AI settings first.'))
+        provider, url, model, headers = self._configuration()
         try:
-            payload = {'model': model, 'prompt': prompt, 'stream': False}
-            if json_mode:
-                payload['format'] = 'json'
-            response = requests.post(url.rstrip('/')+'/api/generate', json=payload, timeout=(5, 90), allow_redirects=False)
+            if provider == 'ollama':
+                endpoint = url+'/api/generate'
+                payload = {'model': model, 'prompt': prompt, 'stream': False}
+                if json_mode:
+                    payload['format'] = 'json'
+            else:
+                endpoint = url+'/chat/completions'
+                payload = {'model': model, 'messages': [{'role': 'system', 'content': 'You are a business dashboard assistant. Follow the requested output format exactly. Answer in Spanish unless requested otherwise.'},
+                                                       {'role': 'user', 'content': prompt}],
+                           'stream': False, 'temperature': 0.2, 'max_tokens': 4096}
+                if json_mode:
+                    payload['response_format'] = {'type': 'json_schema', 'json_schema': {
+                        'name': 'dashboard_proposal', 'strict': True,
+                        'schema': {'type': 'object', 'properties': {'items': {
+                            'type': 'array', 'minItems': 1, 'maxItems': 12,
+                            'items': {'type': 'object', 'properties': {
+                                'name': {'type': 'string'},
+                                'kind': {'type': 'string', 'enum': ['kpi', 'bar', 'line', 'pie', 'table']},
+                                'aggregation': {'type': 'string', 'enum': ['count', 'sum', 'avg']},
+                                'measure': {'type': ['string', 'null']}, 'group': {'type': ['string', 'null']},
+                                'date': {'type': ['string', 'null']}, 'domain': {'type': 'array', 'maxItems': 0}},
+                                'required': ['name', 'kind', 'aggregation', 'measure', 'group', 'date', 'domain'],
+                                'additionalProperties': False}}}, 'required': ['items'], 'additionalProperties': False}}}
+            response = requests.post(endpoint, json=payload, headers=headers, timeout=(5, 180), allow_redirects=False)
             response.raise_for_status()
-            result = response.json()['response']
-            if not isinstance(result, str) or len(result) > 100000:
+            body = response.json()
+            if provider == 'ollama':
+                result = body['response']
+            else:
+                choice = body['choices'][0]
+                if choice.get('finish_reason') == 'length':
+                    raise UserError(_('The model response was truncated. Request fewer indicators.'))
+                result = choice['message']['content']
+            if not isinstance(result, str) or not result.strip() or len(result) > 100000:
                 raise ValueError()
             return result
-        except (requests.RequestException, ValueError, KeyError) as exc:
-            raise UserError(_('The AI service did not return a valid response. Check the local model service.')) from exc
+        except requests.HTTPError as exc:
+            status = exc.response.status_code if exc.response is not None else '?'
+            raise UserError(_('AI service returned HTTP %s. Verify the server, model identifier and authentication settings.', status)) from exc
+        except (requests.RequestException, ValueError, KeyError, IndexError, TypeError) as exc:
+            raise UserError(_('The AI service did not return a valid response. Check that a text-generation model is loaded and the local server is running.')) from exc
+
+    @api.model
+    def _check_connection(self):
+        provider, url, model, headers = self._configuration()
+        endpoint = url+'/models' if provider == 'lmstudio' else url+'/api/tags'
+        try:
+            response = requests.get(endpoint, headers=headers, timeout=(5, 10), allow_redirects=False)
+            response.raise_for_status()
+            body = response.json()
+            names = [m['id'] for m in body['data']] if provider == 'lmstudio' else [m['name'] for m in body['models']]
+            if model not in names:
+                raise UserError(_('The server responds, but model "%s" is not listed. Available identifiers: %s', model, ', '.join(names) or _('None')))
+            if 'embedding' in model.lower():
+                raise UserError(_('Choose a text-generation model, not an embedding model.'))
+            return _('The server responds and the configured model is available. This check does not run inference.')
+        except (requests.RequestException, ValueError, KeyError, TypeError) as exc:
+            raise UserError(_('Cannot read the model list. Verify the service URL, server and authentication.')) from exc
 
 
 class Settings(models.TransientModel):
     _inherit = 'res.config.settings'
-    td_ollama_url = fields.Char(config_parameter='tecnodyne_dashboard.ollama_url')
-    td_ollama_model = fields.Char(config_parameter='tecnodyne_dashboard.ollama_model')
+    td_ai_provider = fields.Selection([('ollama', 'Ollama'), ('lmstudio', 'LM Studio')], default='ollama', config_parameter='tecnodyne_dashboard.ai_provider')
+    td_ollama_url = fields.Char(string='Service URL', config_parameter='tecnodyne_dashboard.ollama_url')
+    td_ollama_model = fields.Char(string='Model identifier', config_parameter='tecnodyne_dashboard.ollama_model')
+    td_ai_key = fields.Char(string='API token (optional)', config_parameter='tecnodyne_dashboard.ai_key', groups='base.group_system')
+
+    def action_td_check_connection(self):
+        if not self.env.user.has_group('base.group_system'):
+            raise AccessError(_('Only a settings administrator can test the AI connection.'))
+        self.ensure_one()
+        self.set_values()
+        message = self.env['tecnodyne.dashboard.ai']._check_connection()
+        return {'type': 'ir.actions.client', 'tag': 'display_notification', 'params': {'title': _('Tecnodyne AI'), 'message': message, 'type': 'success', 'sticky': True}}
 
 
 class PDF(models.AbstractModel):
