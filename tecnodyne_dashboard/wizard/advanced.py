@@ -7,7 +7,7 @@ from datetime import datetime
 
 import openpyxl
 
-from odoo import fields, models, _
+from odoo import api, fields, models, _
 from odoo.exceptions import ValidationError, UserError
 from odoo.osv import expression
 
@@ -111,7 +111,13 @@ class GenerateAI(models.TransientModel):
     model_id = fields.Many2one('ir.model', required=True, ondelete='cascade')
     dashboard_id = fields.Many2one('tecnodyne.dashboard', string='Existing dashboard (optional)')
     keywords = fields.Text(string='What would you like to analyze?', required=True)
+    item_count = fields.Integer(string='Maximum indicators', default=3, required=True)
     proposal = fields.Text(readonly=True)
+
+    @api.constrains('item_count')
+    def _check_item_count(self):
+        if any(not 1 <= wizard.item_count <= 12 for wizard in self):
+            raise ValidationError(_('Choose between 1 and 12 indicators.'))
 
     def action_generate(self):
         self.ensure_one()
@@ -120,9 +126,13 @@ class GenerateAI(models.TransientModel):
         # Schema only; record values are not needed to propose queries.
         schema = {n: {'type': f['type'], 'label': f['string']} for n, f in target.fields_get().items()
                   if target._fields[n].store and f['type'] in ('char', 'selection', 'many2one', 'date', 'datetime', 'integer', 'float', 'monetary')}
-        prompt = ('Create an Odoo dashboard JSON proposal, max 12 items. Return only {"items":[{"name":"...","kind":"kpi|bar|line|pie|table",'
-                  '"aggregation":"count|sum|avg","measure":"field or null","group":"field or null","date":"field or null","domain":[]}]}.'
-                  ' Use only supplied schema fields, empty domain is allowed. Never use code or SQL. User request: '
+        prompt = (f'Create an Odoo dashboard JSON proposal, max {self.item_count} items. '
+                  'Return only JSON in this shape: {"items":[{"name":"Conteo de registros","kind":"kpi","aggregation":"count","measure":null,"group":null,"date":null,"domain":[]}]}.'
+                  ' Allowed kind values: kpi, bar, line, pie, table. Allowed aggregation values: count, sum, avg.'
+                  ' The measure, group and date values must be exact supplied field names or JSON null (not the string "null"). Count requires measure:null.'
+                  ' Use only supplied stored schema fields. Sum/avg require a numeric measure. Non-KPI items require a grouping field.'
+                  ' Use neutral titles describing the exact query; do not call invoices cash liquidity or claim paid/unpaid totals without a matching domain.'
+                  ' If the schema cannot answer the request, return {"items":[]}. Never use code or SQL. User request: '
                   + self.keywords + '\nSchema: ' + json.dumps(schema))
         raw = self.env['tecnodyne.dashboard.ai']._generate(prompt, json_mode=True)
         commands = self._validated_items(raw)
@@ -132,7 +142,7 @@ class GenerateAI(models.TransientModel):
     def _validated_items(self, raw):
         try:
             data = json.loads(raw)
-            if not 1 <= len(data['items']) <= 12:
+            if not isinstance(data, dict) or not isinstance(data.get('items'), list) or not 1 <= len(data['items']) <= self.item_count:
                 raise ValueError()
             commands = []
             visible = self.env[self.model_id.model].fields_get()
@@ -151,6 +161,14 @@ class GenerateAI(models.TransientModel):
                 for source, key in [('measure', 'measure_id'), ('group', 'group_field_id'), ('date', 'date_field_id')]:
                     name = spec.get(source)
                     if name and name not in visible:
+                        raise ValueError()
+                    if name and not self.env[self.model_id.model]._fields[name].store:
+                        raise ValueError()
+                    if source == 'measure' and spec['aggregation'] != 'count' and (not name or visible[name]['type'] not in ('integer', 'float', 'monetary')):
+                        raise ValueError()
+                    if source == 'group' and (spec['kind'] != 'kpi' and not name or name and visible[name]['type'] not in ('many2one', 'char', 'selection', 'boolean', 'date', 'datetime', 'integer')):
+                        raise ValueError()
+                    if source == 'date' and name and visible[name]['type'] not in ('date', 'datetime'):
                         raise ValueError()
                     values[key] = self.env['ir.model.fields']._get(self.model_id.model, name).id if name else False
                 commands.append((0, 0, values))

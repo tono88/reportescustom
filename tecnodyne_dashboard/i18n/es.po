@@ -801,3 +801,44 @@ msgstr "Año hasta hoy"
 #: model:ir.model.fields.selection,name:tecnodyne_dashboard.selection__tecnodyne_dashboard_item__preset__yesterday
 msgid "Yesterday"
 msgstr "Ayer"
+
+#. module: tecnodyne_dashboard
+#. odoo-python
+#: code:addons/tecnodyne_dashboard/models/features.py:0
+msgid ""
+"The model exceeded the 180-second response limit. Request fewer indicators "
+"and use LM Studio native mode with reasoning disabled."
+msgstr ""
+"El modelo superó el límite de respuesta de 180 segundos. Solicita menos "
+"indicadores y usa el modo nativo de LM Studio con el razonamiento "
+"desactivado."
+
+#. module: tecnodyne_dashboard
+#. odoo-python
+#: code:addons/tecnodyne_dashboard/models/features.py:0
+msgid ""
+"Cannot connect to the AI server. Verify its address and that the service is "
+"running."
+msgstr ""
+"No se puede conectar con el servidor de IA. Comprueba su dirección y que el "
+"servicio esté iniciado."
+
+#. module: tecnodyne_dashboard
+#. odoo-python
+#: code:addons/tecnodyne_dashboard/models/features.py:0
+msgid ""
+"The model returned reasoning but no final answer. Use LM Studio native mode "
+"with reasoning disabled."
+msgstr ""
+"El modelo devolvió razonamiento sin una respuesta final. Usa el modo nativo "
+"de LM Studio con el razonamiento desactivado."
+
+#. module: tecnodyne_dashboard
+#. odoo-python
+#: code:addons/tecnodyne_dashboard/models/features.py:0
+msgid ""
+"The model did not return complete JSON. Request fewer indicators and try "
+"again."
+msgstr ""
+"El modelo no devolvió una propuesta JSON completa. Solicita menos "
+"indicadores e inténtalo de nuevo."

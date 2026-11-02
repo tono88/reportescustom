@@ -41,3 +41,11 @@ Antes de activar indicadores financieros, comprobar sus dominios/estados, fechas
 ## Adaptador LM Studio — 18.0.2.0.1
 
 Resultado de instalación/actualización y pruebas: **31 aprobadas, 0 fallos y 0 errores**. Se añadieron pruebas del formato Chat Completions, JSON Schema, token opcional, normalización de URL, consulta de modelos, rechazo de embeddings y detección de respuestas truncadas. Las respuestas de generación están simuladas. La API local de LM Studio respondió en el puerto 1234; en el momento de la comprobación solo anunciaba el modelo de embeddings, por lo que no se ejecutó generación real con Qwen.
+
+## Corrección de razonamiento y espera — 18.0.2.0.2
+
+El registro aportado mostró desconexión exactamente a los 180 segundos mientras el modelo seguía generando razonamiento. Se añadió modo nativo LM Studio con razonamiento desactivado por petición, almacenamiento desactivado, presupuesto de salida acotado y selección de cantidad de indicadores. Los errores de espera, conexión y ausencia de respuesta final tienen mensajes diferentes. No se usa el contenido de razonamiento como propuesta.
+
+Resultado final de la batería: **34 aprobadas, 0 fallos y 0 errores**. Se añadieron casos de modo nativo, separación de razonamiento/respuesta final, delimitadores Markdown, tiempos de espera y tipos de campos inválidos antes de aplicar una propuesta.
+
+Prueba real de API nativa con Qwen 3.5 4B: respuesta JSON simple en 1,1 segundos, cero tokens de razonamiento reportados por el servidor. Prueba real de Odoo: generar propuesta de un KPI de contactos, validar sus campos, aplicar y leer el tablero en 2,3 segundos. La transacción de prueba se revirtió al finalizar; no se creó un tablero permanente ni se modificó la configuración del negocio. Las duraciones corresponden a solicitudes pequeñas concretas.

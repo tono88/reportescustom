@@ -271,6 +271,7 @@ class TestDashboard(TransactionCase):
 
     def test_lmstudio_chat_and_structured_output(self):
         params = self.env['ir.config_parameter'].sudo()
+        params.set_param('tecnodyne_dashboard.lm_api', 'compat')
         params.set_param('tecnodyne_dashboard.ai_provider', 'lmstudio')
         params.set_param('tecnodyne_dashboard.ollama_url', 'http://127.0.0.1:1234/v1/')
         params.set_param('tecnodyne_dashboard.ollama_model', 'qwen3.5-4b')
@@ -309,6 +310,7 @@ class TestDashboard(TransactionCase):
     def test_lmstudio_rejects_truncated_generation(self):
         from odoo.exceptions import UserError
         params = self.env['ir.config_parameter'].sudo()
+        params.set_param('tecnodyne_dashboard.lm_api', 'compat')
         params.set_param('tecnodyne_dashboard.ai_provider', 'lmstudio')
         params.set_param('tecnodyne_dashboard.ollama_url', 'http://127.0.0.1:1234')
         params.set_param('tecnodyne_dashboard.ollama_model', 'qwen3.5-4b')
@@ -317,3 +319,42 @@ class TestDashboard(TransactionCase):
         with patch('odoo.addons.tecnodyne_dashboard.models.features.requests.post', return_value=response):
             with self.assertRaises(UserError):
                 self.env['tecnodyne.dashboard.ai']._generate('Generate JSON', json_mode=True)
+
+    def test_lmstudio_native_ignores_reasoning_and_disables_storage(self):
+        params = self.env['ir.config_parameter'].sudo()
+        params.set_param('tecnodyne_dashboard.ai_provider', 'lmstudio')
+        params.set_param('tecnodyne_dashboard.lm_api', 'native')
+        params.set_param('tecnodyne_dashboard.ollama_url', 'http://127.0.0.1:1234/v1')
+        params.set_param('tecnodyne_dashboard.ollama_model', 'qwen3.5-4b')
+        response = Mock()
+        response.json.return_value = {'output': [{'type': 'reasoning', 'content': 'Not a final answer'},
+                                                {'type': 'message', 'content': '```json\n{"items":[]}\n```'}]}
+        with patch('odoo.addons.tecnodyne_dashboard.models.features.requests.post', return_value=response) as request:
+            self.assertEqual(self.env['tecnodyne.dashboard.ai']._generate('JSON', json_mode=True), '{"items":[]}')
+            self.assertEqual(request.call_args.args[0], 'http://127.0.0.1:1234/api/v1/chat')
+            self.assertEqual(request.call_args.kwargs['json']['reasoning'], 'off')
+            self.assertFalse(request.call_args.kwargs['json']['store'])
+            response.json.return_value = {'output': [{'type': 'message', 'content': '{"items":[]}`'}]}
+            self.assertEqual(self.env['tecnodyne.dashboard.ai']._generate('JSON', json_mode=True), '{"items":[]}')
+            response.json.return_value = {'output': [{'type': 'message', 'content': '<think>not a proposal</think>\n{"items":[]}`'}]}
+            self.assertEqual(self.env['tecnodyne.dashboard.ai']._generate('JSON', json_mode=True), '{"items":[]}')
+            response.json.return_value = {'output': [{'type': 'reasoning', 'content': '{"items":[]}'}]}
+            from odoo.exceptions import UserError
+            with self.assertRaisesRegex(UserError, 'no final answer'):
+                self.env['tecnodyne.dashboard.ai']._generate('JSON', json_mode=True)
+
+    def test_ai_timeout_is_not_reported_as_connection_failure(self):
+        import requests
+        from odoo.exceptions import UserError
+        params = self.env['ir.config_parameter'].sudo()
+        params.set_param('tecnodyne_dashboard.ollama_url', 'http://127.0.0.1:1234/v1')
+        params.set_param('tecnodyne_dashboard.ollama_model', 'qwen3.5-4b')
+        with patch('odoo.addons.tecnodyne_dashboard.models.features.requests.post', side_effect=requests.ReadTimeout()):
+            with self.assertRaisesRegex(UserError, '180-second'):
+                self.env['tecnodyne.dashboard.ai']._generate('JSON', json_mode=True)
+
+    def test_ai_proposal_rejects_wrong_field_types_before_apply(self):
+        wizard = self.env['tecnodyne.dashboard.generate'].create({'name': 'Test', 'model_id': self.item.model_id.id, 'keywords': 'Test'})
+        raw = json.dumps({'items': [{'name': 'Bad sum', 'kind': 'kpi', 'aggregation': 'sum', 'measure': 'name'}]})
+        with self.assertRaises(ValidationError):
+            wizard._validated_items(raw)

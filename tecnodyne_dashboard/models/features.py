@@ -674,12 +674,19 @@ class AI(models.AbstractModel):
     def _generate(self, prompt, json_mode=False):
         # Only administrators set these parameters. They are not accepted over RPC.
         provider, url, model, headers = self._configuration()
+        native = provider == 'lmstudio' and self.env['ir.config_parameter'].sudo().get_param('tecnodyne_dashboard.lm_api', 'native') == 'native'
         try:
             if provider == 'ollama':
                 endpoint = url+'/api/generate'
                 payload = {'model': model, 'prompt': prompt, 'stream': False}
                 if json_mode:
                     payload['format'] = 'json'
+            elif native:
+                endpoint = url[:-3]+'/api/v1/chat'
+                payload = {'model': model, 'input': prompt,
+                           'system_prompt': 'Return the final answer directly in Spanish. Follow the requested format exactly. Do not include reasoning or markdown fences. For a JSON request return only a valid JSON object.',
+                           'reasoning': 'off', 'store': False, 'stream': False,
+                           'temperature': 0.2, 'max_output_tokens': 2048}
             else:
                 endpoint = url+'/chat/completions'
                 payload = {'model': model, 'messages': [{'role': 'system', 'content': 'You are a business dashboard assistant. Follow the requested output format exactly. Answer in Spanish unless requested otherwise.'},
@@ -703,14 +710,47 @@ class AI(models.AbstractModel):
             body = response.json()
             if provider == 'ollama':
                 result = body['response']
+            elif native:
+                parts = body['output']
+                result = '\n'.join(part['content'] for part in parts if part.get('type') == 'message' and isinstance(part.get('content'), str))
+                if not result.strip() and any(part.get('type') == 'reasoning' for part in parts):
+                    raise UserError(_('The model returned reasoning but no final answer. Use LM Studio native mode with reasoning disabled.'))
             else:
                 choice = body['choices'][0]
                 if choice.get('finish_reason') == 'length':
                     raise UserError(_('The model response was truncated. Request fewer indicators.'))
-                result = choice['message']['content']
+                message = choice['message']
+                result = message.get('content')
+                if not result and message.get('reasoning_content'):
+                    raise UserError(_('The model returned reasoning but no final answer. Use LM Studio native mode with reasoning disabled.'))
             if not isinstance(result, str) or not result.strip() or len(result) > 100000:
                 raise ValueError()
+            # Keep only the final message when a local template leaks an inline
+            # reasoning delimiter. Never treat the preceding text as a proposal.
+            if '</think>' in result:
+                result = result.rsplit('</think>', 1)[1].strip()
+                if not result:
+                    raise UserError(_('The model returned reasoning but no final answer. Use LM Studio native mode with reasoning disabled.'))
+            elif result.lstrip().startswith('<think>'):
+                raise UserError(_('The model returned reasoning but no final answer. Use LM Studio native mode with reasoning disabled.'))
+            if json_mode:
+                result = result.strip()
+                if result.startswith(('```json\n', '```\n')) and result.endswith('```'):
+                    result = '\n'.join(result.splitlines()[1:-1]).strip()
+                # Some local models append a stray Markdown delimiter after an
+                # otherwise complete object. Remove delimiters, never prose or
+                # a second JSON object, before the strict JSON validation.
+                if result.startswith('{'):
+                    result = result.rstrip('`').rstrip()
+                try:
+                    json.loads(result)
+                except ValueError as exc:
+                    raise UserError(_('The model did not return complete JSON. Request fewer indicators and try again.')) from exc
             return result
+        except requests.Timeout as exc:
+            raise UserError(_('The model exceeded the 180-second response limit. Request fewer indicators and use LM Studio native mode with reasoning disabled.')) from exc
+        except requests.ConnectionError as exc:
+            raise UserError(_('Cannot connect to the AI server. Verify its address and that the service is running.')) from exc
         except requests.HTTPError as exc:
             status = exc.response.status_code if exc.response is not None else '?'
             raise UserError(_('AI service returned HTTP %s. Verify the server, model identifier and authentication settings.', status)) from exc
@@ -741,6 +781,7 @@ class Settings(models.TransientModel):
     td_ollama_url = fields.Char(string='Service URL', config_parameter='tecnodyne_dashboard.ollama_url')
     td_ollama_model = fields.Char(string='Model identifier', config_parameter='tecnodyne_dashboard.ollama_model')
     td_ai_key = fields.Char(string='API token (optional)', config_parameter='tecnodyne_dashboard.ai_key', groups='base.group_system')
+    td_lm_api = fields.Selection([('native', 'Native API — reasoning off (recommended)'), ('compat', 'Chat Completions (compatibility)')], default='native', string='LM Studio API', config_parameter='tecnodyne_dashboard.lm_api')
 
     def action_td_check_connection(self):
         if not self.env.user.has_group('base.group_system'):

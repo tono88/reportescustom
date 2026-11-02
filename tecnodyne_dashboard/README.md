@@ -1,6 +1,6 @@
 # Tecnodyne Dashboards — Odoo 18 Community
 
-Versión **18.0.2.0.1**, implementación original LGPL-3 para crear tableros de negocio sin Enterprise. Usa los módulos estándar `web`, `mail` y `bus`; las exportaciones/importaciones usan `xlsxwriter` y `openpyxl`. No contiene código, imágenes ni estilos del producto usado como referencia funcional.
+Versión **18.0.2.0.2**, implementación original LGPL-3 para crear tableros de negocio sin Enterprise. Usa los módulos estándar `web`, `mail` y `bus`; las exportaciones/importaciones usan `xlsxwriter` y `openpyxl`. No contiene código, imágenes ni estilos del producto usado como referencia funcional.
 
 ## Capacidades
 
@@ -46,7 +46,7 @@ La transferencia JSON usa esquema 2 y admite configuraciones de esquema 1. Permi
 
 ## IA recomendada
 
-**Si ya usas LM Studio**, no necesitas Ollama: selecciona LM Studio en los ajustes de IA y usa `http://127.0.0.1:1234/v1` con el identificador exacto de tu modelo cargado. Consultar [instrucciones de LM Studio](docs/LM_STUDIO.md). El botón de prueba de conexión comprueba la lista de modelos sin ejecutar inferencia.
+**Si ya usas LM Studio**, no necesitas Ollama: selecciona LM Studio y el modo nativo sin razonamiento en los ajustes de IA; usa `http://127.0.0.1:1234/v1` con el identificador exacto de tu modelo cargado. Consultar [instrucciones de LM Studio](docs/LM_STUDIO.md). El botón de prueba de conexión comprueba la lista de modelos sin ejecutar inferencia. La generación permite limitar la cantidad de indicadores (3 por defecto).
 
 Para el equipo revisado (aproximadamente 24 GB RAM y RTX 3050 Ti Laptop de 4 GB), comenzar con **Ollama + `qwen3.5:4b`**. La inferencia puede repartir memoria entre GPU y RAM; medir latencia antes de habilitar uso general. [Modelo oficial](https://ollama.com/library/qwen3.5%3A4b).
 
