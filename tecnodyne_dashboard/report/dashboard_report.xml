@@ -1,0 +1,18 @@
+<odoo>
+    <record id="dashboard_pdf" model="ir.actions.report">
+        <field name="name">Tecnodyne Dashboard PDF</field><field name="model">tecnodyne.dashboard.item</field>
+        <field name="report_type">qweb-pdf</field><field name="report_name">tecnodyne_dashboard.report_dashboard</field>
+        <field name="report_file">tecnodyne_dashboard.report_dashboard</field>
+    </record>
+    <template id="report_dashboard">
+        <t t-call="web.html_container"><t t-foreach="payloads" t-as="item"><t t-call="web.external_layout">
+            <div class="page"><h1>TECNODYNE</h1><h2 t-esc="item['name']"/>
+                <img t-if="chart_image" t-att-src="'data:image/png;base64,' + chart_image" style="max-width:100%;max-height:400px;"/>
+                <p t-if="item['kind'] == 'kpi'"><span t-esc="item['value']"/> <span t-esc="item['unit']"/></p>
+                <table t-else="" class="table table-sm"><thead><tr><t t-if="item['columns']"><th t-foreach="item['columns']" t-as="column" t-esc="column"/></t><t t-else=""><th>Grupo</th><th>Serie</th><th>Valor</th><th t-if="item['has_second']">Medida 2</th></t></tr></thead><tbody>
+                    <tr t-foreach="item['rows']" t-as="row" style="page-break-inside:avoid;"><t t-if="row.get('cells')"><td t-foreach="row['cells']" t-as="cell" t-esc="cell"/></t><t t-else=""><td t-esc="row['label']"/><td t-esc="row.get('series', '')"/><td t-esc="row['value']"/><td t-if="item['has_second']" t-esc="row.get('value2', '')"/></t></tr>
+                </tbody></table>
+            </div>
+        </t></t></t>
+    </template>
+</odoo>

@@ -10,7 +10,9 @@ La [guía funcional](https://www.ksolves.com/user-guide/odoo-dashboard-ninja/) d
 
 El [catálogo del fabricante](https://store.ksolves.com/shop/product/dashboard-ninja-with-ai-v-16.0) también anuncia soporte Community/Enterprise/Odoo.sh, unidades y filtros de usuario/empresa. Es una página de otra versión, por lo que solo sirve como corroboración general. [Dashboard Ninja Advance](https://ksolvesstore17stage.kappso.com/shop/product/advanced-dashboard-ninja-with-ai-v-18.0) anuncia envío de snapshots PDF por correo: no se atribuye automáticamente al módulo base solicitado.
 
-## Matriz de implementación Tecnodyne
+## Matriz histórica de la primera entrega 18.0.1.0.0
+
+Esta sección conserva el diagnóstico inicial. La implementación actual 18.0.2.0.0 y sus pruebas se describen en [PARIDAD.md](PARIDAD.md); los pendientes de esta tabla no representan el estado actual.
 
 | Área | Estado 18.0.1.0.0 | Próxima entrega propuesta |
 |---|---|---|

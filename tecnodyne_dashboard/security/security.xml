@@ -20,6 +20,34 @@
     <record id="item_company_rule" model="ir.rule">
         <field name="name">Dashboard item companies and audience</field>
         <field name="model_id" ref="model_tecnodyne_dashboard_item"/>
-        <field name="domain_force">[('company_id', 'in', company_ids), '|', ('dashboard_id.group_ids', '=', False), ('dashboard_id.group_ids', 'in', user.groups_id.ids)]</field>
+        <field name="domain_force">[('company_id', 'in', company_ids), '|', ('dashboard_id.group_ids', '=', False), ('dashboard_id.group_ids', 'in', user.groups_id.ids), '|', ('group_ids', '=', False), ('group_ids', 'in', user.groups_id.ids)]</field>
+    </record>
+    <record id="preference_owner" model="ir.rule">
+        <field name="name">Personal dashboard preferences</field><field name="model_id" ref="model_tecnodyne_dashboard_preference"/>
+        <field name="domain_force">[('user_id', '=', user.id), ('dashboard_id.company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="filter_access" model="ir.rule">
+        <field name="name">Dashboard filter audience</field><field name="model_id" ref="model_tecnodyne_dashboard_filter"/>
+        <field name="domain_force">[('dashboard_id.company_id', 'in', company_ids), '|', ('dashboard_id.group_ids', '=', False), ('dashboard_id.group_ids', 'in', user.groups_id.ids)]</field>
+    </record>
+    <record id="target_access" model="ir.rule">
+        <field name="name">Dashboard target audience</field><field name="model_id" ref="model_tecnodyne_dashboard_target"/>
+        <field name="domain_force">[('item_id.company_id', 'in', company_ids), '|', ('item_id.dashboard_id.group_ids', '=', False), ('item_id.dashboard_id.group_ids', 'in', user.groups_id.ids), '|', ('item_id.group_ids', '=', False), ('item_id.group_ids', 'in', user.groups_id.ids)]</field>
+    </record>
+    <record id="task_access" model="ir.rule">
+        <field name="name">Dashboard checklist audience</field><field name="model_id" ref="model_tecnodyne_dashboard_task"/>
+        <field name="domain_force">[('item_id.company_id', 'in', company_ids), '|', ('item_id.dashboard_id.group_ids', '=', False), ('item_id.dashboard_id.group_ids', 'in', user.groups_id.ids), '|', ('item_id.group_ids', '=', False), ('item_id.group_ids', 'in', user.groups_id.ids)]</field>
+    </record>
+    <record id="dataset_access" model="ir.rule">
+        <field name="name">Dataset company</field><field name="model_id" ref="model_tecnodyne_dashboard_dataset"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="dataset_row_access" model="ir.rule">
+        <field name="name">Dataset row company</field><field name="model_id" ref="model_tecnodyne_dashboard_dataset_row"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="conversation_access" model="ir.rule">
+        <field name="name">Dashboard conversation audience and company</field><field name="model_id" ref="mail.model_discuss_channel"/>
+        <field name="domain_force">['|', ('td_item_id', '=', False), '&amp;', '&amp;', ('td_item_id.company_id', 'in', company_ids), '|', ('td_item_id.dashboard_id.group_ids', '=', False), ('td_item_id.dashboard_id.group_ids', 'in', user.groups_id.ids), '|', ('td_item_id.group_ids', '=', False), ('td_item_id.group_ids', 'in', user.groups_id.ids)]</field>
     </record>
 </odoo>

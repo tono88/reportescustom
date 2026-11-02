@@ -4,3 +4,17 @@ item_viewer,Item viewer,model_tecnodyne_dashboard_item,group_dashboard_user,1,0,
 dashboard_designer,Dashboard designer,model_tecnodyne_dashboard,group_dashboard_manager,1,1,1,1
 item_designer,Item designer,model_tecnodyne_dashboard_item,group_dashboard_manager,1,1,1,1
 transfer_designer,Transfer designer,model_tecnodyne_dashboard_transfer,group_dashboard_manager,1,1,1,1
+preference_user,Personal preferences,model_tecnodyne_dashboard_preference,group_dashboard_user,1,1,1,1
+filter_viewer,Filter viewer,model_tecnodyne_dashboard_filter,group_dashboard_user,1,0,0,0
+filter_designer,Filter designer,model_tecnodyne_dashboard_filter,group_dashboard_manager,1,1,1,1
+target_viewer,Target viewer,model_tecnodyne_dashboard_target,group_dashboard_user,1,0,0,0
+target_designer,Target designer,model_tecnodyne_dashboard_target,group_dashboard_manager,1,1,1,1
+task_viewer,Task viewer,model_tecnodyne_dashboard_task,group_dashboard_user,1,1,0,0
+task_designer,Task designer,model_tecnodyne_dashboard_task,group_dashboard_manager,1,1,1,1
+dataset_viewer,Dataset viewer,model_tecnodyne_dashboard_dataset,group_dashboard_user,1,0,0,0
+dataset_designer,Dataset designer,model_tecnodyne_dashboard_dataset,group_dashboard_manager,1,1,1,1
+dataset_row_viewer,Dataset row viewer,model_tecnodyne_dashboard_dataset_row,group_dashboard_user,1,0,0,0
+dataset_row_designer,Dataset row designer,model_tecnodyne_dashboard_dataset_row,group_dashboard_manager,1,1,1,1
+import_designer,Data importer,model_tecnodyne_dashboard_import,group_dashboard_manager,1,1,1,1
+generate_designer,AI generator,model_tecnodyne_dashboard_generate,group_dashboard_manager,1,1,1,1
+move_designer,Item transfer,model_tecnodyne_dashboard_move,group_dashboard_manager,1,1,1,1

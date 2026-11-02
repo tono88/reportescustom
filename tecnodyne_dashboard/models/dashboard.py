@@ -70,7 +70,7 @@ class DashboardItem(models.Model):
                     raise ValidationError(_('Choose stored fields from the selected model.'))
             if item.aggregation != 'count' and (not item.measure_id or item.measure_id.ttype not in ('integer', 'float', 'monetary')):
                 raise ValidationError(_('Select a stored numeric measure.'))
-            if item.kind != 'kpi' and not item.group_field_id:
+            if item.kind not in ('kpi', 'todo', 'list', 'map') and not item.group_field_id:
                 raise ValidationError(_('A grouping field is required.'))
             if item.group_field_id and item.group_field_id.ttype not in ('many2one', 'char', 'selection', 'boolean', 'date', 'datetime', 'integer'):
                 raise ValidationError(_('Unsupported grouping field.'))
@@ -87,9 +87,9 @@ class DashboardItem(models.Model):
             def replace(value):
                 if isinstance(value, list):
                     return [replace(v) for v in value]
-                if value == '$uid':
+                if isinstance(value, str) and value in ('$uid', '%UID'):
                     return self.env.uid
-                if value == '$company':
+                if isinstance(value, str) and value in ('$company', '%MYCOMPANY'):
                     return self.company_id.id
                 return value
             domain = replace(domain)

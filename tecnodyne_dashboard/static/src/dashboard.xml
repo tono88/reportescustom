@@ -1,33 +1,28 @@
 <templates xml:space="preserve">
+    <t t-name="tecnodyne_dashboard.JsonDomain"><div><DomainSelector t-if="props.record.data.model_name" resModel="props.record.data.model_name" domain="domain" readonly="props.readonly" allowExpressions="false" update.bind="update"/><small class="text-muted" t-if="!props.record.data.model_name">Selecciona primero un modelo.</small></div></t>
     <t t-name="tecnodyne_dashboard.Chart"><div class="td-chart"><canvas t-ref="canvas" role="img" t-att-aria-label="props.item.name"/></div></t>
     <t t-name="tecnodyne_dashboard.Dashboard">
         <div class="td-dashboard">
-            <header class="td-header"><div><span class="td-brand">TECNODYNE / ANALYTICS</span>
-                <h1 t-if="state.data" t-esc="state.data.name"/><span t-if="state.data" t-esc="state.data.company"/>
-            </div><div class="td-filters">
-                <label>Desde <input type="date" t-model="state.from"/></label>
-                <label>Hasta <input type="date" t-model="state.to"/></label>
-                <button class="btn btn-primary" t-on-click="load" t-att-disabled="state.busy">Actualizar</button>
-                <label>Auto <select t-on-change="setRefresh"><option value="0">Manual</option><option value="30">30 s</option><option value="60">60 s</option><option value="300">5 min</option></select></label>
-            </div></header>
-            <p class="alert alert-danger" t-if="state.error" role="alert" t-esc="state.error"/>
-            <p t-if="state.busy" role="status">Cargando…</p>
+            <header class="td-header"><div><span class="td-brand">TECNODYNE / ANALYTICS</span><h1 t-if="state.data" t-esc="state.data.name"/><span t-if="state.data" t-esc="state.data.company"/></div>
+                <div class="td-filters"><label>Período<select t-model="state.preset"><t t-if="state.data"><option t-foreach="state.data.presets" t-as="p" t-key="p[0]" t-att-value="p[0]" t-esc="p[1]"/></t></select></label><label>Desde<input type="date" t-model="state.from"/></label><label>Hasta<input type="date" t-model="state.to"/></label><button class="btn btn-primary" t-on-click="load" t-att-disabled="state.busy">Actualizar</button><label>Auto<select t-on-change="setRefresh"><option value="0">Eventos</option><option value="30">30 s</option><option value="60">60 s</option><option value="300">5 min</option></select></label></div>
+            </header>
+            <nav t-if="state.data" class="td-toolbar"><button class="btn btn-light" t-on-click="favorite" t-esc="state.data.favorite ? '★ Favorito' : '☆ Favorito'"/><button class="btn btn-light" t-on-click="() => state.edit = !state.edit">Diseño y edición</button><button class="btn btn-light" t-if="state.edit" t-on-click="saveLayout">Guardar diseño personal</button><t t-if="state.edit"><input aria-label="Nombre del diseño" t-model="state.layoutName" placeholder="Nombre del diseño"/><button class="btn btn-light" t-on-click="saveNamed">Guardar variante</button></t><select aria-label="Diseños personales" t-on-change="selectNamed"><option value="">Diseños personales</option><option t-foreach="state.data.layouts" t-as="name" t-key="name" t-att-value="name" t-esc="name"/></select><button t-foreach="state.data.filters" t-as="filter" t-key="filter.id" t-att-class="state.filters.includes(filter.id) ? 'btn btn-primary' : 'btn btn-light'" t-on-click="() => this.toggleFilter(filter.id)" t-esc="filter.name"/></nav>
+            <p class="alert alert-danger" t-if="state.error" role="alert" t-esc="state.error"/><p t-if="state.busy" role="status">Cargando…</p><p t-if="state.insightBusy" role="status">Analizando con IA…</p>
+            <aside t-if="state.insight" class="alert alert-info td-insight"><button class="btn btn-light float-end" t-on-click="() => state.insight = ''">Cerrar</button><p t-esc="state.insight"/></aside>
             <div class="td-grid" t-if="state.data">
-                <article class="td-card" t-foreach="state.data.items" t-as="item" t-key="item.id">
-                    <div class="td-card-title"><h2 t-esc="item.name"/><button class="btn btn-sm btn-light" t-on-click="() => this.download(item)" title="Exportar datos visibles">CSV</button></div>
-                    <t t-if="item.kind === 'kpi'"><button class="td-kpi" t-on-click="() => this.drill(item)"><t t-esc="format(item.value)"/> <small t-esc="item.unit"/></button>
-                        <p t-if="item.target">Meta: <t t-esc="format(item.target)"/> · <t t-esc="format(item.value / item.target * 100)"/>%</p></t>
-                    <t t-else="">
-                        <DashboardChart t-if="item.kind !== 'table'" item="item" onDrill="(it, idx) => this.drill(it, idx)"/>
-                        <details t-att-open="item.kind === 'table'"><summary>Datos · máximo <t t-esc="item.limit"/> grupos</summary>
-                            <table class="table table-sm"><thead><tr><th>Grupo</th><th>Valor</th></tr></thead><tbody>
-                                <tr t-foreach="item.rows" t-as="row" t-key="row_index"><td><button class="btn btn-link" t-on-click="() => this.drill(item, row_index)" t-esc="row.label"/></td><td t-esc="format(row.value)"/></tr>
-                            </tbody></table>
-                        </details>
-                    </t>
+                <article t-att-class="'td-card ' + (item.tile_style === 'solid' and item.kind === 'kpi' ? 'td-solid' : '')" t-foreach="state.data.items" t-as="item" t-key="item.id" t-att-data-item-id="item.id" t-att-style="cardStyle(item)" t-att-draggable="state.edit ? 'true' : 'false'" t-on-dragstart="ev => this.drag(ev,item)" t-on-dragover.prevent="() => {}" t-on-drop="ev => this.drop(ev,item)">
+                    <div class="td-card-title"><h2><i t-att-class="'fa ' + item.icon"/> <t t-esc="item.name"/></h2><button t-if="item.level" class="btn btn-sm btn-light" t-on-click="() => this.up(item)">↑ Volver</button></div>
+                    <div class="td-controls" t-if="state.edit"><label>Ancho<select t-on-change="ev => this.resize(item,'width',ev)"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></label><label>Alto<input type="range" min="250" max="1000" step="50" t-on-input="ev => this.resize(item,'height',ev)"/></label><t t-if="state.data.designer"><input aria-label="Nombre" t-model="item.name"/><input aria-label="Color" type="color" t-model="item.color"/><button class="btn btn-sm btn-primary" t-on-click="() => this.quickSave(item)">Guardar</button><button class="btn btn-sm btn-light" t-on-click="() => this.openItem(item)">Configurar</button><button class="btn btn-sm btn-light" t-on-click="() => this.duplicate(item)">Duplicar</button></t></div>
+                    <div class="td-controls"><select aria-label="Visualización" t-model="item.kind"><option t-foreach="kindsFor(item)" t-as="kind" t-key="kind" t-att-value="kind" t-esc="kind"/></select><button class="btn btn-sm btn-light" t-on-click="() => this.exportData(item,'csv')">CSV</button><button class="btn btn-sm btn-light" t-on-click="() => this.exportData(item,'xlsx')">Excel</button><button class="btn btn-sm btn-light" t-on-click="() => this.pdf(item)">PDF</button><button class="btn btn-sm btn-light" t-on-click="() => this.png(item)">PNG</button><button class="btn btn-sm btn-light" t-on-click="() => this.insights(item)">IA</button><button class="btn btn-sm btn-light" t-on-click="() => this.openItem(item,'action_conversation')">Chat</button></div>
+                    <t t-if="item.kind === 'kpi'"><button class="td-kpi" t-on-click="() => this.drill(item)"><t t-if="item.undefined_ratio">—</t><t t-else="" t-esc="format(item.value,item)"/> <small t-esc="item.unit"/></button><p t-if="item.second_value !== undefined">Consulta 2: <t t-esc="format(item.second_value,item)"/></p><t t-if="item.target"><p t-if="item.target_style !== 'progress'">Meta: <t t-esc="format(item.target,item)"/> · <t t-esc="format(item.value/item.target*100)"/>%</p><progress t-if="item.target_style !== 'number'" t-att-value="item.value" t-att-max="item.target" style="width:100%;"/></t></t>
+                    <t t-elif="item.kind === 'todo'"><label t-foreach="item.rows" t-as="row" t-key="row.id" class="td-task"><input type="checkbox" t-att-checked="row.done" t-on-change="() => this.task(row)"/><span t-esc="row.label"/></label></t>
+                    <t t-else=""><DashboardChart t-if="!['table','list'].includes(item.kind)" item="item" theme="state.data.theme" onDrill="(it,idx) => this.drill(it,idx)"/>
+                        <details t-att-open="['table','list'].includes(item.kind)"><summary>Datos · máximo <t t-esc="item.limit"/> filas</summary><div class="td-table"><table class="table table-sm"><thead><tr><th t-if="!item.columns.length">Grupo</th><th t-foreach="item.columns" t-as="column" t-key="column" t-esc="column"/><th t-if="!item.columns.length">Valor</th></tr></thead><tbody>
+                            <tr t-foreach="item.rows" t-as="row" t-key="row_index"><t t-if="row.cells"><td t-foreach="row.cells" t-as="cell" t-key="cell_index"><button class="btn btn-link" t-on-click="() => this.drill(item,row_index)" t-esc="cell"/></td></t><t t-else=""><td><button class="btn btn-link" t-on-click="() => this.drill(item,row_index)"><t t-esc="row.label"/><span t-if="row.series"> / <t t-esc="row.series"/></span></button></td><td><t t-esc="format(row.value,item)"/> <t t-esc="item.unit"/></td></t></tr>
+                        </tbody></table></div><div class="td-controls" t-if="item.total > item.limit"><button class="btn btn-sm btn-light" t-att-disabled="!item.page" t-on-click="() => this.page(item,item.page-1)">Anterior</button><span><t t-esc="item.page+1"/> / <t t-esc="Math.ceil(item.total/item.limit)"/></span><button class="btn btn-sm btn-light" t-att-disabled="(item.page+1)*item.limit >= item.total" t-on-click="() => this.page(item,item.page+1)">Siguiente</button></div></details>
+                    </t><p t-if="item.previous !== undefined">Anterior: <t t-esc="format(item.previous,item)"/><t t-if="item.change !== null"> · <t t-esc="format(item.change)"/>%</t></p>
                 </article>
-            </div>
-            <p t-if="state.data and !state.data.items.length">Agrega indicadores desde la configuración del tablero.</p>
+            </div><p t-if="state.data and !state.data.items.length">Agrega indicadores desde la configuración del tablero.</p>
         </div>
     </t>
 </templates>

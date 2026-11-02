@@ -1,0 +1,218 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 18.0-20250924\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-02 14:55+0000\n"
+"PO-Revision-Date: 2026-11-02 14:55+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. module: tecnodyne_dashboard
+#. odoo-javascript
+#: code:addons/tecnodyne_dashboard/static/src/dashboard.xml:0
+msgid "Actualizar"
+msgstr "Refresh"
+
+#. module: tecnodyne_dashboard
+#. odoo-javascript
+#: code:addons/tecnodyne_dashboard/static/src/dashboard.xml:0
+msgid "Agrega indicadores desde la configuración del tablero."
+msgstr "Add indicators from the dashboard configuration."
+
+#. module: tecnodyne_dashboard
+#. odoo-javascript
+#: code:addons/tecnodyne_dashboard/static/src/dashboard.xml:0
+msgid "Alto"
+msgstr "Height"
+
+#. module: tecnodyne_dashboard
+#. odoo-javascript
+#: code:addons/tecnodyne_dashboard/static/src/dashboard.xml:0
+msgid "Analizando con IA…"
+msgstr "Analyzing with AI…"
+
+#. module: tecnodyne_dashboard
+#. odoo-javascript
+#: code:addons/tecnodyne_dashboard/static/src/dashboard.xml:0
+msgid "Ancho"
+msgstr "Width"
+
+#. module: tecnodyne_dashboard
+#. odoo-javascript
+#: code:addons/tecnodyne_dashboard/static/src/dashboard.xml:0
+msgid "Anterior"
+msgstr "Previous"
+
+#. module: tecnodyne_dashboard
+#. odoo-javascript
+#: code:addons/tecnodyne_dashboard/static/src/dashboard.xml:0
+msgid "Cargando…"
+msgstr "Loading…"
+
+#. module: tecnodyne_dashboard
+#. odoo-javascript
+#: code:addons/tecnodyne_dashboard/static/src/dashboard.xml:0
+msgid "Cerrar"
+msgstr "Close"
+
+#. module: tecnodyne_dashboard
+#. odoo-javascript
+#: code:addons/tecnodyne_dashboard/static/src/dashboard.xml:0
+msgid "Chat"
+msgstr "Chat"
+
+#. module: tecnodyne_dashboard
+#. odoo-javascript
+#: code:addons/tecnodyne_dashboard/static/src/dashboard.xml:0
+msgid "Configurar"
+msgstr "Configure"
+
+#. module: tecnodyne_dashboard
+#. odoo-javascript
+#: code:addons/tecnodyne_dashboard/static/src/dashboard.xml:0
+msgid "Consulta 2:"
+msgstr "Query 2:"
+
+#. module: tecnodyne_dashboard
+#. odoo-javascript
+#: code:addons/tecnodyne_dashboard/static/src/dashboard.xml:0
+msgid "Datos · máximo"
+msgstr "Data · maximum"
+
+#. module: tecnodyne_dashboard
+#. odoo-javascript
+#: code:addons/tecnodyne_dashboard/static/src/dashboard.xml:0
+msgid "Desde"
+msgstr "From"
+
+#. module: tecnodyne_dashboard
+#. odoo-javascript
+#: code:addons/tecnodyne_dashboard/static/src/dashboard.xml:0
+msgid "Diseño y edición"
+msgstr "Layout and editing"
+
+#. module: tecnodyne_dashboard
+#. odoo-javascript
+#: code:addons/tecnodyne_dashboard/static/src/dashboard.xml:0
+msgid "Diseños personales"
+msgstr "Personal layouts"
+
+#. module: tecnodyne_dashboard
+#. odoo-javascript
+#: code:addons/tecnodyne_dashboard/static/src/dashboard.xml:0
+msgid "Duplicar"
+msgstr "Duplicate"
+
+#. module: tecnodyne_dashboard
+#. odoo-javascript
+#: code:addons/tecnodyne_dashboard/static/src/dashboard.xml:0
+msgid "Eventos"
+msgstr "Events"
+
+#. module: tecnodyne_dashboard
+#. odoo-javascript
+#: code:addons/tecnodyne_dashboard/static/src/dashboard.xml:0
+#: model_terms:ir.ui.view,arch_db:tecnodyne_dashboard.report_dashboard
+msgid "Grupo"
+msgstr "Group"
+
+#. module: tecnodyne_dashboard
+#. odoo-javascript
+#: code:addons/tecnodyne_dashboard/static/src/dashboard.xml:0
+msgid "Guardar"
+msgstr "Save"
+
+#. module: tecnodyne_dashboard
+#. odoo-javascript
+#: code:addons/tecnodyne_dashboard/static/src/dashboard.xml:0
+msgid "Guardar diseño personal"
+msgstr "Save personal layout"
+
+#. module: tecnodyne_dashboard
+#. odoo-javascript
+#: code:addons/tecnodyne_dashboard/static/src/dashboard.xml:0
+msgid "Guardar variante"
+msgstr "Save variant"
+
+#. module: tecnodyne_dashboard
+#. odoo-javascript
+#: code:addons/tecnodyne_dashboard/static/src/dashboard.xml:0
+msgid "Hasta"
+msgstr "To"
+
+#. module: tecnodyne_dashboard
+#. odoo-javascript
+#: code:addons/tecnodyne_dashboard/static/src/dashboard.xml:0
+msgid "IA"
+msgstr "AI"
+
+#. module: tecnodyne_dashboard
+#: model_terms:ir.ui.view,arch_db:tecnodyne_dashboard.report_dashboard
+msgid "Medida 2"
+msgstr "Second measure"
+
+#. module: tecnodyne_dashboard
+#. odoo-javascript
+#: code:addons/tecnodyne_dashboard/static/src/dashboard.xml:0
+msgid "Meta:"
+msgstr "Target:"
+
+#. module: tecnodyne_dashboard
+#. odoo-javascript
+#: code:addons/tecnodyne_dashboard/static/src/dashboard.xml:0
+msgid "Nombre"
+msgstr "Name"
+
+#. module: tecnodyne_dashboard
+#. odoo-javascript
+#: code:addons/tecnodyne_dashboard/static/src/dashboard.xml:0
+msgid "Nombre del diseño"
+msgstr "Layout name"
+
+#. module: tecnodyne_dashboard
+#. odoo-javascript
+#: code:addons/tecnodyne_dashboard/static/src/dashboard.xml:0
+msgid "Período"
+msgstr "Period"
+
+#. module: tecnodyne_dashboard
+#. odoo-javascript
+#: code:addons/tecnodyne_dashboard/static/src/dashboard.xml:0
+msgid "Selecciona primero un modelo."
+msgstr "Select a model first."
+
+#. module: tecnodyne_dashboard
+#: model_terms:ir.ui.view,arch_db:tecnodyne_dashboard.report_dashboard
+msgid "Serie"
+msgstr "Series"
+
+#. module: tecnodyne_dashboard
+#. odoo-javascript
+#: code:addons/tecnodyne_dashboard/static/src/dashboard.xml:0
+msgid "Siguiente"
+msgstr "Next"
+
+#. module: tecnodyne_dashboard
+#. odoo-javascript
+#: code:addons/tecnodyne_dashboard/static/src/dashboard.xml:0
+#: model_terms:ir.ui.view,arch_db:tecnodyne_dashboard.report_dashboard
+msgid "Valor"
+msgstr "Value"
+
+#. module: tecnodyne_dashboard
+#. odoo-javascript
+#: code:addons/tecnodyne_dashboard/static/src/dashboard.xml:0
+msgid "filas"
+msgstr "rows"
+
+#. module: tecnodyne_dashboard
+#. odoo-javascript
+#: code:addons/tecnodyne_dashboard/static/src/dashboard.xml:0
+msgid "↑ Volver"
+msgstr "↑ Back"

@@ -14,13 +14,13 @@
         <field name="arch" type="xml">
             <form string="Dashboard item"><sheet><group>
                 <field name="name"/><field name="dashboard_id"/><field name="sequence"/>
-                <field name="model_id" options="{'no_create': True}"/><field name="kind"/>
+                <field name="model_id" options="{'no_create': True}"/><field name="model_name" invisible="1"/><field name="kind"/>
                 <field name="aggregation"/>
                 <field name="measure_id" domain="[('model_id', '=', model_id), ('store', '=', True), ('ttype', 'in', ['integer', 'float', 'monetary'])]" options="{'no_create': True}" invisible="aggregation == 'count'"/>
                 <field name="group_field_id" domain="[('model_id', '=', model_id), ('store', '=', True)]" options="{'no_create': True}" invisible="kind == 'kpi'"/>
                 <field name="interval" invisible="kind == 'kpi'"/>
                 <field name="date_field_id" domain="[('model_id', '=', model_id), ('ttype', 'in', ['date', 'datetime']), ('store', '=', True)]" options="{'no_create': True}"/>
-                <field name="domain_json"/><field name="limit"/><field name="target"/><field name="unit"/>
+                <field name="domain_json" widget="td_json_domain"/><field name="limit"/><field name="target"/><field name="unit"/>
             </group></sheet></form>
         </field>
     </record>
