@@ -50,4 +50,12 @@
         <field name="name">Dashboard conversation audience and company</field><field name="model_id" ref="mail.model_discuss_channel"/>
         <field name="domain_force">['|', ('td_item_id', '=', False), '&amp;', '&amp;', ('td_item_id.company_id', 'in', company_ids), '|', ('td_item_id.dashboard_id.group_ids', '=', False), ('td_item_id.dashboard_id.group_ids', 'in', user.groups_id.ids), '|', ('td_item_id.group_ids', '=', False), ('td_item_id.group_ids', 'in', user.groups_id.ids)]</field>
     </record>
+    <record id="query_source_access" model="ir.rule">
+        <field name="name">SQL source audience and company</field><field name="model_id" ref="model_tecnodyne_dashboard_query_source"/>
+        <field name="domain_force">[('item_id.company_id', 'in', company_ids), '|', ('item_id.dashboard_id.group_ids', '=', False), ('item_id.dashboard_id.group_ids', 'in', user.groups_id.ids), '|', ('item_id.group_ids', '=', False), ('item_id.group_ids', 'in', user.groups_id.ids)]</field>
+    </record>
+    <record id="drill_level_access" model="ir.rule">
+        <field name="name">Drill hierarchy audience and company</field><field name="model_id" ref="model_tecnodyne_dashboard_drill"/>
+        <field name="domain_force">[('item_id.company_id', 'in', company_ids), '|', ('item_id.dashboard_id.group_ids', '=', False), ('item_id.dashboard_id.group_ids', 'in', user.groups_id.ids), '|', ('item_id.group_ids', '=', False), ('item_id.group_ids', 'in', user.groups_id.ids)]</field>
+    </record>
 </odoo>

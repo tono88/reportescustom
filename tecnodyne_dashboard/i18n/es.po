@@ -842,3 +842,355 @@ msgid ""
 msgstr ""
 "El modelo no devolvió una propuesta JSON completa. Solicita menos "
 "indicadores e inténtalo de nuevo."
+
+#. module: tecnodyne_dashboard
+#. odoo-python
+#: code:addons/tecnodyne_dashboard/wizard/semantic.py:0
+#: model:ir.model.fields.selection,name:tecnodyne_dashboard.selection__tecnodyne_dashboard_generate__source_mode__auto
+msgid "Resolve business source"
+msgstr "Origen automático"
+
+#. module: tecnodyne_dashboard
+#. odoo-python
+#: code:addons/tecnodyne_dashboard/wizard/semantic.py:0
+#: model:ir.model.fields.selection,name:tecnodyne_dashboard.selection__tecnodyne_dashboard_generate__source_mode__manual
+msgid "Use selected model"
+msgstr "Usar modelo seleccionado"
+
+#. module: tecnodyne_dashboard
+#. odoo-python
+#: code:addons/tecnodyne_dashboard/wizard/semantic.py:0
+#: model:ir.model.fields.selection,name:tecnodyne_dashboard.selection__tecnodyne_dashboard_generate__sales_channel__both
+msgid "Sales and POS separately"
+msgstr "Ventas y POS por separado"
+
+#. module: tecnodyne_dashboard
+#. odoo-python
+#: code:addons/tecnodyne_dashboard/wizard/semantic.py:0
+#: model:ir.model.fields.selection,name:tecnodyne_dashboard.selection__tecnodyne_dashboard_generate__sales_channel__sale
+msgid "Sales orders"
+msgstr "Pedidos de venta"
+
+#. module: tecnodyne_dashboard
+#. odoo-python
+#: code:addons/tecnodyne_dashboard/wizard/semantic.py:0
+#: model:ir.model.fields.selection,name:tecnodyne_dashboard.selection__tecnodyne_dashboard_generate__sales_channel__pos
+msgid "Point of sale"
+msgstr "Punto de venta"
+
+#. module: tecnodyne_dashboard
+#. odoo-python
+#: code:addons/tecnodyne_dashboard/wizard/semantic.py:0
+#: model:ir.model.fields.selection,name:tecnodyne_dashboard.selection__tecnodyne_dashboard_generate__sales_metric__auto
+msgid "Detect from request"
+msgstr "Detectar según la petición"
+
+#. module: tecnodyne_dashboard
+#. odoo-python
+#: code:addons/tecnodyne_dashboard/wizard/semantic.py:0
+#: model:ir.model.fields.selection,name:tecnodyne_dashboard.selection__tecnodyne_dashboard_generate__sales_metric__quantity
+msgid "Net quantity"
+msgstr "Cantidad neta"
+
+#. module: tecnodyne_dashboard
+#. odoo-python
+#: code:addons/tecnodyne_dashboard/wizard/semantic.py:0
+#: model:ir.model.fields.selection,name:tecnodyne_dashboard.selection__tecnodyne_dashboard_generate__sales_metric__amount
+msgid "Untaxed sales amount"
+msgstr "Importe sin impuestos"
+
+#. module: tecnodyne_dashboard
+#. odoo-python
+#: code:addons/tecnodyne_dashboard/wizard/semantic.py:0
+#: model:ir.model.fields.selection,name:tecnodyne_dashboard.selection__tecnodyne_dashboard_generate__proposal_engine__business
+msgid "Validated business plan"
+msgstr "Plan de negocio validado"
+
+#. module: tecnodyne_dashboard
+#. odoo-python
+#: code:addons/tecnodyne_dashboard/wizard/semantic.py:0
+#: model:ir.model.fields.selection,name:tecnodyne_dashboard.selection__tecnodyne_dashboard_generate__proposal_engine__ai
+msgid "Local AI proposal"
+msgstr "Propuesta de IA local"
+
+#. module: tecnodyne_dashboard
+#. odoo-python
+#: code:addons/tecnodyne_dashboard/wizard/semantic.py:0
+msgid "Categories"
+msgstr "Categorías"
+
+#. module: tecnodyne_dashboard
+#. odoo-python
+#: code:addons/tecnodyne_dashboard/wizard/semantic.py:0
+msgid "Products"
+msgstr "Productos"
+
+#. module: tecnodyne_dashboard
+#. odoo-python
+#: code:addons/tecnodyne_dashboard/wizard/semantic.py:0
+msgid "Sales trend"
+msgstr "Tendencia de ventas"
+
+#. module: tecnodyne_dashboard
+#. odoo-python
+#: code:addons/tecnodyne_dashboard/wizard/semantic.py:0
+msgid "net quantity"
+msgstr "cantidad neta"
+
+#. module: tecnodyne_dashboard
+#. odoo-python
+#: code:addons/tecnodyne_dashboard/wizard/semantic.py:0
+msgid "untaxed amount"
+msgstr "importe sin impuestos"
+
+#. module: tecnodyne_dashboard
+#. odoo-python
+#: code:addons/tecnodyne_dashboard/wizard/semantic.py:0
+msgid "Product base units"
+msgstr "Unidades base del producto"
+
+#. module: tecnodyne_dashboard
+#. odoo-python
+#: code:addons/tecnodyne_dashboard/wizard/semantic.py:0
+msgid "Top limit must be between 1 and 100."
+msgstr "El límite de principales debe estar entre 1 y 100."
+
+#. module: tecnodyne_dashboard
+#. odoo-python
+#: code:addons/tecnodyne_dashboard/wizard/semantic.py:0
+msgid "Choose at least two indicators for separate Sales and POS charts."
+msgstr "Elige al menos dos indicadores para separar Ventas y POS."
+
+#. module: tecnodyne_dashboard
+#. odoo-python
+#: code:addons/tecnodyne_dashboard/wizard/semantic.py:0
+msgid "Select the dashboard company in the company selector."
+msgstr "Selecciona la empresa del tablero en el selector de empresas."
+
+#. module: tecnodyne_dashboard
+#. odoo-python
+#: code:addons/tecnodyne_dashboard/wizard/semantic.py:0
+msgid "Select a source model for this request."
+msgstr "Selecciona un modelo de origen para esta petición."
+
+#. module: tecnodyne_dashboard
+#. odoo-python
+#: code:addons/tecnodyne_dashboard/wizard/semantic.py:0
+msgid "Select a source model or request a supported business analysis."
+msgstr ""
+"Selecciona un modelo de origen o solicita un análisis de negocio compatible."
+
+#. module: tecnodyne_dashboard
+#. odoo-python
+#: code:addons/tecnodyne_dashboard/wizard/semantic.py:0
+msgid ""
+"Choose automatic business-source resolution for this analysis; a generic "
+"model selection does not define its transactional measure."
+msgstr ""
+"Elige el origen automático para este análisis; seleccionar un modelo "
+"genérico no define la medida de sus operaciones."
+
+#. module: tecnodyne_dashboard
+#. odoo-python
+#: code:addons/tecnodyne_dashboard/wizard/semantic.py:0
+msgid ""
+"This request is not a record count. The generated count was rejected; choose"
+" an appropriate source or refine the requested measure."
+msgstr ""
+"Esta petición no solicita un conteo de registros. Se rechazó el conteo "
+"generado; elige un origen adecuado o precisa la medida solicitada."
+
+#. module: tecnodyne_dashboard
+#. odoo-python
+#: code:addons/tecnodyne_dashboard/wizard/semantic.py:0
+msgid ""
+"A monthly request requires grouping by its date field by month. A flat KPI "
+"does not answer it."
+msgstr ""
+"Una petición mensual requiere agrupar su fecha por mes. Un KPI sin "
+"agrupación no responde a esa petición."
+
+#. module: tecnodyne_dashboard
+#. odoo-python
+#: code:addons/tecnodyne_dashboard/wizard/semantic.py:0
+msgid ""
+"The request or source changed. Generate and review a new proposal before "
+"applying it."
+msgstr ""
+"La petición o el origen cambiaron. Genera y revisa una propuesta nueva antes"
+" de aplicarla."
+
+#. module: tecnodyne_dashboard
+#. odoo-python
+#: code:addons/tecnodyne_dashboard/wizard/semantic.py:0
+msgid ""
+"The AI proposal is incompatible with the authorized source or request. No "
+"indicator was created."
+msgstr ""
+"La propuesta de IA es incompatible con el origen autorizado o la petición. "
+"No se creó ningún indicador."
+
+#. module: tecnodyne_dashboard
+#. odoo-python
+#: code:addons/tecnodyne_dashboard/wizard/semantic.py:0
+msgid ""
+"The selected source cannot answer this request. Select a source containing "
+"the requested transactions, measures and dates. No fallback count was "
+"created."
+msgstr ""
+"El origen seleccionado no puede responder a esta petición. Elige uno con las"
+" operaciones, medidas y fechas solicitadas. No se sustituyó el análisis por "
+"un conteo."
+
+#. module: tecnodyne_dashboard
+#. odoo-python
+#: code:addons/tecnodyne_dashboard/wizard/semantic.py:0
+msgid ""
+"Validated sales plan: quantities or untaxed amounts, confirmed transactions "
+"only, separate channels. Monthly Top N is calculated inside each month. "
+"Quantities use product base units; do not compare incompatible units of "
+"measure."
+msgstr ""
+"Plan de ventas validado: cantidades o importes sin impuestos, solo "
+"operaciones confirmadas y canales separados. Los principales se calculan "
+"dentro de cada mes. Las cantidades usan la unidad base del producto; no "
+"compares unidades incompatibles."
+
+#. module: tecnodyne_dashboard
+#. odoo-python
+#: code:addons/tecnodyne_dashboard/wizard/semantic.py:0
+msgid ""
+"Validated posted-ledger plan. Cash balances include opening history through "
+"the end date; cash movements use the selected range. Supplier residuals "
+"represent current outstanding amounts, grouped by maturity, not a historical"
+" aging reconstruction."
+msgstr ""
+"Plan contable validado con asientos publicados. El saldo de efectivo incluye"
+" el historial de apertura hasta la fecha final; los movimientos usan el "
+"rango elegido. Los residuales de proveedores representan importes pendientes"
+" actuales por vencimiento, sin reconstruir la antigüedad histórica."
+
+#. module: tecnodyne_dashboard
+#. odoo-python
+#: code:addons/tecnodyne_dashboard/wizard/semantic.py:0
+msgid ""
+"Local AI proposal; source, measures and requested grouping are checked "
+"before application. Review the query and business meaning."
+msgstr ""
+"Propuesta de IA local; se comprueban el origen, las medidas y la agrupación "
+"antes de aplicarla. Revisa la consulta y su significado de negocio."
+
+#. module: tecnodyne_dashboard
+#. odoo-python
+#: code:addons/tecnodyne_dashboard/wizard/semantic.py:0
+msgid "Posted cash and bank balance at month end"
+msgstr "Saldo contable mensual de efectivo y bancos"
+
+#. module: tecnodyne_dashboard
+#. odoo-python
+#: code:addons/tecnodyne_dashboard/wizard/semantic.py:0
+msgid "Posted cash and bank book balance"
+msgstr "Saldo contable de efectivo y bancos"
+
+#. module: tecnodyne_dashboard
+#. odoo-python
+#: code:addons/tecnodyne_dashboard/wizard/semantic.py:0
+msgid "Posted net cash movement"
+msgstr "Movimiento neto contabilizado de efectivo"
+
+#. module: tecnodyne_dashboard
+#. odoo-python
+#: code:addons/tecnodyne_dashboard/wizard/semantic.py:0
+msgid "Posted income less expenses"
+msgstr "Ingresos menos gastos contabilizados"
+
+#. module: tecnodyne_dashboard
+#. odoo-python
+#: code:addons/tecnodyne_dashboard/wizard/semantic.py:0
+msgid "Posted expense pattern"
+msgstr "Gastos contabilizados por cuenta"
+
+#. module: tecnodyne_dashboard
+#. odoo-python
+#: code:addons/tecnodyne_dashboard/wizard/semantic.py:0
+msgid "Current open supplier balance by maturity"
+msgstr "Saldo pendiente actual de proveedores por vencimiento"
+
+#. module: tecnodyne_dashboard
+#. odoo-python
+#: code:addons/tecnodyne_dashboard/models/query.py:0
+msgid "Selected date range"
+msgstr "Rango de fechas seleccionado"
+
+#. module: tecnodyne_dashboard
+#. odoo-python
+#: code:addons/tecnodyne_dashboard/models/query.py:0
+msgid "All rows through end date"
+msgstr "Todo el historial hasta la fecha final"
+
+#. module: tecnodyne_dashboard
+#. odoo-python
+#: code:addons/tecnodyne_dashboard/models/query.py:0
+msgid "Odoo model"
+msgstr "Modelo de Odoo"
+
+#. module: tecnodyne_dashboard
+#. odoo-python
+#: code:addons/tecnodyne_dashboard/models/query.py:0
+msgid "SQL over authorized snapshots"
+msgstr "SQL sobre datos autorizados"
+
+#. module: tecnodyne_dashboard
+#. odoo-python
+#: code:addons/tecnodyne_dashboard/models/query.py:0
+msgid "Snapshot columns"
+msgstr "Columnas disponibles para SQL"
+
+#. module: tecnodyne_dashboard
+#. odoo-python
+#: code:addons/tecnodyne_dashboard/models/query.py:0
+msgid "Include shared records without company"
+msgstr "Incluir registros compartidos sin empresa"
+
+#. module: tecnodyne_dashboard
+#. odoo-python
+#: code:addons/tecnodyne_dashboard/models/query.py:0
+msgid "SQL results cannot be used as an editable checklist."
+msgstr ""
+"Los resultados SQL no se pueden usar como una lista de tareas editable."
+
+#. module: tecnodyne_dashboard
+#. odoo-python
+#: code:addons/tecnodyne_dashboard/models/domain_security.py:0
+msgid "A dashboard filter refers to an unavailable or restricted field."
+msgstr "Un filtro del tablero utiliza un campo no disponible o restringido."
+
+#. module: tecnodyne_dashboard
+#: model:ir.model.fields,field_description:tecnodyne_dashboard.field_tecnodyne_dashboard_generate__source_mode
+msgid "Source Mode"
+msgstr "Origen de datos"
+
+#. module: tecnodyne_dashboard
+#: model:ir.model.fields,field_description:tecnodyne_dashboard.field_tecnodyne_dashboard_generate__sales_channel
+msgid "Sales Channel"
+msgstr "Canales de venta"
+
+#. module: tecnodyne_dashboard
+#: model:ir.model.fields,field_description:tecnodyne_dashboard.field_tecnodyne_dashboard_generate__sales_metric
+msgid "Sales Metric"
+msgstr "Medida de ventas"
+
+#. module: tecnodyne_dashboard
+#: model:ir.model.fields,field_description:tecnodyne_dashboard.field_tecnodyne_dashboard_generate__top_limit
+msgid "Top Limit"
+msgstr "Cantidad de principales por mes"
+
+#. module: tecnodyne_dashboard
+#: model:ir.model.fields,field_description:tecnodyne_dashboard.field_tecnodyne_dashboard_generate__plan_explanation
+msgid "Plan Explanation"
+msgstr "Explicación del plan"
+
+#. module: tecnodyne_dashboard
+#: model:ir.model.fields,field_description:tecnodyne_dashboard.field_tecnodyne_dashboard_generate__proposal_engine
+msgid "Proposal Engine"
+msgstr "Método de generación"

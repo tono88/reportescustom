@@ -1,4 +1,6 @@
-# Auditoría funcional de Tecnodyne 18.0.2.0.0
+# Auditoría funcional de Tecnodyne 18.0.3.0.0
+
+Actualización: la [auditoría de la playlist](PLAYLIST_AUDIT.md) precisa las carencias encontradas, recetas nuevas y límites. El generador anterior podía devolver conteos que no respondían a la petición; validar formato no demostraba corrección de negocio.
 
 Revisión del 2 de noviembre de 2026. Referencias públicas: [ficha exacta Odoo 18](https://apps.odoo.com/apps/modules/18.0/ks_dashboard_ninja) y [guía del fabricante](https://www.ksolves.com/user-guide/odoo-dashboard-ninja/). Las páginas sirven para identificar requisitos; la implementación se acredita con código y pruebas propias. No se inspeccionó código propietario ni se verificó la demo autenticada.
 
@@ -56,9 +58,9 @@ La ficha y la guía difieren en cantidades y contienen ejemplos de distintas ver
 
 ## Alcance que no se debe presentar como certificado
 
-- No hay una prueba real de inferencia sin un modelo instalado; se recomienda `qwen3.5:4b`. No se afirma igualdad de resultados con la IA comercial.
+- Se probó inferencia real con LM Studio y Qwen 3.5 4B para un caso pequeño; no se afirma igualdad con la IA comercial ni comprensión universal. Las nuevas recetas explícitas no se presentan como inferencia.
 - Se verificó Community 18 en Windows. La compatibilidad 19, futuras versiones, Enterprise y Odoo.sh sigue requiriendo entornos y pruebas propios.
 - Los gráficos propios representan las mismas categorías funcionales con diseño y cartografía propios; no se afirma equivalencia visual exacta con el producto comercial.
-- El [catálogo Advance del fabricante](https://store.ksolves.com/shop/product/advanced-dashboard-ninja-with-ai-v-17.0) separa SQL, TV, conexiones externas y otras extensiones del producto base. No se anuncian como incluidas en esta entrega. La guía general mezcla ejemplos de consulta personalizada; para valores propios Tecnodyne utiliza fuentes importadas y consultas ORM.
+- La playlist mezcla el producto base y extensiones Advance. Esta versión añade SQL sobre instantáneas con permisos, no SQL PostgreSQL directo. TV y conexiones externas continuas no están implementadas. Los ejemplos hoteleros, de margen/rotación y ahorro no están certificados de extremo a extremo; véase la matriz de videos.
 
 Esta auditoría no declara “100 % idéntico”. Registra las equivalencias funcionales realizadas y las diferencias que todavía necesitan validación o una especificación adicional.

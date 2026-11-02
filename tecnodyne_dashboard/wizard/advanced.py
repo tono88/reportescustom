@@ -8,8 +8,8 @@ from datetime import datetime
 import openpyxl
 
 from odoo import api, fields, models, _
-from odoo.exceptions import ValidationError, UserError
-from odoo.osv import expression
+from odoo.exceptions import ValidationError
+
 
 
 class ImportData(models.TransientModel):
@@ -30,6 +30,8 @@ class ImportData(models.TransientModel):
     longitude_column = fields.Char(default='longitude')
     amount_column = fields.Char(default='amount')
     currency_column = fields.Char(default='currency')
+    column_types_json = fields.Text(default='{}', string='Additional column types',
+        help='JSON mapping from original column names to text, integer, float, date or boolean. All original columns are retained in raw_json for snapshot SQL.')
 
     def action_import(self):
         self.ensure_one()
@@ -56,6 +58,9 @@ class ImportData(models.TransientModel):
                        'longitude': self.longitude_column, 'amount': self.amount_column, 'currency': self.currency_column}
             if self.label_column not in headers:
                 raise ValueError('The label column was not found in the file')
+            column_types = json.loads(self.column_types_json or '{}')
+            if not isinstance(column_types, dict) or any(name not in headers or kind not in ('text', 'integer', 'float', 'date', 'boolean') for name, kind in column_types.items()):
+                raise ValueError('Invalid additional column type mapping')
             values = []
             for source_row in rows:
                 row = {key: source_row.get(column) for key, column in mapping.items() if column}
@@ -63,7 +68,30 @@ class ImportData(models.TransientModel):
                     raise ValueError('Maximum 10000 rows')
                 if not row.get('name'):
                     continue
+                original = {}
+                for name, cell in source_row.items():
+                    kind = column_types.get(name)
+                    if cell is None or cell == '':
+                        original[name] = None
+                    elif kind == 'integer':
+                        number = float(cell)
+                        if not number.is_integer():
+                            raise ValueError('Non-integer value in '+name)
+                        original[name] = int(number)
+                    elif kind == 'float':
+                        original[name] = float(cell)
+                    elif kind == 'date':
+                        original[name] = str(fields.Date.to_date(cell))
+                    elif kind == 'boolean':
+                        text = str(cell).lower()
+                        if text not in ('true', 'false', '1', '0', 'yes', 'no'):
+                            raise ValueError('Invalid boolean in '+name)
+                        original[name] = text in ('true', '1', 'yes')
+                    else:
+                        original[name] = cell.isoformat() if isinstance(cell, datetime) else str(cell) if kind == 'text' else cell
+                json.dumps(original, allow_nan=False)
                 value = {'name': str(row['name'])}
+                value['raw_json'] = original
                 if row.get('category') is not None:
                     value['category'] = str(row['category'])
                 for key in ('value', 'value2', 'latitude', 'longitude', 'amount'):
@@ -88,9 +116,9 @@ class ImportData(models.TransientModel):
             dataset.check_access('write')
             if dataset.company_id != self.dashboard_id.company_id:
                 raise ValidationError(_('Dataset and dashboard must belong to the same company.'))
-            dataset.write({'row_ids': [(5, 0, 0)] + values})
+            dataset.write({'row_ids': [(5, 0, 0)] + values, 'column_types': column_types})
         else:
-            dataset = self.env['tecnodyne.dashboard.dataset'].create({'name': self.name, 'company_id': self.dashboard_id.company_id.id, 'row_ids': values})
+            dataset = self.env['tecnodyne.dashboard.dataset'].create({'name': self.name, 'company_id': self.dashboard_id.company_id.id, 'row_ids': values, 'column_types': column_types})
             model = 'tecnodyne.dashboard.dataset.row'
             self.env['tecnodyne.dashboard.item'].create({
                 'name': self.name, 'dashboard_id': self.dashboard_id.id, 'kind': 'bar',
@@ -119,74 +147,7 @@ class GenerateAI(models.TransientModel):
         if any(not 1 <= wizard.item_count <= 12 for wizard in self):
             raise ValidationError(_('Choose between 1 and 12 indicators.'))
 
-    def action_generate(self):
-        self.ensure_one()
-        target = self.env[self.model_id.model]
-        target.check_access('read')
-        # Schema only; record values are not needed to propose queries.
-        schema = {n: {'type': f['type'], 'label': f['string']} for n, f in target.fields_get().items()
-                  if target._fields[n].store and f['type'] in ('char', 'selection', 'many2one', 'date', 'datetime', 'integer', 'float', 'monetary')}
-        prompt = (f'Create an Odoo dashboard JSON proposal, max {self.item_count} items. '
-                  'Return only JSON in this shape: {"items":[{"name":"Conteo de registros","kind":"kpi","aggregation":"count","measure":null,"group":null,"date":null,"domain":[]}]}.'
-                  ' Allowed kind values: kpi, bar, line, pie, table. Allowed aggregation values: count, sum, avg.'
-                  ' The measure, group and date values must be exact supplied field names or JSON null (not the string "null"). Count requires measure:null.'
-                  ' Use only supplied stored schema fields. Sum/avg require a numeric measure. Non-KPI items require a grouping field.'
-                  ' Use neutral titles describing the exact query; do not call invoices cash liquidity or claim paid/unpaid totals without a matching domain.'
-                  ' If the schema cannot answer the request, return {"items":[]}. Never use code or SQL. User request: '
-                  + self.keywords + '\nSchema: ' + json.dumps(schema))
-        raw = self.env['tecnodyne.dashboard.ai']._generate(prompt, json_mode=True)
-        commands = self._validated_items(raw)
-        self.proposal = raw
-        return {'type': 'ir.actions.act_window', 'res_model': self._name, 'res_id': self.id, 'views': [(False, 'form')], 'target': 'new'}
-
-    def _validated_items(self, raw):
-        try:
-            data = json.loads(raw)
-            if not isinstance(data, dict) or not isinstance(data.get('items'), list) or not 1 <= len(data['items']) <= self.item_count:
-                raise ValueError()
-            commands = []
-            visible = self.env[self.model_id.model].fields_get()
-            for spec in data['items']:
-                if spec['kind'] not in ('kpi', 'bar', 'line', 'pie', 'table') or spec['aggregation'] not in ('count', 'sum', 'avg'):
-                    raise ValueError()
-                values = {'name': str(spec['name'])[:150], 'model_id': self.model_id.id, 'kind': spec['kind'], 'aggregation': spec['aggregation'],
-                          'domain_json': json.dumps(spec.get('domain', []))}
-                domain = spec.get('domain', [])
-                if not isinstance(domain, list):
-                    raise ValueError()
-                expression.normalize_domain(domain)
-                for leaf in domain:
-                    if isinstance(leaf, (list, tuple)) and (len(leaf) != 3 or leaf[0] not in visible):
-                        raise ValueError()
-                for source, key in [('measure', 'measure_id'), ('group', 'group_field_id'), ('date', 'date_field_id')]:
-                    name = spec.get(source)
-                    if name and name not in visible:
-                        raise ValueError()
-                    if name and not self.env[self.model_id.model]._fields[name].store:
-                        raise ValueError()
-                    if source == 'measure' and spec['aggregation'] != 'count' and (not name or visible[name]['type'] not in ('integer', 'float', 'monetary')):
-                        raise ValueError()
-                    if source == 'group' and (spec['kind'] != 'kpi' and not name or name and visible[name]['type'] not in ('many2one', 'char', 'selection', 'boolean', 'date', 'datetime', 'integer')):
-                        raise ValueError()
-                    if source == 'date' and name and visible[name]['type'] not in ('date', 'datetime'):
-                        raise ValueError()
-                    values[key] = self.env['ir.model.fields']._get(self.model_id.model, name).id if name else False
-                commands.append((0, 0, values))
-            return commands
-        except (ValueError, TypeError, KeyError, AssertionError) as exc:
-            raise ValidationError(_('The AI proposal is incompatible. Refine the request and generate again.')) from exc
-
-    def action_apply(self):
-        self.ensure_one()
-        if not self.proposal:
-            raise UserError(_('Generate and review a proposal first.'))
-        commands = self._validated_items(self.proposal)
-        board = self.dashboard_id
-        if board:
-            board.write({'item_ids': commands})
-        else:
-            board = self.env['tecnodyne.dashboard'].create({'name': self.name, 'item_ids': commands})
-        return board.action_open()
+# Generation and validation are implemented in semantic.py.
 
 
 class ItemTransfer(models.TransientModel):

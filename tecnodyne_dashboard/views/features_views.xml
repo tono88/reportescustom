@@ -13,18 +13,21 @@
             <xpath expr="//sheet/group" position="after">
                 <notebook>
                     <page string="Analysis"><group>
+                        <field name="query_mode"/>
                         <field name="domain_json" string="Advanced JSON domain (dynamic tokens)"/>
                         <field name="measure2_id" domain="[('model_id', '=', model_id)]"/>
                         <field name="extra_measure_ids" widget="many2many_tags" domain="[('model_id', '=', model_id), ('ttype', 'in', ['integer', 'float', 'monetary'])]"/>
                         <field name="comparison_item_id"/><field name="kpi_operation"/><field name="target_style"/><field name="tile_style"/>
                         <field name="secondary_as_line"/><field name="cumulative_as_line"/>
                         <field name="subgroup_id" domain="[('model_id', '=', model_id)]"/>
-                        <field name="drill_field_ids" widget="many2many_tags" domain="[('model_id', '=', model_id)]"/>
+                        <field name="drill_field_ids" widget="many2many_tags" domain="[('model_id', '=', model_id)]" string="Legacy drill fields"/>
                         <field name="list_field_ids" widget="many2many_tags" domain="[('model_id', '=', model_id)]"/>
                         <field name="latitude_id" domain="[('model_id', '=', model_id)]"/><field name="longitude_id" domain="[('model_id', '=', model_id)]"/>
-                        <field name="sort"/><field name="preset"/><field name="comparison"/><field name="multiplier"/>
+                        <field name="sort"/><field name="top_n_per_period"/><field name="preset"/><field name="date_scope"/><field name="comparison"/><field name="multiplier"/>
                         <field name="cumulative"/><field name="fill_gaps"/><field name="client_action_id"/>
                     </group></page>
+                    <page string="Drill hierarchy" invisible="query_mode == 'sql'"><field name="drill_line_ids"><list editable="bottom"><field name="sequence" widget="handle"/><field name="field_id" domain="[('model_id', '=', parent.model_id), ('store', '=', True)]"/></list></field></page>
+                    <page string="Custom SQL" invisible="query_mode != 'sql'"><field name="query_source_ids"><list><field name="alias"/><field name="model_id"/><field name="field_ids" widget="many2many_tags"/></list><form><group><field name="alias"/><field name="model_id"/><field name="model_name" invisible="1"/><field name="field_ids" widget="many2many_tags" domain="[('model_id', '=', model_id), ('store', '=', True)]"/><field name="date_field_id" domain="[('model_id', '=', model_id), ('ttype', 'in', ['date', 'datetime'])]"/><field name="date_scope"/><field name="include_shared"/><field name="domain_json" widget="td_json_domain"/></group></form></field><field name="query_sql"/><p>Read-only SQL over authorized snapshots, not the Odoo database. Return label and value; optional series, value2, source_alias and record_id. Use :uid, :company, :date_from, :date_to. Many2one fields also expose field__name.</p></page>
                     <page string="Appearance and access"><group><field name="group_ids" widget="many2many_tags"/><field name="icon"/><field name="color"/><field name="currency_id"/><field name="number_format"/><field name="stacked"/><field name="show_values"/><field name="show_legend"/></group></page>
                     <page string="Targets"><field name="target_ids"><list editable="bottom"><field name="date"/><field name="value"/></list></field></page>
                     <page string="Checklist"><field name="task_ids"><list editable="bottom"><field name="name"/><field name="done"/></list></field></page>
@@ -45,7 +48,7 @@
     <record id="import_form" model="ir.ui.view">
         <field name="name">tecnodyne.dashboard.import.form</field><field name="model">tecnodyne.dashboard.import</field>
         <field name="arch" type="xml"><form><group><field name="name"/><field name="dashboard_id"/><field name="dataset_id"/><field name="file" filename="filename"/><field name="filename" invisible="1"/></group>
-            <group string="Column mapping"><field name="label_column"/><field name="category_column"/><field name="value_column"/><field name="value2_column"/><field name="date_column"/><field name="latitude_column"/><field name="longitude_column"/><field name="amount_column"/><field name="currency_column"/></group>
+            <group string="Column mapping"><field name="label_column"/><field name="category_column"/><field name="value_column"/><field name="value2_column"/><field name="date_column"/><field name="latitude_column"/><field name="longitude_column"/><field name="amount_column"/><field name="currency_column"/><field name="column_types_json"/></group>
             <p>CSV UTF-8 / XLSX. Enter the original column headers above. Only the label column is required. Maximum 10,000 rows.</p>
             <footer><button name="action_import" string="Import and synchronize" type="object" class="btn-primary"/><button string="Close" special="cancel"/></footer></form></field>
     </record>
@@ -53,7 +56,7 @@
     <menuitem id="import_menu" name="CSV / Excel data" parent="dashboard_root" action="import_action" groups="group_dashboard_manager"/>
     <record id="generate_form" model="ir.ui.view">
         <field name="name">tecnodyne.dashboard.generate.form</field><field name="model">tecnodyne.dashboard.generate</field>
-        <field name="arch" type="xml"><form><group><field name="name"/><field name="dashboard_id"/><field name="model_id"/><field name="keywords"/><field name="item_count"/><field name="proposal"/></group>
+        <field name="arch" type="xml"><form><group><field name="name"/><field name="dashboard_id"/><field name="analysis_preset"/><field name="source_mode"/><field name="model_id" invisible="source_mode != 'manual'" required="source_mode == 'manual'"/><field name="sales_channel"/><field name="sales_metric"/><field name="top_limit"/><field name="keywords"/><field name="item_count"/><field name="proposal_engine"/><field name="plan_explanation"/><field name="proposal"/></group>
             <p>The configured local AI service receives authorized schema for generation. Chart explanations send the visible aggregate values to that service.</p>
             <footer><button name="action_generate" string="Generate proposal" type="object"/><button name="action_apply" string="Apply reviewed proposal" type="object" class="btn-primary"/><button string="Close" special="cancel"/></footer></form></field>
     </record>

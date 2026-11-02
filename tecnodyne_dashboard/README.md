@@ -1,6 +1,6 @@
 # Tecnodyne Dashboards — Odoo 18 Community
 
-Versión **18.0.2.0.2**, implementación original LGPL-3 para crear tableros de negocio sin Enterprise. Usa los módulos estándar `web`, `mail` y `bus`; las exportaciones/importaciones usan `xlsxwriter` y `openpyxl`. No contiene código, imágenes ni estilos del producto usado como referencia funcional.
+Versión **18.0.3.0.0**, implementación original LGPL-3 para crear tableros de negocio sin Enterprise. Usa los módulos estándar `web`, `mail` y `bus`; las exportaciones/importaciones usan `xlsxwriter` y `openpyxl`. No contiene código, imágenes ni estilos del producto usado como referencia funcional.
 
 ## Capacidades
 
@@ -10,13 +10,15 @@ Versión **18.0.2.0.2**, implementación original LGPL-3 para crear tableros de 
 - Editor visual de dominios, filtros con nombre, 28 opciones temporales y comparación con período/año anterior.
 - Diseño adaptable, tres distribuciones iniciales, arrastrar/reordenar, ajustar ancho/alto y guardar variantes privadas por usuario. Cuatro paletas y tres estilos de tarjeta.
 - Favoritos, menús por tablero y acción de inicio; edición rápida, duplicar y mover indicadores.
-- ACL, audiencias por tablero/indicador y compañías. Ninguna consulta de datos de negocio utiliza `sudo` ni SQL libre.
+- ACL, audiencias por tablero/indicador y compañías. Ninguna consulta de datos de negocio utiliza `sudo`. SQL de solo lectura sobre instantáneas autorizadas en SQLite, con JOIN y ventanas, sin acceso directo a PostgreSQL.
 - CSV/XLSX completos respecto al filtro y nivel consultado; PNG de cualquier indicador; PDF con gráfico y tabla. La exportación no se recorta al límite de pantalla.
 - Transferencia JSON de tableros/indicadores, medidas, filtros, metas, tareas y dependencias entre KPI. Los datos de fuentes importadas se incluyen y sus referencias se reasignan en el destino.
 - Fuentes CSV/XLSX con asignación de columnas y reemplazo/sincronización de datos; conversaciones privadas por indicador en Discuss; actualización por eventos y sondeo opcional.
 - IA local con Ollama o LM Studio para proponer tableros/indicadores por modelo y palabras clave, y explicar resultados. Catálogos iniciales español/inglés y nombres traducibles.
 
-La [matriz de cobertura](docs/PARIDAD.md) distingue implementación, evidencia y límites. La [validación](docs/VALIDACION.md) registra las pruebas realizadas.
+La [revisión de los once videos](docs/PLAYLIST_AUDIT.md) documenta la corrección de generación y las carencias aún existentes. La [matriz de cobertura](docs/PARIDAD.md) distingue implementación, evidencia y límites. La [validación](docs/VALIDACION.md) registra las pruebas realizadas.
+
+Para **categorías más vendidas por mes**, elegir el análisis predefinido, origen automático y **Ventas y POS por separado**. Se generan dos gráficos de suma de unidades o importe sin impuestos, con clasificación dentro de cada mes y estados confirmados. No se usa el modelo de catálogo como sustituto de las ventas ni se acepta un conteo no solicitado. Otras recetas cubren productos, tendencia mensual y análisis contables sobre asientos publicados. Cambiar la petición invalida la propuesta previa.
 
 ## Instalación
 
@@ -42,7 +44,7 @@ Un administrador de ajustes puede publicar un menú por tablero y su acción. Pa
 
 CSV debe ser UTF-8; Excel debe ser `.xlsx`. La primera fila contiene encabezados. Asignar la columna de etiqueta y, opcionalmente, categoría, dos valores numéricos, fecha, coordenadas, importe monetario y código de moneda. Seleccionar un dataset existente para reemplazar sus filas manteniendo los indicadores vinculados. Los archivos no se vinculan automáticamente a una carpeta externa: cada sincronización requiere subir el archivo actualizado.
 
-La transferencia JSON usa esquema 2 y admite configuraciones de esquema 1. Permite exportar un indicador con sus consultas KPI dependientes o un tablero completo. Importar crea un tablero nuevo en la empresa activa, o añade indicadores al tablero seleccionado. No copia grupos de seguridad ni diseños privados. Las acciones personalizadas necesitan un ID externo y deben existir en destino. Los modelos/campos de las fuentes Odoo deben estar instalados. Los datasets internos viajan con sus filas; trate el JSON exportado como datos de negocio.
+La transferencia JSON usa esquema 3 y admite configuraciones de esquemas 1 y 2. Conserva consultas SQL, sus fuentes, alcance temporal, tipos de columnas originales y orden del detalle. Permite exportar un indicador con sus consultas KPI dependientes o un tablero completo. Importar crea un tablero nuevo en la empresa activa, o añade indicadores al tablero seleccionado. No copia grupos de seguridad ni diseños privados. Las acciones personalizadas necesitan un ID externo y deben existir en destino. Los modelos/campos de las fuentes Odoo deben estar instalados. Los datasets internos viajan con sus filas; trate el JSON exportado como datos de negocio.
 
 ## IA recomendada
 
@@ -52,7 +54,7 @@ Para el equipo revisado (aproximadamente 24 GB RAM y RTX 3050 Ti Laptop de 4 GB)
 
 Para usar **Ollama**, instalarlo por separado y descargar el modelo con `ollama pull qwen3.5:4b`. En Ajustes → Tecnodyne AI seleccionar proveedor Ollama, URL `http://127.0.0.1:11434` y modelo `qwen3.5:4b`. No se instala ni descarga automáticamente. Un servidor en otra máquina requiere su dirección accesible y la configuración de red correspondiente.
 
-La generación envía estructura de campos autorizados y la petición, muestra una propuesta y exige aplicarla antes de crear indicadores. Nunca ejecuta código/SQL generado. Las explicaciones envían los resultados visibles al servidor configurado; las respuestas deben distinguir observaciones de hipótesis. El proveedor se puede cambiar mediante URL/modelo compatibles con la [API Ollama](https://docs.ollama.com/api/generate). Las pruebas automáticas usan un servicio simulado; no sustituyen la prueba con un modelo instalado.
+Las recetas de negocio reconocidas se resuelven localmente con reglas explícitas. Para otras peticiones, la generación envía estructura de campos autorizados y la petición, muestra una propuesta y exige aplicarla antes de crear indicadores. Nunca ejecuta código/SQL propuesto libremente por la IA. Las explicaciones envían los resultados visibles al servidor configurado; las respuestas deben distinguir observaciones de hipótesis. El proveedor se puede cambiar mediante URL/modelo compatibles con la [API Ollama](https://docs.ollama.com/api/generate). Las pruebas de contrato usan simulaciones; el registro de validación distingue las pruebas reales con LM Studio.
 
 ## Límites y versiones
 

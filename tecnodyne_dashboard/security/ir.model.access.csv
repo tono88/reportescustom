@@ -18,3 +18,8 @@ dataset_row_designer,Dataset row designer,model_tecnodyne_dashboard_dataset_row,
 import_designer,Data importer,model_tecnodyne_dashboard_import,group_dashboard_manager,1,1,1,1
 generate_designer,AI generator,model_tecnodyne_dashboard_generate,group_dashboard_manager,1,1,1,1
 move_designer,Item transfer,model_tecnodyne_dashboard_move,group_dashboard_manager,1,1,1,1
+query_source_viewer,SQL source viewer,model_tecnodyne_dashboard_query_source,group_dashboard_user,1,0,0,0
+query_source_designer,SQL source designer,model_tecnodyne_dashboard_query_source,group_dashboard_manager,1,1,1,1
+dashboard_field_metadata,Designer field metadata,base.model_ir_model_fields,group_dashboard_manager,1,0,0,0
+drill_viewer,Drill level viewer,model_tecnodyne_dashboard_drill,group_dashboard_user,1,0,0,0
+drill_designer,Drill level designer,model_tecnodyne_dashboard_drill,group_dashboard_manager,1,1,1,1

@@ -421,6 +421,7 @@ class TecnodyneDashboard extends Component {
       this.bus.subscribe("tecnodyne_dashboard_changed", this.changed);
     });
     onWillUnmount(() => {
+      this.resizeStop?.();
       clearInterval(this.timer);
       clearTimeout(this.debounce);
       this.bus.unsubscribe("tecnodyne_dashboard_changed", this.changed);
@@ -611,7 +612,41 @@ class TecnodyneDashboard extends Component {
       [key]: Number(event.target.value),
     };
   }
+  startResize(event, item) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.resizeStop?.();
+    const card = event.currentTarget.closest('.td-card');
+    const grid = card.parentElement;
+    const rect = card.getBoundingClientRect();
+    const style = getComputedStyle(grid);
+    const columns = style.gridTemplateColumns.split(' ').filter(Boolean).length;
+    const gap = parseFloat(style.columnGap) || 20;
+    const columnWidth = (grid.getBoundingClientRect().width - gap * (columns - 1)) / columns;
+    const startX = event.clientX, startY = event.clientY;
+    const move = pointer => {
+      const width = Math.max(1, Math.min(columns, Math.round((rect.width + pointer.clientX - startX + gap) / (columnWidth + gap))));
+      const height = Math.max(300, Math.min(1000, Math.round((rect.height + pointer.clientY - startY) / 10) * 10));
+      this.state.layout[String(item.id)] = {...(this.state.layout[String(item.id)] || {}), width, height};
+    };
+    const stop = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', stop);
+      window.removeEventListener('pointercancel', stop);
+      this.resizeStop = undefined;
+    };
+    this.resizeStop = stop;
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', stop);
+    window.addEventListener('pointercancel', stop);
+  }
+  async moveOrCopy(item) {
+    await this.action.doAction({type:'ir.actions.act_window', name:'Mover / copiar indicador',
+      res_model:'tecnodyne.dashboard.move', views:[[false,'form']], target:'new',
+      context:{default_item_id:item.id, default_dashboard_id:this.id}});
+  }
   drag(event, item) {
+    if (event.target.closest('.td-resize-handle')) {event.preventDefault(); return;}
     event.dataTransfer.setData("text/plain", String(item.id));
   }
   drop(event, item) {

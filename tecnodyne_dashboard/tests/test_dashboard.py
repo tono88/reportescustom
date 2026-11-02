@@ -58,6 +58,28 @@ class TestDashboard(TransactionCase):
         self.assertEqual(len(rows), 1)
         self.assertEqual(rows[0]['value'], 1)
 
+    def test_ordered_drill_and_cold_metadata_as_viewer(self):
+        group = self.env['ir.model.fields']._get('res.partner', 'company_id')
+        first = self.env['ir.model.fields']._get('res.partner', 'name')
+        second = self.env['ir.model.fields']._get('res.partner', 'ref')
+        self.item.write({'kind': 'bar', 'group_field_id': group.id, 'drill_line_ids': [
+            (0, 0, {'sequence': 20, 'field_id': first.id}), (0, 0, {'sequence': 10, 'field_id': second.id})]})
+        self.env.invalidate_all()
+        item = self.item.with_user(self.viewer)
+        self.assertEqual(item._drill_fields().mapped('name'), ['ref', 'name'])
+        self.assertEqual(item._payload()['rows'][0]['value'], 1)
+        wizard = self.env['tecnodyne.dashboard.transfer'].create({'dashboard_id': self.board.id})
+        wizard.action_export()
+        result = wizard.action_import()
+        copy = self.env['tecnodyne.dashboard'].browse(result['params']['dashboard_id']).item_ids
+        self.assertEqual(copy._drill_fields().mapped('name'), ['ref', 'name'])
+
+    def test_domain_cannot_probe_group_restricted_field(self):
+        target = self.env['res.partner']
+        with patch.object(target._fields['ref'], 'groups', 'base.group_system'):
+            with self.assertRaises(AccessError):
+                self.item.with_user(self.viewer)._payload()
+
     def test_domain_is_data(self):
         with self.assertRaises(ValidationError), self.cr.savepoint():
             self.item.domain_json = "__import__('os').system('anything')"
@@ -358,3 +380,40 @@ class TestDashboard(TransactionCase):
         raw = json.dumps({'items': [{'name': 'Bad sum', 'kind': 'kpi', 'aggregation': 'sum', 'measure': 'name'}]})
         with self.assertRaises(ValidationError):
             wizard._validated_items(raw)
+
+    def test_ai_rejects_count_for_non_count_analysis(self):
+        wizard = self.env['tecnodyne.dashboard.generate'].create({'name': 'Analysis', 'model_id': self.item.model_id.id, 'keywords': 'Analiza importes por mes'})
+        raw = json.dumps({'items': [{'name': 'Conteo de registros', 'kind': 'kpi', 'aggregation': 'count', 'domain': []}]})
+        with self.assertRaises(ValidationError):
+            wizard._validated_items(raw)
+
+    def test_ai_nullable_kpi_options_keep_required_defaults(self):
+        wizard = self.env['tecnodyne.dashboard.generate'].create({'model_id': self.item.model_id.id, 'keywords': 'Conteo de contactos'})
+        spec = {'name': 'Contacts', 'kind': 'kpi', 'aggregation': 'count', 'interval': None, 'sort': None, 'domain': []}
+        commands = wizard._validated_items(json.dumps({'items': [spec]}))
+        board = self.env['tecnodyne.dashboard'].create({'name': 'Nullable options', 'item_ids': commands})
+        self.assertEqual(board.item_ids.interval, 'month')
+        self.assertEqual(board.item_ids.sort, 'group_asc')
+        spec['interval'] = 'invalid'
+        with self.assertRaises(ValidationError):
+            wizard._validated_items(json.dumps({'items': [spec]}))
+
+    def test_ai_changed_request_cannot_apply_old_proposal(self):
+        from odoo.exceptions import UserError
+        wizard = self.env['tecnodyne.dashboard.generate'].create({'name': 'Analysis', 'model_id': self.item.model_id.id, 'keywords': 'Count contacts'})
+        wizard.proposal = json.dumps({'items': [{'name': 'Contacts', 'kind': 'kpi', 'aggregation': 'count', 'domain': []}]})
+        wizard.proposal_fingerprint = wizard._request_fingerprint()
+        wizard.keywords = 'Analyze monthly amounts'
+        with self.assertRaisesRegex(UserError, 'request or source changed'):
+            wizard.action_apply()
+
+    def test_period_ranking_is_calculated_inside_each_month(self):
+        item = self._dataset_item()
+        item.write({'subgroup_id': item.date_field_id.id, 'top_n_per_period': 1})
+        dataset_id = json.loads(item.domain_json)[0][2]
+        self.env[item.model_name].create([
+            {'dataset_id': dataset_id, 'name': 'February A', 'category': 'A', 'value': 100, 'date': '2026-02-01'},
+            {'dataset_id': dataset_id, 'name': 'February B', 'category': 'B', 'value': 5, 'date': '2026-02-01'},
+        ])
+        rows = item._payload()['rows']
+        self.assertEqual([(row['label'], row['value'], row['rank']) for row in rows], [('B', 20, 1), ('A', 100, 1)])

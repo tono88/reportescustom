@@ -12,6 +12,7 @@ import xlsxwriter
 from odoo import api, fields, models, _
 from odoo.exceptions import AccessError, ValidationError, UserError
 from odoo.osv import expression
+from .domain_security import check_domain_fields
 
 
 KINDS = [('horizontal', 'Horizontal bars'), ('area', 'Area'), ('doughnut', 'Doughnut'),
@@ -188,9 +189,12 @@ class Item(models.Model):
     comparison_item_id = fields.Many2one('tecnodyne.dashboard.item', string='Second KPI query', ondelete='set null')
     kpi_operation = fields.Selection([('compare', 'Compare'), ('sum', 'Sum'), ('ratio', 'Ratio'), ('percentage', 'Percentage')], default='compare', required=True)
     target_style = fields.Selection([('number', 'Number'), ('progress', 'Progress'), ('both', 'Number and progress')], default='both', required=True)
+    top_n_per_period = fields.Integer(string='Top N inside each period', default=0)
+    date_scope = fields.Selection([('range', 'Movement in selected range'), ('as_of', 'Balance through end date')], default='range', required=True)
     tile_style = fields.Selection([('plain', 'Plain'), ('solid', 'Solid color'), ('compact', 'Compact')], default='plain', required=True)
     subgroup_id = fields.Many2one('ir.model.fields', ondelete='set null')
     drill_field_ids = fields.Many2many('ir.model.fields', 'td_item_drill_field_rel', string='Drill hierarchy')
+    drill_line_ids = fields.One2many('tecnodyne.dashboard.drill', 'item_id', string='Ordered drill hierarchy', copy=True)
     list_field_ids = fields.Many2many('ir.model.fields', 'td_item_list_field_rel', string='List columns')
     latitude_id = fields.Many2one('ir.model.fields', ondelete='set null')
     longitude_id = fields.Many2one('ir.model.fields', ondelete='set null')
@@ -212,6 +216,11 @@ class Item(models.Model):
     task_ids = fields.One2many('tecnodyne.dashboard.task', 'item_id', copy=True)
     client_action_id = fields.Many2one('ir.actions.actions', string='Custom action')
 
+    def _drill_fields(self):
+        self.ensure_one()
+        identifiers = [line.field_id.id for line in self.drill_line_ids.sorted(lambda line: (line.sequence, line.id))]
+        return self.env['ir.model.fields'].browse(identifiers).sudo() if identifiers else self.drill_field_ids.sudo().sorted('id')
+
     @api.constrains('kind', 'measure2_id', 'extra_measure_ids', 'subgroup_id', 'list_field_ids', 'drill_field_ids', 'latitude_id', 'longitude_id', 'model_id', 'multiplier', 'color', 'icon', 'comparison_item_id')
     def _validate_features(self):
         import re
@@ -227,7 +236,7 @@ class Item(models.Model):
                 raise ValidationError(_('Invalid multiplier or color.'))
             if not re.fullmatch(r'fa-[a-z0-9-]+', item.icon or ''):
                 raise ValidationError(_('Use a Font Awesome icon name.'))
-            if item.kind == 'map' and not (item.latitude_id and item.longitude_id):
+            if item.query_mode != 'sql' and item.kind == 'map' and not (item.latitude_id and item.longitude_id):
                 raise ValidationError(_('A map requires latitude and longitude fields.'))
             seen, current = {item.id}, item.comparison_item_id
             while current:
@@ -238,6 +247,14 @@ class Item(models.Model):
                 seen.add(current.id)
                 current = current.comparison_item_id
 
+    @api.constrains('top_n_per_period', 'subgroup_id', 'kind')
+    def _check_period_ranking(self):
+        for item in self:
+            if not 0 <= item.top_n_per_period <= 100:
+                raise ValidationError(_('Per-period ranking must be between 0 and 100.'))
+            if item.top_n_per_period and (item.subgroup_id.ttype not in ('date', 'datetime') or item.kind in ('kpi', 'todo', 'list', 'map')):
+                raise ValidationError(_('Per-period ranking requires a grouped chart with a date subgroup.'))
+
     def _query(self, date_from=False, date_to=False):
         preset = 'custom' if self.env.context.get('td_comparing') else self.preset if self.preset != 'custom' else self.env.context.get('td_preset', 'custom')
         if preset not in dict(PRESETS):
@@ -246,7 +263,7 @@ class Item(models.Model):
             date_from, date_to = date_range(preset, fields.Date.context_today(self))
         target, domain = super()._query(date_from, date_to)
         visible = target.fields_get()
-        for field in self.measure2_id | self.extra_measure_ids | self.subgroup_id | self.list_field_ids | self.drill_field_ids | self.latitude_id | self.longitude_id:
+        for field in (self.measure2_id | self.extra_measure_ids | self.subgroup_id | self.list_field_ids | self._drill_fields() | self.latitude_id | self.longitude_id).sudo():
             if field.name not in visible:
                 raise AccessError(_('A configured field is restricted.'))
         for filter in self.dashboard_id.filter_ids.filtered(lambda f: f.id in self.env.context.get('td_filters', [])):
@@ -257,13 +274,15 @@ class Item(models.Model):
                 except (ValueError, TypeError, AssertionError) as exc:
                     raise ValidationError(_('Invalid filter domain.')) from exc
                 domain = expression.AND([domain, extra])
-        return target, expression.AND([domain, self.env.context.get('td_domain', [])])
+        domain = expression.AND([domain, self.env.context.get('td_domain', [])])
+        check_domain_fields(target, domain)
+        return target, domain
 
     def _convert(self, value):
         return (value or 0) * self.multiplier
 
     def _aggregate_value(self, target, domain, raw, measure_field=None, aggregation=None):
-        measure_field = measure_field or self.measure_id
+        measure_field = (measure_field or self.measure_id).sudo()
         aggregation = aggregation or self.aggregation
         if aggregation == 'count' or measure_field.ttype != 'monetary':
             return self._convert(raw)
@@ -277,7 +296,8 @@ class Item(models.Model):
         values = []
         for record in records:
             source = record[currency_field] or self.company_id.currency_id
-            day = fields.Date.to_date(record[self.date_field_id.name]) if self.date_field_id and record[self.date_field_id.name] else fields.Date.context_today(self)
+            date_name = self.date_field_id.sudo().name
+            day = fields.Date.to_date(record[date_name]) if date_name and record[date_name] else fields.Date.context_today(self)
             values.append(source._convert(record[measure_field.name], destination, self.company_id, day))
         value = {'sum': lambda: sum(values), 'avg': lambda: sum(values)/len(values) if values else 0,
                  'min': lambda: min(values) if values else 0, 'max': lambda: max(values) if values else 0}[aggregation]()
@@ -287,15 +307,16 @@ class Item(models.Model):
         target, domain = self._query(date_from, date_to)
         cap = 10001 if export else self.limit
         page = 0 if export else max(0, min(1000, int(self.env.context.get('td_page', 0))))
-        measure = self.measure_id.name if self.aggregation != 'count' else False
+        measure_field = self.measure_id.sudo()
+        measure = measure_field.name if self.aggregation != 'count' else False
         aggregate = measure + ':' + self.aggregation if measure else None
         rows, columns, value, total = [], [], 0, 0
         if self.kind == 'todo':
             tasks = self.env['tecnodyne.dashboard.task'].search([('item_id', '=', self.id)])
             rows = [{'id': task.id, 'label': task.name, 'done': task.done, 'value': int(task.done)} for task in tasks]
         elif self.kind in ('list', 'map'):
-            columns = self.list_field_ids.mapped('name') or ['display_name']
-            names = list(set(columns + self.latitude_id.mapped('name') + self.longitude_id.mapped('name') + self.measure_id.mapped('name') + self.measure2_id.mapped('name')))
+            columns = self.list_field_ids.sudo().mapped('name') or ['display_name']
+            names = list(set(columns + self.latitude_id.sudo().mapped('name') + self.longitude_id.sudo().mapped('name') + measure_field.mapped('name') + self.measure2_id.sudo().mapped('name')))
             total = target.search_count(domain)
             records = target.search_read(domain, names, limit=cap, offset=page*cap, order='id ' + ('desc' if self.sort.endswith('desc') else 'asc'))
             for record in records:
@@ -304,24 +325,25 @@ class Item(models.Model):
                 rows.append({'id': record['id'], 'label': str(scalar(record.get(columns[0]))),
                              'cells': [scalar(record.get(n)) for n in columns],
                              'value': self._aggregate_value(target, [('id', '=', record['id'])], record.get(measure, 0)) if measure else 1,
-                             'lat': record.get(self.latitude_id.name, 0), 'lon': record.get(self.longitude_id.name, 0),
+                             'lat': record.get(self.latitude_id.sudo().name, 0), 'lon': record.get(self.longitude_id.sudo().name, 0),
                              'domain': [('id', '=', record['id'])]})
         elif self.kind == 'kpi':
             value = target.read_group(domain, [aggregate], [], lazy=False)[0].get(measure, 0) if aggregate else target.search_count(domain)
             value = self._aggregate_value(target, domain, value)
         else:
             level = self.env.context.get('td_level', 0)
-            grouping = self.group_field_id if not level else self.drill_field_ids.sorted('id')[level-1:level]
+            grouping = self.group_field_id.sudo() if not level else self._drill_fields()[level-1:level]
             if not grouping:
                 raise ValidationError(_('Configure a grouping field.'))
             group = grouping.name + (':' + self.interval if grouping.ttype in ('date', 'datetime') else '')
-            subgroup = self.subgroup_id.name + (':' + self.interval if self.subgroup_id.ttype in ('date', 'datetime') else '') if self.subgroup_id else False
+            subgroup_field = self.subgroup_id.sudo()
+            subgroup = subgroup_field.name + (':' + self.interval if subgroup_field.ttype in ('date', 'datetime') else '') if subgroup_field else False
             group_fields = [group] + ([subgroup] if subgroup and subgroup != group else [])
             measures = [aggregate] if aggregate else []
-            second = self.measure2_id.name
+            second = self.measure2_id.sudo().name
             if second and second != measure:
                 measures.append(second + ':sum')
-            extra_fields = self.extra_measure_ids.filtered(lambda f: f.name not in (measure, second))
+            extra_fields = self.extra_measure_ids.sudo().filtered(lambda f: f.name not in (measure, second))
             extra_aggregation = self.aggregation if self.aggregation != 'count' else 'sum'
             measures += [f.name + ':' + extra_aggregation for f in extra_fields]
             order_field = group if self.sort.startswith('group') else measure or 'id'
@@ -329,6 +351,8 @@ class Item(models.Model):
             if not measure and self.sort.startswith('value'):
                 order = False
             groups = target.read_group(domain, [g.split(':')[0] for g in group_fields] + measures, group_fields, limit=10001, lazy=False, orderby=order)
+            if self.top_n_per_period and len(groups) >= 10001:
+                raise UserError(_('The ranking exceeds 10,000 groups. Narrow the period to calculate a complete monthly ranking.'))
             for row in groups:
                 label = row.get(group)
                 if isinstance(label, tuple):
@@ -344,8 +368,11 @@ class Item(models.Model):
                              'value2': self._aggregate_value(target, row['__domain'], row.get(second, 0), self.measure2_id, 'sum') if second else 0, 'domain': row['__domain'],
                              'measures': {f.name: self._aggregate_value(target, row['__domain'], row.get(f.name, 0), f, extra_aggregation) for f in extra_fields},
                              'range': row.get('__range', {}).get(group, {})})
+                rows[-1]['period_key'] = str(row.get('__range', {}).get(subgroup, {}).get('from', sub or ''))
             if not measure and self.sort.startswith('value'):
                 rows.sort(key=lambda row: row['value'], reverse=self.sort.endswith('desc'))
+            if self.top_n_per_period:
+                rows = self._rank_periods(rows)
             if self.fill_gaps and grouping.ttype in ('date', 'datetime') and not subgroup and rows:
                 rows = self._fill_periods(rows, group)
             total = len(rows)
@@ -365,19 +392,19 @@ class Item(models.Model):
             dated = self.target_ids.filtered(lambda t: period.get('from') and str(t.date) >= str(period['from'])[:10] and str(t.date) < str(period.get('to', '9999-12-31'))[:10])
             row['target'] = sum(dated.mapped('value')) if dated else self.target
         result = {'id': self.id, 'name': self.name, 'kind': self.kind, 'source_kind': self.kind, 'value': value, 'rows': rows,
-                  'columns': columns, 'target': self.target, 'page': page, 'total': total, 'unit': (self.currency_id or self.company_id.currency_id).symbol if self.measure_id.ttype == 'monetary' and self.aggregation != 'count' else self.unit or '',
+                  'columns': columns, 'target': self.target, 'page': page, 'total': total, 'unit': (self.currency_id or self.company_id.currency_id).symbol if measure_field.ttype == 'monetary' and self.aggregation != 'count' else self.unit or '',
                   'limit': self.limit, 'icon': self.icon, 'color': self.color, 'show_values': self.show_values, 'has_second': bool(self.measure2_id),
                   'secondary_as_line': self.secondary_as_line, 'cumulative_as_line': self.cumulative_as_line,
-                  'target_style': self.target_style, 'measure_labels': {f.name: f.field_description for f in self.extra_measure_ids},
+                  'target_style': self.target_style, 'measure_labels': {f.name: f.field_description for f in self.extra_measure_ids.sudo()},
                   'tile_style': self.tile_style,
                   'show_legend': self.show_legend, 'stacked': self.stacked, 'number_format': self.number_format,
-                  'level': self.env.context.get('td_level', 0), 'depth': len(self.drill_field_ids), 'sequence': self.sequence,
+                  'level': self.env.context.get('td_level', 0), 'depth': len(self._drill_fields()), 'sequence': self.sequence,
                   'targets': {str(line.date): line.value for line in self.target_ids}}
         if self.kind == 'kpi' and (self.comparison_item_id or self.measure2_id):
             if self.comparison_item_id:
                 second_value = self.comparison_item_id.with_context(self.env.context)._payload(date_from, date_to)['value']
             else:
-                raw = target.read_group(domain, [self.measure2_id.name+':sum'], [], lazy=False)[0].get(self.measure2_id.name, 0)
+                raw = target.read_group(domain, [self.measure2_id.sudo().name+':sum'], [], lazy=False)[0].get(self.measure2_id.sudo().name, 0)
                 second_value = self._aggregate_value(target, domain, raw, self.measure2_id, 'sum')
             result['second_value'] = second_value
             if self.kpi_operation == 'sum':
@@ -400,6 +427,17 @@ class Item(models.Model):
                 current_total = result['value'] if self.kind == 'kpi' else self._aggregate_value(target, domain, target.read_group(domain, [aggregate], [], lazy=False)[0].get(measure, 0) if aggregate else target.search_count(domain))
                 result['change'] = ((current_total-result['previous']) / abs(result['previous'])*100) if result['previous'] else None
         return result
+
+    def _rank_periods(self, rows):
+        periods = {}
+        for row in rows:
+            periods.setdefault(row['period_key'], []).append(row)
+        ranked = []
+        for period in sorted(periods):
+            candidates = sorted(periods[period], key=lambda row: (-row['value'], row['label']))
+            for rank, row in enumerate(candidates[:self.top_n_per_period], 1):
+                ranked.append(dict(row, rank=rank))
+        return ranked
 
     def _comparison_query(self, start, end):
         target, domain = super()._query(start, end)
@@ -432,7 +470,7 @@ class Item(models.Model):
         context = dict(self.env.context, td_preset=preset, td_filters=filter_ids or [], td_domain=[], td_level=0)
         item = self.with_context(context)
         for level, index in enumerate(path or []):
-            if level >= len(self.drill_field_ids) or type(index) is not int:
+            if level >= len(self._drill_fields()) or type(index) is not int:
                 raise ValidationError(_('Invalid drill path.'))
             payload = item._payload(date_from, date_to, export=True)
             if not 0 <= index < len(payload['rows']):
@@ -498,8 +536,8 @@ class Item(models.Model):
             rows, headers = [row['cells'] for row in data['rows']], data['columns']
         else:
             extra = list(data['measure_labels'])
-            rows = [[row['label'], row.get('series', ''), row['value']] + ([row.get('value2', 0)] if self.measure2_id else []) + [row.get('measures', {}).get(name, 0) for name in extra] for row in data['rows']]
-            headers = [_('Group'), _('Series'), _('Value')] + ([_('Second measure')] if self.measure2_id else []) + [data['measure_labels'][name] for name in extra]
+            rows = [[row['label'], row.get('series', ''), row['value']] + ([row.get('value2', 0)] if data['has_second'] else []) + [row.get('measures', {}).get(name, 0) for name in extra] for row in data['rows']]
+            headers = [_('Group'), _('Series'), _('Value')] + ([_('Second measure')] if data['has_second'] else []) + [data['measure_labels'][name] for name in extra]
         if format == 'csv':
             output = io.StringIO()
             writer = csv.writer(output)
@@ -572,6 +610,21 @@ class Preference(models.Model):
         return super().write(values)
 
 
+class DrillLevel(models.Model):
+    _name = 'tecnodyne.dashboard.drill'
+    _description = 'Ordered dashboard drill level'
+    _order = 'sequence, id'
+    item_id = fields.Many2one('tecnodyne.dashboard.item', required=True, ondelete='cascade')
+    sequence = fields.Integer(default=10)
+    field_id = fields.Many2one('ir.model.fields', required=True, ondelete='cascade')
+
+    @api.constrains('field_id', 'item_id')
+    def _check_dimension(self):
+        for line in self:
+            if line.field_id.model_id != line.item_id.model_id or not line.field_id.store or line.field_id.ttype not in ('many2one', 'char', 'selection', 'boolean', 'date', 'datetime', 'integer'):
+                raise ValidationError(_('Drill levels require stored grouping fields from the indicator model.'))
+
+
 class Filter(models.Model):
     _name = 'tecnodyne.dashboard.filter'
     _description = 'Named dashboard filter'
@@ -622,6 +675,7 @@ class Dataset(models.Model):
     name = fields.Char(required=True)
     company_id = fields.Many2one('res.company', required=True, default=lambda s: s.env.company)
     row_ids = fields.One2many('tecnodyne.dashboard.dataset.row', 'dataset_id')
+    column_types = fields.Json(default=dict)
 
 
 class DatasetRow(models.Model):
@@ -638,6 +692,7 @@ class DatasetRow(models.Model):
     date = fields.Date()
     latitude = fields.Float()
     longitude = fields.Float()
+    raw_json = fields.Json(string='Original typed file columns', default=dict)
 
     @api.constrains('value', 'value2', 'amount', 'latitude', 'longitude')
     def _check_numbers(self):

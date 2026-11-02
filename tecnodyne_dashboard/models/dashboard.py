@@ -65,6 +65,8 @@ class DashboardItem(models.Model):
         for item in self:
             if not 1 <= item.limit <= 200:
                 raise ValidationError(_('Group limit must be between 1 and 200.'))
+            if item.query_mode == 'sql':
+                continue
             for field in item.measure_id | item.group_field_id | item.date_field_id:
                 if field.model_id != item.model_id or not field.store:
                     raise ValidationError(_('Choose stored fields from the selected model.'))
@@ -109,20 +111,24 @@ class DashboardItem(models.Model):
         target = self.env[self.model_name].with_context(allowed_company_ids=[self.company_id.id])
         target.check_access('read')
         visible = target.fields_get()
-        for f in self.measure_id | self.group_field_id | self.date_field_id:
+        for f in (self.measure_id | self.group_field_id | self.date_field_id).sudo():
             if f.name not in visible:
                 raise ValidationError(_('You cannot read a configured dashboard field.'))
         domain = self._domain()
         if 'company_id' in target._fields:
             domain = expression.AND([domain, [('company_id', '=', self.company_id.id)]])
         if self.date_field_id:
-            field = self.date_field_id.name
+            if self.date_scope == 'as_of':
+                date_from = False
+                date_to = date_to or fields.Date.context_today(self)
+            date_field = self.date_field_id.sudo()
+            field = date_field.name
             start = fields.Date.to_date(date_from) if date_from else False
             end = fields.Date.to_date(date_to) if date_to else False
             if start and end and start > end:
                 raise ValidationError(_('Start date must precede end date.'))
             def boundary(day):
-                if self.date_field_id.ttype == 'date':
+                if date_field.ttype == 'date':
                     return str(day)
                 zone = pytz.timezone(self.env.context.get('tz') or self.env.user.tz or 'UTC')
                 local = zone.localize(datetime.combine(day, time.min))

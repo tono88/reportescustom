@@ -6,11 +6,12 @@ class WatchedItems(models.Model):
 
     def _register_hook(self):
         result = super()._register_hook()
-        self.env.registry._tecnodyne_watched_models = frozenset(self.sudo().search([]).mapped('model_name'))
+        self._refresh_watches()
         return result
 
     def _refresh_watches(self):
-        self.env.registry._tecnodyne_watched_models = frozenset(self.sudo().search([]).mapped('model_name'))
+        items = self.sudo().search([])
+        self.env.registry._tecnodyne_watched_models = frozenset(items.mapped('model_name') + items.mapped('query_source_ids.model_name'))
 
     @api.model_create_multi
     def create(self, values_list):
