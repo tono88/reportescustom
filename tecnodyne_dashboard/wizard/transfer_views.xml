@@ -1,0 +1,14 @@
+<odoo>
+    <record id="transfer_form" model="ir.ui.view">
+        <field name="name">tecnodyne.dashboard.transfer.form</field><field name="model">tecnodyne.dashboard.transfer</field>
+        <field name="arch" type="xml"><form><group><field name="dashboard_id"/><field name="document"/></group>
+            <footer><button name="action_export" type="object" string="Export configuration"/>
+                <button name="action_import" type="object" string="Import as new dashboard" class="btn-primary"/>
+                <button special="cancel" string="Close"/></footer></form></field>
+    </record>
+    <record id="transfer_action" model="ir.actions.act_window">
+        <field name="name">Transfer configuration</field><field name="res_model">tecnodyne.dashboard.transfer</field>
+        <field name="view_mode">form</field><field name="target">new</field>
+    </record>
+    <menuitem id="transfer_menu" name="Import / Export" parent="dashboard_root" action="transfer_action" groups="group_dashboard_manager"/>
+</odoo>

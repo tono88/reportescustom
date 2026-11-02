@@ -1,0 +1,6 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+dashboard_viewer,Dashboard viewer,model_tecnodyne_dashboard,group_dashboard_user,1,0,0,0
+item_viewer,Item viewer,model_tecnodyne_dashboard_item,group_dashboard_user,1,0,0,0
+dashboard_designer,Dashboard designer,model_tecnodyne_dashboard,group_dashboard_manager,1,1,1,1
+item_designer,Item designer,model_tecnodyne_dashboard_item,group_dashboard_manager,1,1,1,1
+transfer_designer,Transfer designer,model_tecnodyne_dashboard_transfer,group_dashboard_manager,1,1,1,1

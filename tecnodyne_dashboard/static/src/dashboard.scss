@@ -1,0 +1,11 @@
+.td-dashboard { overflow: auto; height: 100%; padding: 28px; background: var(--o-webclient-background-color, #f3f6f9);
+    .td-header { display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; margin-bottom: 28px; }
+    .td-brand { color: #167d9a; letter-spacing: .15em; font-size: 11px; font-weight: 700; }
+    h1 { margin: 8px 0; font-size: 28px; } .td-filters { display: flex; gap: 12px; flex-wrap: wrap; align-items: end; }
+    label { display: flex; flex-direction: column; gap: 4px; } input, select { padding: 7px; border: 1px solid #b9c9d2; border-radius: 6px; }
+    .td-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(Min(100%, 360px), 1fr)); gap: 20px; }
+    .td-card { background: var(--o-view-background-color, white); padding: 22px; border: 1px solid #dce4e9; border-radius: 14px; min-width: 0; }
+    .td-card-title { display: flex; justify-content: space-between; align-items: start; gap: 12px; } h2 { font-size: 17px; }
+    .td-kpi { border: 0; background: transparent; color: #167d9a; font-size: 40px; font-weight: 700; padding: 20px 0; } small { font-size: 16px; }
+    .td-chart { height: 250px; margin: 16px 0; } details { margin-top: 12px; } td { word-break: break-word; }
+}

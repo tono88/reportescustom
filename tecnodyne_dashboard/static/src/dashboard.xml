@@ -1,0 +1,33 @@
+<templates xml:space="preserve">
+    <t t-name="tecnodyne_dashboard.Chart"><div class="td-chart"><canvas t-ref="canvas" role="img" t-att-aria-label="props.item.name"/></div></t>
+    <t t-name="tecnodyne_dashboard.Dashboard">
+        <div class="td-dashboard">
+            <header class="td-header"><div><span class="td-brand">TECNODYNE / ANALYTICS</span>
+                <h1 t-if="state.data" t-esc="state.data.name"/><span t-if="state.data" t-esc="state.data.company"/>
+            </div><div class="td-filters">
+                <label>Desde <input type="date" t-model="state.from"/></label>
+                <label>Hasta <input type="date" t-model="state.to"/></label>
+                <button class="btn btn-primary" t-on-click="load" t-att-disabled="state.busy">Actualizar</button>
+                <label>Auto <select t-on-change="setRefresh"><option value="0">Manual</option><option value="30">30 s</option><option value="60">60 s</option><option value="300">5 min</option></select></label>
+            </div></header>
+            <p class="alert alert-danger" t-if="state.error" role="alert" t-esc="state.error"/>
+            <p t-if="state.busy" role="status">Cargando…</p>
+            <div class="td-grid" t-if="state.data">
+                <article class="td-card" t-foreach="state.data.items" t-as="item" t-key="item.id">
+                    <div class="td-card-title"><h2 t-esc="item.name"/><button class="btn btn-sm btn-light" t-on-click="() => this.download(item)" title="Exportar datos visibles">CSV</button></div>
+                    <t t-if="item.kind === 'kpi'"><button class="td-kpi" t-on-click="() => this.drill(item)"><t t-esc="format(item.value)"/> <small t-esc="item.unit"/></button>
+                        <p t-if="item.target">Meta: <t t-esc="format(item.target)"/> · <t t-esc="format(item.value / item.target * 100)"/>%</p></t>
+                    <t t-else="">
+                        <DashboardChart t-if="item.kind !== 'table'" item="item" onDrill="(it, idx) => this.drill(it, idx)"/>
+                        <details t-att-open="item.kind === 'table'"><summary>Datos · máximo <t t-esc="item.limit"/> grupos</summary>
+                            <table class="table table-sm"><thead><tr><th>Grupo</th><th>Valor</th></tr></thead><tbody>
+                                <tr t-foreach="item.rows" t-as="row" t-key="row_index"><td><button class="btn btn-link" t-on-click="() => this.drill(item, row_index)" t-esc="row.label"/></td><td t-esc="format(row.value)"/></tr>
+                            </tbody></table>
+                        </details>
+                    </t>
+                </article>
+            </div>
+            <p t-if="state.data and !state.data.items.length">Agrega indicadores desde la configuración del tablero.</p>
+        </div>
+    </t>
+</templates>
